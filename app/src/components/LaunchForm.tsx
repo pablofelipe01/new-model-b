@@ -1,6 +1,11 @@
 "use client";
 
-import { CURVES, type CurveParams, type PiecewiseCurve } from "@new-model-b/sdk";
+import {
+  CURVES,
+  scaleCurveHumanToOnChain,
+  type CurveParams,
+  type PiecewiseCurve,
+} from "@new-model-b/sdk";
 import BN from "bn.js";
 import { PublicKey } from "@solana/web3.js";
 import { useMemo, useState } from "react";
@@ -68,6 +73,17 @@ export function LaunchForm() {
     setError(null);
     try {
       // 1. Create the curve account.
+      // The user enters HUMAN coefficients (e.g. linear c=1 means
+      // "1 base per 1 token at supply=1 token"). The on-chain program
+      // works in raw lamport units, so scale the coefficients before
+      // serializing — see scaleCurveHumanToOnChain for the derivation.
+      const baseDecimals =
+        BASE_TOKENS[CLUSTER].find((t) => t.mint === baseMint)?.decimals ?? 9;
+      const onChainCurve = scaleCurveHumanToOnChain(
+        curveParams,
+        baseDecimals,
+        decimals,
+      );
       const definition: PiecewiseCurve = {
         timeV0: {
           curves: [
@@ -75,10 +91,10 @@ export function LaunchForm() {
               offset: new BN(0),
               curve: {
                 exponentialCurveV0: {
-                  c: humanToRawBn(curveParams.c),
-                  b: humanToRawBn(curveParams.b),
-                  pow: curveParams.pow,
-                  frac: curveParams.frac,
+                  c: humanToRawBn(onChainCurve.c),
+                  b: humanToRawBn(onChainCurve.b),
+                  pow: onChainCurve.pow,
+                  frac: onChainCurve.frac,
                 },
               },
               buyTransitionFees: null,

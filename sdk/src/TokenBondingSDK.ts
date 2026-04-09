@@ -442,6 +442,23 @@ export class TokenBondingSDK {
     return this.getTokenBonding(pda);
   }
 
+  /**
+   * List every `TokenBondingV0` account owned by this program. Anchor's
+   * `account.tokenBondingV0.all()` performs a `getProgramAccounts` RPC
+   * filtered by the account's 8-byte discriminator, so this returns
+   * exactly the bondings created by this protocol — not by other forks
+   * that happen to share the type name.
+   */
+  async listTokenBondings(): Promise<
+    { publicKey: PublicKey; account: TokenBondingV0 }[]
+  > {
+    const rows = await this.program.account.tokenBondingV0.all();
+    return rows.map((r) => ({
+      publicKey: r.publicKey,
+      account: r.account as unknown as TokenBondingV0,
+    }));
+  }
+
   // ── Internals ──────────────────────────────────────────────────────────
 
   /**

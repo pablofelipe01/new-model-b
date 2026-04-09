@@ -1,14 +1,22 @@
 import Link from "next/link";
 
-import { cn, formatNumber, shortenAddress } from "@/lib/utils";
+import { formatNumber, shortenAddress } from "@/lib/utils";
 
 interface Props {
+  /** Target mint of the bonded token. URL points to its detail page. */
   mint: string;
-  name: string;
-  symbol: string;
+  /**
+   * Display name. Without an indexer / metaplex metadata fetch we don't
+   * have a real on-chain name, so the explore grid passes the shortened
+   * mint and the symbol falls back to the first chars of the mint too.
+   */
+  name?: string;
+  symbol?: string;
   price?: number;
-  change24h?: number;
-  marketCap?: number;
+  /** Raw on-chain supply (smallest units of the target mint). */
+  supplyRaw?: number;
+  /** Raw reserve (lamports of the base mint). */
+  reserveRaw?: number;
   imageUrl?: string;
 }
 
@@ -17,11 +25,13 @@ export function TokenCard({
   name,
   symbol,
   price,
-  change24h,
-  marketCap,
+  supplyRaw,
+  reserveRaw,
   imageUrl,
 }: Props) {
-  const positive = (change24h ?? 0) >= 0;
+  const displayName = name ?? shortenAddress(mint, 6);
+  const displaySymbol = (symbol ?? mint.slice(0, 4)).toUpperCase();
+
   return (
     <Link
       href={`/token/${mint}`}
@@ -32,40 +42,39 @@ export function TokenCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}
-            alt={symbol}
+            alt={displaySymbol}
             className="h-10 w-10 rounded-full object-cover"
           />
         ) : (
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700 dark:bg-brand-900 dark:text-brand-200">
-            {symbol.slice(0, 2)}
+            {displaySymbol.slice(0, 2)}
           </div>
         )}
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{name}</p>
+          <p className="truncate text-sm font-semibold">{displayName}</p>
           <p className="truncate text-xs text-zinc-500">
-            {symbol} · {shortenAddress(mint)}
+            {displaySymbol} · {shortenAddress(mint)}
           </p>
         </div>
       </div>
       <dl className="grid grid-cols-3 gap-2 text-xs">
         <div>
           <dt className="text-zinc-500">Price</dt>
-          <dd className="font-medium">{formatNumber(price ?? 0)}</dd>
-        </div>
-        <div>
-          <dt className="text-zinc-500">24h</dt>
-          <dd
-            className={cn(
-              "font-medium",
-              positive ? "text-emerald-500" : "text-red-500",
-            )}
-          >
-            {change24h !== undefined ? `${(change24h * 100).toFixed(2)}%` : "—"}
+          <dd className="font-medium">
+            {price !== undefined ? formatNumber(price, 4) : "—"}
           </dd>
         </div>
         <div>
-          <dt className="text-zinc-500">MC</dt>
-          <dd className="font-medium">{formatNumber(marketCap ?? 0, 0)}</dd>
+          <dt className="text-zinc-500">Supply</dt>
+          <dd className="font-medium">
+            {supplyRaw !== undefined ? formatNumber(supplyRaw, 0) : "—"}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-zinc-500">Reserve</dt>
+          <dd className="font-medium">
+            {reserveRaw !== undefined ? formatNumber(reserveRaw, 0) : "—"}
+          </dd>
         </div>
       </dl>
     </Link>

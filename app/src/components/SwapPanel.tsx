@@ -9,14 +9,19 @@ import { cn, formatNumber } from "@/lib/utils";
 
 interface Props {
   tokenBonding: string;
+  /**
+   * Curve parameters in HUMAN units. The page is responsible for
+   * inverting the on-chain decimal scaling before passing the curve
+   * down (see `scaleCurveOnChainToHuman`).
+   */
   curve: CurveParams;
-  /** On-chain supply in raw smallest units. */
+  /** Current supply in HUMAN token units (NOT raw lamports). */
   currentSupply: number;
   baseSymbol: string;
   targetSymbol: string;
-  /** Decimals of the target mint — used to convert between human and raw amounts. */
+  /** Decimals of the target mint — used to convert the user's input to raw before sending on-chain. */
   targetDecimals: number;
-  /** Decimals of the base mint — used to render the cost / proceeds. */
+  /** Decimals of the base mint. Currently unused but kept for symmetry / future formatting. */
   baseDecimals: number;
 }
 
@@ -42,34 +47,38 @@ export function SwapPanel({
   const swap = useSwap(tokenBonding);
 
   const targetFactor = Math.pow(10, targetDecimals);
-  const baseFactor = Math.pow(10, baseDecimals);
+  // `baseDecimals` is no longer used here because all of the math now
+  // happens in HUMAN units — the curve, the supply and the quote are
+  // all human-scaled by the page that owns this panel. We still keep
+  // the prop in the API in case future formatting wants it.
+  void baseDecimals;
 
-  // The user types in human units. The on-chain math operates on raw
-  // smallest units, so we multiply through `targetFactor` for both the
-  // off-chain quote and the BN passed to the SDK. The displayed cost
-  // is converted back to human units via `baseFactor`.
   const numericHuman = Number(amount) || 0;
-  const numericRaw = numericHuman * targetFactor;
 
+  // Off-chain quote operates entirely in human units now. The only
+  // raw conversion happens at the boundary, when we hand the amount
+  // to the SDK as a `BN`.
   const quote = useMemo(() => {
-    if (numericRaw <= 0) return { baseHuman: 0, perTokenHuman: 0 };
-    let baseRaw: number;
+    if (numericHuman <= 0) return { baseHuman: 0, perTokenHuman: 0 };
+    let baseHuman: number;
     if (mode === "buy") {
-      baseRaw = buyTargetAmount(curve, currentSupply, numericRaw);
+      baseHuman = buyTargetAmount(curve, currentSupply, numericHuman);
     } else {
-      baseRaw = buyTargetAmount(
+      baseHuman = buyTargetAmount(
         curve,
-        Math.max(currentSupply - numericRaw, 0),
-        numericRaw,
+        Math.max(currentSupply - numericHuman, 0),
+        numericHuman,
       );
     }
-    const baseHuman = baseRaw / baseFactor;
     return { baseHuman, perTokenHuman: baseHuman / numericHuman };
-  }, [mode, numericRaw, numericHuman, curve, currentSupply, baseFactor]);
+  }, [mode, numericHuman, curve, currentSupply]);
 
   async function onSubmit() {
-    if (numericRaw <= 0) return;
-    const amountBn = new BN(Math.floor(numericRaw));
+    if (numericHuman <= 0) return;
+    // `1` token entered by the user → `1 * 10^targetDecimals` raw
+    // lamports on-chain. Floor to drop any sub-lamport remainder
+    // introduced by float arithmetic.
+    const amountBn = new BN(Math.floor(numericHuman * targetFactor));
     if (mode === "buy") {
       await swap.buy(amountBn, "tokens", slippage);
     } else {

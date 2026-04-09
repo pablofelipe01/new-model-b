@@ -122,3 +122,52 @@ export function rawToHuman(raw: BN): number {
 export function toExponentialCurve(p: CurveParams): ExponentialCurve {
   return { c: humanToRaw(p.c), b: humanToRaw(p.b), pow: p.pow, frac: p.frac };
 }
+
+// ── Decimal-aware curve scaling ───────────────────────────────────────────
+//
+// The on-chain program operates in raw smallest units, so a curve with
+// `c = 1, b = 0, pow = 1, frac = 1` literally means "the price in raw base
+// lamports per raw target lamport equals the supply in raw target
+// lamports". With 9-decimal mints that makes the cost of a single human
+// token astronomical (~5e17 raw base, ~5e8 base when normalized).
+//
+// To let users reason in HUMAN units we scale the coefficients before
+// sending them on-chain, and reverse the scaling when reading them back.
+// Derivation:
+//
+//   P_human(S_human) = c * S_human^k + b           (k = pow / frac)
+//   S_human          = S_raw / 10^t                (t = target decimals)
+//   cost_human       = cost_raw / 10^B             (B = base   decimals)
+//
+//   On-chain we want R_raw to equal R_human × 10^B, which gives:
+//
+//     c_chain = c_human × 10^(B − t × (k + 1))
+//     b_chain = b_human × 10^(B − t)
+
+export function scaleCurveHumanToOnChain(
+  human: CurveParams,
+  baseDecimals: number,
+  targetDecimals: number,
+): CurveParams {
+  const kPlus1 = (human.pow + human.frac) / human.frac;
+  return {
+    c: human.c * Math.pow(10, baseDecimals - targetDecimals * kPlus1),
+    b: human.b * Math.pow(10, baseDecimals - targetDecimals),
+    pow: human.pow,
+    frac: human.frac,
+  };
+}
+
+export function scaleCurveOnChainToHuman(
+  onChain: CurveParams,
+  baseDecimals: number,
+  targetDecimals: number,
+): CurveParams {
+  const kPlus1 = (onChain.pow + onChain.frac) / onChain.frac;
+  return {
+    c: onChain.c / Math.pow(10, baseDecimals - targetDecimals * kPlus1),
+    b: onChain.b / Math.pow(10, baseDecimals - targetDecimals),
+    pow: onChain.pow,
+    frac: onChain.frac,
+  };
+}

@@ -1,6 +1,10 @@
 "use client";
 
-import { tokenBondingPda, type CurveParams } from "@new-model-b/sdk";
+import {
+  scaleCurveOnChainToHuman,
+  tokenBondingPda,
+  type CurveParams,
+} from "@new-model-b/sdk";
 import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
 
@@ -39,27 +43,31 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
     if (!sdk || !tokenBonding) return;
     let cancelled = false;
     (async () => {
-      const curve = await sdk.getCurve(tokenBonding.curve);
-      if (cancelled || !curve) return;
-      const piece = curve.definition.timeV0.curves[0]?.curve;
-      if (!piece || !("exponentialCurveV0" in piece)) return;
-      const e = piece.exponentialCurveV0;
-      setCurveParams({
-        c: rawToHumanNumber(e.c.toString()),
-        b: rawToHumanNumber(e.b.toString()),
-        pow: e.pow,
-        frac: e.frac,
-      });
-      // Pull supply + decimals for both mints in parallel.
-      const [supplyInfo, targetMintInfo, baseMintInfo] = await Promise.all([
+      // Fetch the curve definition + decimals for both mints in parallel
+      // — we need the decimals before we can convert the on-chain
+      // coefficients back into the human-units the UI expects.
+      const [curve, supplyInfo, targetMintInfo, baseMintInfo] = await Promise.all([
+        sdk.getCurve(tokenBonding.curve),
         sdk.provider.connection.getTokenSupply(tokenBonding.targetMint),
         sdk.provider.connection.getTokenSupply(tokenBonding.targetMint),
         sdk.provider.connection.getTokenSupply(tokenBonding.baseMint),
       ]);
-      if (cancelled) return;
+      if (cancelled || !curve) return;
+      const piece = curve.definition.timeV0.curves[0]?.curve;
+      if (!piece || !("exponentialCurveV0" in piece)) return;
+      const e = piece.exponentialCurveV0;
+      const onChainCurve: CurveParams = {
+        c: rawToHumanNumber(e.c.toString()),
+        b: rawToHumanNumber(e.b.toString()),
+        pow: e.pow,
+        frac: e.frac,
+      };
+      const tDec = targetMintInfo.value.decimals;
+      const bDec = baseMintInfo.value.decimals;
+      setCurveParams(scaleCurveOnChainToHuman(onChainCurve, bDec, tDec));
       setSupplyRaw(Number(supplyInfo.value.amount));
-      setTargetDecimals(targetMintInfo.value.decimals);
-      setBaseDecimals(baseMintInfo.value.decimals);
+      setTargetDecimals(tDec);
+      setBaseDecimals(bDec);
     })();
     return () => {
       cancelled = true;
@@ -88,7 +96,9 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
             {curveParams && (
               <BondingCurveChart
                 curve={curveParams}
-                currentSupply={supplyRaw}
+                // Curve is now in human units, so the chart's "current
+                // supply" line has to be too.
+                currentSupply={supplyRaw / Math.pow(10, targetDecimals)}
                 baseMintSymbol="base"
               />
             )}
@@ -100,7 +110,7 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
             <SwapPanel
               tokenBonding={bondingPk.toBase58()}
               curve={curveParams}
-              currentSupply={supplyRaw}
+              currentSupply={supplyRaw / Math.pow(10, targetDecimals)}
               baseSymbol="base"
               targetSymbol="token"
               targetDecimals={targetDecimals}
@@ -112,15 +122,19 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
 
       <section className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Stat
-          label="Price (raw)"
-          value={price !== undefined ? formatNumber(price, 0) : "—"}
+          label="Price"
+          value={price !== undefined ? formatNumber(price, 6) : "—"}
         />
-        <Stat label="Supply (raw)" value={formatNumber(supplyRaw, 0)} />
         <Stat
-          label="Reserve (raw)"
+          label="Supply"
+          value={formatNumber(supplyRaw / Math.pow(10, targetDecimals), 4)}
+        />
+        <Stat
+          label="Reserve"
           value={formatNumber(
-            tokenBonding.reserveBalanceFromBonding.toNumber(),
-            0,
+            tokenBonding.reserveBalanceFromBonding.toNumber() /
+              Math.pow(10, baseDecimals),
+            6,
           )}
         />
         <Stat label="Index" value={tokenBonding.index.toString()} />
