@@ -43,9 +43,13 @@ export function BondingCurveChart({
   );
 
   return (
-    <div className={cn("w-full", className)}>
+    // Recharts' ResponsiveContainer measures its parent's clientWidth /
+    // clientHeight at mount time. Without `h-full` here the wrapper has
+    // height 0, the container measures to 0, and the chart silently
+    // renders nothing inside an otherwise correct-looking card.
+    <div className={cn("h-full w-full", className)}>
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
+        <ComposedChart data={data} margin={{ top: 20, right: 16, bottom: 8, left: 8 }}>
           <defs>
             <linearGradient id="reserveFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="rgb(139 92 246)" stopOpacity={0.45} />
@@ -99,7 +103,13 @@ export function BondingCurveChart({
             x={currentSupply}
             stroke="rgb(244 114 182)"
             strokeDasharray="4 4"
-            label={{ value: "now", position: "top", fill: "rgb(244 114 182)", fontSize: 10 }}
+            label={{
+              value: "now",
+              position: "insideTop",
+              fill: "rgb(244 114 182)",
+              fontSize: 10,
+              offset: 4,
+            }}
           />
         </ComposedChart>
       </ResponsiveContainer>

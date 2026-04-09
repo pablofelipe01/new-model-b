@@ -31,7 +31,9 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
   const { sdk } = useSdk();
 
   const [curveParams, setCurveParams] = useState<CurveParams | null>(null);
-  const [supply, setSupply] = useState<number>(0);
+  const [supplyRaw, setSupplyRaw] = useState<number>(0);
+  const [targetDecimals, setTargetDecimals] = useState<number>(9);
+  const [baseDecimals, setBaseDecimals] = useState<number>(9);
 
   useEffect(() => {
     if (!sdk || !tokenBonding) return;
@@ -48,8 +50,16 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
         pow: e.pow,
         frac: e.frac,
       });
-      const s = await sdk.provider.connection.getTokenSupply(tokenBonding.targetMint);
-      if (!cancelled) setSupply(Number(s.value.amount));
+      // Pull supply + decimals for both mints in parallel.
+      const [supplyInfo, targetMintInfo, baseMintInfo] = await Promise.all([
+        sdk.provider.connection.getTokenSupply(tokenBonding.targetMint),
+        sdk.provider.connection.getTokenSupply(tokenBonding.targetMint),
+        sdk.provider.connection.getTokenSupply(tokenBonding.baseMint),
+      ]);
+      if (cancelled) return;
+      setSupplyRaw(Number(supplyInfo.value.amount));
+      setTargetDecimals(targetMintInfo.value.decimals);
+      setBaseDecimals(baseMintInfo.value.decimals);
     })();
     return () => {
       cancelled = true;
@@ -78,7 +88,7 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
             {curveParams && (
               <BondingCurveChart
                 curve={curveParams}
-                currentSupply={supply}
+                currentSupply={supplyRaw}
                 baseMintSymbol="base"
               />
             )}
@@ -90,9 +100,11 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
             <SwapPanel
               tokenBonding={bondingPk.toBase58()}
               curve={curveParams}
-              currentSupply={supply}
+              currentSupply={supplyRaw}
               baseSymbol="base"
               targetSymbol="token"
+              targetDecimals={targetDecimals}
+              baseDecimals={baseDecimals}
             />
           )}
         </div>
@@ -100,10 +112,17 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
 
       <section className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Stat label="Price" value={price !== undefined ? formatNumber(price, 8) : "—"} />
-        <Stat label="Supply" value={formatNumber(supply, 0)} />
         <Stat
-          label="Reserve (virtual)"
-          value={formatNumber(tokenBonding.reserveBalanceFromBonding.toNumber(), 0)}
+          label="Supply"
+          value={formatNumber(supplyRaw / Math.pow(10, targetDecimals), 4)}
+        />
+        <Stat
+          label="Reserve"
+          value={formatNumber(
+            tokenBonding.reserveBalanceFromBonding.toNumber() /
+              Math.pow(10, baseDecimals),
+            6,
+          )}
         />
         <Stat label="Index" value={tokenBonding.index.toString()} />
       </section>
