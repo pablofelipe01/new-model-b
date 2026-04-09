@@ -79,10 +79,18 @@ export function SwapPanel({
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="mb-4 flex rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800">
+      <div
+        role="tablist"
+        aria-label="Trade mode"
+        className="mb-4 flex rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800"
+      >
         {(["buy", "sell"] as const).map((m) => (
           <button
             key={m}
+            type="button"
+            role="tab"
+            aria-selected={mode === m ? "true" : "false"}
+            aria-label={`Switch to ${m} mode`}
             onClick={() => setMode(m)}
             className={cn(
               "flex-1 rounded-md py-2 text-sm font-medium capitalize transition",
@@ -96,14 +104,20 @@ export function SwapPanel({
         ))}
       </div>
 
-      <label className="mb-1 block text-xs uppercase tracking-wide text-zinc-500">
+      <label
+        htmlFor="swap-amount"
+        className="mb-1 block text-xs uppercase tracking-wide text-zinc-500"
+      >
         Amount ({targetSymbol})
       </label>
       <input
+        id="swap-amount"
         type="number"
         min="0"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
+        aria-label={`Amount in ${targetSymbol}`}
+        placeholder="0"
         className="mb-4 w-full rounded-lg border border-zinc-200 bg-transparent px-3 py-2 text-lg font-medium focus:border-brand-500 focus:outline-none dark:border-zinc-700"
       />
 
@@ -122,11 +136,19 @@ export function SwapPanel({
         </div>
       </dl>
 
-      <div className="mb-4 flex items-center gap-2 text-xs">
+      <div
+        role="radiogroup"
+        aria-label="Slippage tolerance"
+        className="mb-4 flex items-center gap-2 text-xs"
+      >
         <span className="text-zinc-500">Slippage</span>
         {[0.005, 0.01, 0.05].map((s) => (
           <button
             key={s}
+            type="button"
+            role="radio"
+            aria-checked={slippage === s ? "true" : "false"}
+            aria-label={`${(s * 100).toFixed(s < 0.01 ? 1 : 0)} percent slippage`}
             onClick={() => setSlippage(s)}
             className={cn(
               "rounded px-2 py-1",
@@ -141,8 +163,10 @@ export function SwapPanel({
       </div>
 
       <button
+        type="button"
         onClick={onSubmit}
         disabled={swap.buying || swap.selling || numericHuman <= 0}
+        aria-label={mode === "buy" ? "Buy tokens" : "Sell tokens"}
         className="w-full rounded-xl bg-brand-500 py-3 font-semibold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {swap.buying || swap.selling ? "Submitting…" : mode === "buy" ? "Buy" : "Sell"}

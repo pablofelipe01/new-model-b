@@ -117,6 +117,8 @@ export function LaunchForm() {
         <Card title="1. Token metadata">
           <Field label="Name">
             <input
+              title="Token name"
+              aria-label="Token name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="input"
@@ -125,6 +127,8 @@ export function LaunchForm() {
           </Field>
           <Field label="Symbol">
             <input
+              title="Token symbol"
+              aria-label="Token symbol"
               value={symbol}
               maxLength={10}
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}
@@ -134,6 +138,8 @@ export function LaunchForm() {
           </Field>
           <Field label="Description">
             <textarea
+              title="Token description"
+              aria-label="Token description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="input min-h-[80px]"
@@ -142,12 +148,15 @@ export function LaunchForm() {
           </Field>
           <Field label="Decimals">
             <input
+              title="Token decimals"
+              aria-label="Token decimals"
               type="number"
               min={0}
               max={18}
               value={decimals}
               onChange={(e) => setDecimals(Number(e.target.value))}
               className="input"
+              placeholder="9"
             />
           </Field>
           <NavButtons onNext={() => setStep(2)} disableNext={!name || !symbol} />
@@ -158,6 +167,8 @@ export function LaunchForm() {
         <Card title="2. Bonding curve">
           <Field label="Base token">
             <select
+              title="Base token"
+              aria-label="Base token"
               value={baseMint}
               onChange={(e) => setBaseMint(e.target.value)}
               className="input"
@@ -175,6 +186,8 @@ export function LaunchForm() {
               {PRESETS.map((p) => (
                 <button
                   key={p.key}
+                  type="button"
+                  aria-label={`Use ${p.label} preset`}
                   onClick={() => setCurveParams(CURVES[p.key])}
                   className="rounded-lg border border-zinc-200 px-3 py-1 text-sm hover:border-brand-500 dark:border-zinc-700"
                 >
@@ -187,40 +200,52 @@ export function LaunchForm() {
           <div className="grid grid-cols-2 gap-3">
             <Field label="c (slope)">
               <input
+                title="Coefficient c (slope)"
+                aria-label="Coefficient c (slope)"
                 type="number"
                 step="0.01"
                 value={curveParams.c}
                 onChange={(e) => setCurveParams({ ...curveParams, c: Number(e.target.value) })}
                 className="input"
+                placeholder="1"
               />
             </Field>
             <Field label="b (floor)">
               <input
+                title="Coefficient b (floor)"
+                aria-label="Coefficient b (floor)"
                 type="number"
                 step="0.01"
                 value={curveParams.b}
                 onChange={(e) => setCurveParams({ ...curveParams, b: Number(e.target.value) })}
                 className="input"
+                placeholder="0"
               />
             </Field>
             <Field label="pow">
               <input
+                title="Numerator of the rational exponent"
+                aria-label="Numerator of the rational exponent"
                 type="number"
                 min={0}
                 max={10}
                 value={curveParams.pow}
                 onChange={(e) => setCurveParams({ ...curveParams, pow: Number(e.target.value) })}
                 className="input"
+                placeholder="1"
               />
             </Field>
             <Field label="frac">
               <input
+                title="Denominator of the rational exponent"
+                aria-label="Denominator of the rational exponent"
                 type="number"
                 min={1}
                 max={10}
                 value={curveParams.frac}
                 onChange={(e) => setCurveParams({ ...curveParams, frac: Number(e.target.value) })}
                 className="input"
+                placeholder="2"
               />
             </Field>
           </div>
@@ -237,6 +262,8 @@ export function LaunchForm() {
 
           <Field label="Mint cap (optional)">
             <input
+              title="Optional maximum total supply"
+              aria-label="Optional maximum total supply"
               value={mintCap}
               onChange={(e) => setMintCap(e.target.value)}
               className="input"
@@ -245,6 +272,8 @@ export function LaunchForm() {
           </Field>
           <Field label="Go-live date">
             <input
+              title="Date the bonding starts accepting buys"
+              aria-label="Go-live date"
               type="datetime-local"
               value={goLive}
               onChange={(e) => setGoLive(e.target.value)}
@@ -254,6 +283,8 @@ export function LaunchForm() {
           <div className="grid grid-cols-2 gap-3">
             <Field label="Buy royalty %">
               <input
+                title="Buy royalty percentage"
+                aria-label="Buy royalty percentage"
                 type="number"
                 min={0}
                 max={100}
@@ -261,10 +292,13 @@ export function LaunchForm() {
                 value={buyRoyalty}
                 onChange={(e) => setBuyRoyalty(Number(e.target.value))}
                 className="input"
+                placeholder="0"
               />
             </Field>
             <Field label="Sell royalty %">
               <input
+                title="Sell royalty percentage"
+                aria-label="Sell royalty percentage"
                 type="number"
                 min={0}
                 max={100}
@@ -272,6 +306,7 @@ export function LaunchForm() {
                 value={sellRoyalty}
                 onChange={(e) => setSellRoyalty(Number(e.target.value))}
                 className="input"
+                placeholder="0"
               />
             </Field>
           </div>
@@ -293,6 +328,8 @@ export function LaunchForm() {
           </ul>
 
           <button
+            type="button"
+            aria-label="Launch token"
             onClick={onLaunch}
             disabled={submitting || !ready}
             className="w-full rounded-xl bg-brand-500 py-3 font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
@@ -384,6 +421,8 @@ function NavButtons({
     <div className="mt-2 flex justify-between gap-2">
       {onBack ? (
         <button
+          type="button"
+          aria-label="Go back to previous step"
           onClick={onBack}
           className="rounded-lg border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700"
         >
@@ -394,6 +433,8 @@ function NavButtons({
       )}
       {!hideNext && onNext && (
         <button
+          type="button"
+          aria-label="Continue to next step"
           onClick={onNext}
           disabled={disableNext}
           className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
