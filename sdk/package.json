@@ -1,0 +1,29 @@
+{
+  "name": "@new-model-b/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for the spl-token-bonding Anchor program",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "sync-idl": "cp ../target/idl/spl_token_bonding.json src/idl/spl_token_bonding.json && cp ../target/types/spl_token_bonding.ts src/idl/spl_token_bonding.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana/spl-token": "^0.4.0",
+    "@solana/web3.js": "^1.91.0",
+    "bn.js": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.5",
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  }
+}

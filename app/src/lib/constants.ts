@@ -1,0 +1,47 @@
+import { PublicKey } from "@solana/web3.js";
+
+// PERSONALIZAR cuando haya nombre real.
+export const PROJECT_NAME = "new-model-b";
+export const PROJECT_DESCRIPTION = "Configurable bonding curves on Solana";
+export const PROJECT_URL = "https://example.com";
+
+export const MAINNET_RPC =
+  process.env.NEXT_PUBLIC_MAINNET_RPC ?? "https://api.mainnet-beta.solana.com";
+export const DEVNET_RPC =
+  process.env.NEXT_PUBLIC_DEVNET_RPC ?? "https://api.devnet.solana.com";
+
+/** Cluster used by the app. Override with NEXT_PUBLIC_CLUSTER. */
+export const CLUSTER = (process.env.NEXT_PUBLIC_CLUSTER ?? "devnet") as "devnet" | "mainnet";
+export const RPC_ENDPOINT = CLUSTER === "mainnet" ? MAINNET_RPC : DEVNET_RPC;
+
+/** Replace after `anchor build && anchor keys list`. */
+export const TOKEN_BONDING_PROGRAM_ID = new PublicKey(
+  process.env.NEXT_PUBLIC_PROGRAM_ID ?? "41nppqSazESeBmrgnud2j5Nz1MbsnPGeyAryPcKAefqa",
+);
+
+export interface BaseTokenInfo {
+  mint: string;
+  symbol: string;
+  decimals: number;
+}
+
+export const BASE_TOKENS: Record<"devnet" | "mainnet", BaseTokenInfo[]> = {
+  devnet: [
+    // Localnet test token created with `spl-token create-token`. Replace
+    // with the SOL/USDC mints below when deploying to actual devnet.
+    {
+      mint: "5GkZWyykUuYUbyrN6NsAW1AHNH6183cpihFguqGXLRwp",
+      symbol: "TEST",
+      decimals: 9,
+    },
+    // The wrapped-SOL mint only exists on real devnet/mainnet — keep it
+    // here so devnet deploys still work, but the localnet form will pick
+    // the TEST mint by default since it's first.
+    { mint: "So11111111111111111111111111111111111111112", symbol: "SOL", decimals: 9 },
+  ],
+  mainnet: [
+    { mint: "So11111111111111111111111111111111111111112", symbol: "SOL", decimals: 9 },
+    { mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", symbol: "USDC", decimals: 6 },
+    { mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", symbol: "USDT", decimals: 6 },
+  ],
+};

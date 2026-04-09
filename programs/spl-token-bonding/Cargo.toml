@@ -1,0 +1,29 @@
+[package]
+name = "spl-token-bonding"
+version = "0.1.0"
+description = "Configurable bonding curve protocol for Solana SPL tokens"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "spl_token_bonding"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+# Required by Anchor 0.30+ to generate the IDL during `anchor build`.
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+
+[dependencies]
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+anchor-spl = { version = "0.31.1", features = ["token", "associated_token"] }
+spl-token = { version = "4.0.0", features = ["no-entrypoint"] }
+# spl-token-2022 1.0.0 ships a `confidential_transfer::verify_proof`
+# function whose stack frame exceeds the BPF 4 KB budget. We don't use
+# Token-2022 in the on-chain instructions yet (it's a Phase 5 enhancement),
+# so removing the dep + the `token_2022` feature on anchor-spl above
+# unblocks the build entirely.
+uint = { version = "0.9.5", default-features = false }

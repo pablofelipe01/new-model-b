@@ -1,0 +1,1498 @@
+{
+  "address": "41nppqSazESeBmrgnud2j5Nz1MbsnPGeyAryPcKAefqa",
+  "metadata": {
+    "name": "spl_token_bonding",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Configurable bonding curve protocol for Solana SPL tokens"
+  },
+  "instructions": [
+    {
+      "name": "buy_v1",
+      "docs": [
+        "Buy tokens along the curve. Either fix `desired_target_amount` and",
+        "compute the base cost, or fix `base_amount` and compute the tokens out."
+      ],
+      "discriminator": [
+        69,
+        255,
+        7,
+        52,
+        119,
+        228,
+        164,
+        6
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_bonding",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  45,
+                  98,
+                  111,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "target_mint"
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding.index",
+                "account": "TokenBondingV0"
+              }
+            ]
+          }
+        },
+        {
+          "name": "curve"
+        },
+        {
+          "name": "base_mint",
+          "writable": true
+        },
+        {
+          "name": "target_mint",
+          "writable": true
+        },
+        {
+          "name": "target_mint_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  45,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding"
+              }
+            ]
+          }
+        },
+        {
+          "name": "base_storage",
+          "writable": true
+        },
+        {
+          "name": "buy_base_royalties",
+          "writable": true
+        },
+        {
+          "name": "buy_target_royalties",
+          "writable": true
+        },
+        {
+          "name": "source",
+          "docs": [
+            "Source of base tokens spent by the buyer."
+          ],
+          "writable": true
+        },
+        {
+          "name": "destination",
+          "docs": [
+            "Destination of newly minted target tokens."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "clock",
+          "address": "SysvarC1ock11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "BuyV1Args"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_curve_v0",
+      "docs": [
+        "Create a reusable curve definition account."
+      ],
+      "discriminator": [
+        205,
+        203,
+        250,
+        201,
+        156,
+        135,
+        114,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "curve",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "CreateCurveArgsV0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_program_v0",
+      "docs": [
+        "Initialize the global program state. Idempotent: callable once."
+      ],
+      "discriminator": [
+        204,
+        24,
+        212,
+        47,
+        180,
+        190,
+        173,
+        190
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializeProgramArgsV0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_token_bonding_v0",
+      "docs": [
+        "Initialize a token bonding tied to a (base_mint, target_mint, curve).",
+        "If `target_mint` is freshly created, the bonding's PDA mint authority",
+        "becomes its mint authority."
+      ],
+      "discriminator": [
+        4,
+        205,
+        255,
+        32,
+        185,
+        121,
+        134,
+        61
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "target_mint"
+        },
+        {
+          "name": "curve"
+        },
+        {
+          "name": "token_bonding",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  45,
+                  98,
+                  111,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "target_mint"
+              },
+              {
+                "kind": "arg",
+                "path": "args.index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "target_mint_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  45,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding"
+              }
+            ]
+          }
+        },
+        {
+          "name": "base_storage",
+          "docs": [
+            "Reserve token account, owned by the storage authority PDA."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  97,
+                  115,
+                  101,
+                  45,
+                  115,
+                  116,
+                  111,
+                  114,
+                  97,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding"
+              }
+            ]
+          }
+        },
+        {
+          "name": "base_storage_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  111,
+                  114,
+                  97,
+                  103,
+                  101,
+                  45,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buy_base_royalties",
+          "docs": [
+            "Royalty destinations. Stored as `UncheckedAccount` rather than",
+            "`Account<TokenAccount>` to keep the `try_accounts` stack frame",
+            "under the 4 KB BPF limit — full deserialization of 4 token",
+            "accounts pushes the frame over budget. The buy/sell instructions",
+            "re-validate these as `TokenAccount`s when actually used, so the",
+            "looser typing here is safe."
+          ]
+        },
+        {
+          "name": "buy_target_royalties"
+        },
+        {
+          "name": "sell_base_royalties"
+        },
+        {
+          "name": "sell_target_royalties"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializeTokenBondingArgsV0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sell_v1",
+      "docs": [
+        "Sell tokens back along the curve."
+      ],
+      "discriminator": [
+        19,
+        129,
+        236,
+        31,
+        99,
+        212,
+        19,
+        208
+      ],
+      "accounts": [
+        {
+          "name": "seller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_bonding",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  45,
+                  98,
+                  111,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "target_mint"
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding.index",
+                "account": "TokenBondingV0"
+              }
+            ]
+          }
+        },
+        {
+          "name": "curve"
+        },
+        {
+          "name": "base_mint",
+          "writable": true
+        },
+        {
+          "name": "target_mint",
+          "writable": true
+        },
+        {
+          "name": "base_storage",
+          "writable": true
+        },
+        {
+          "name": "base_storage_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  111,
+                  114,
+                  97,
+                  103,
+                  101,
+                  45,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sell_base_royalties",
+          "writable": true
+        },
+        {
+          "name": "sell_target_royalties",
+          "writable": true
+        },
+        {
+          "name": "source",
+          "docs": [
+            "Source of target tokens being sold (seller's ATA)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "destination",
+          "docs": [
+            "Destination of base tokens (seller's base ATA)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "target_mint_authority",
+          "docs": [
+            "Mint authority PDA — needed to mint the target-side royalty."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  45,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "clock",
+          "address": "SysvarC1ock11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "SellV1Args"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "transfer_reserves_v0",
+      "docs": [
+        "Move base reserves out of `base_storage`. Only the reserve authority",
+        "can call this. Useful for migrations."
+      ],
+      "discriminator": [
+        7,
+        142,
+        255,
+        166,
+        164,
+        247,
+        159,
+        157
+      ],
+      "accounts": [
+        {
+          "name": "reserve_authority",
+          "signer": true
+        },
+        {
+          "name": "token_bonding",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  45,
+                  98,
+                  111,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding.target_mint",
+                "account": "TokenBondingV0"
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding.index",
+                "account": "TokenBondingV0"
+              }
+            ]
+          }
+        },
+        {
+          "name": "base_storage",
+          "writable": true
+        },
+        {
+          "name": "base_storage_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  111,
+                  114,
+                  97,
+                  103,
+                  101,
+                  45,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_bonding"
+              }
+            ]
+          }
+        },
+        {
+          "name": "destination",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "TransferReservesArgsV0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_token_bonding_v0",
+      "docs": [
+        "Update authorities, royalty destinations, freeze flags."
+      ],
+      "discriminator": [
+        10,
+        181,
+        83,
+        74,
+        124,
+        211,
+        123,
+        48
+      ],
+      "accounts": [
+        {
+          "name": "general_authority",
+          "signer": true
+        },
+        {
+          "name": "token_bonding",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "UpdateTokenBondingArgsV0"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CurveV0",
+      "discriminator": [
+        77,
+        25,
+        232,
+        252,
+        138,
+        96,
+        1,
+        172
+      ]
+    },
+    {
+      "name": "ProgramStateV0",
+      "discriminator": [
+        102,
+        65,
+        191,
+        196,
+        12,
+        36,
+        248,
+        123
+      ]
+    },
+    {
+      "name": "TokenBondingV0",
+      "discriminator": [
+        83,
+        36,
+        213,
+        250,
+        189,
+        200,
+        154,
+        127
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6001,
+      "name": "ArithmeticUnderflow",
+      "msg": "Arithmetic underflow"
+    },
+    {
+      "code": 6002,
+      "name": "DivisionByZero",
+      "msg": "Division by zero"
+    },
+    {
+      "code": 6003,
+      "name": "U64ConversionFailed",
+      "msg": "Conversion to u64 overflowed"
+    },
+    {
+      "code": 6004,
+      "name": "NewtonDidNotConverge",
+      "msg": "Newton's method failed to converge"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidCurve",
+      "msg": "Invalid curve parameters"
+    },
+    {
+      "code": 6006,
+      "name": "BuyFrozen",
+      "msg": "Buys are frozen on this token bonding"
+    },
+    {
+      "code": 6007,
+      "name": "SellFrozen",
+      "msg": "Sells are frozen on this token bonding"
+    },
+    {
+      "code": 6008,
+      "name": "NotLiveYet",
+      "msg": "Bonding is not yet live"
+    },
+    {
+      "code": 6009,
+      "name": "BuyWindowClosed",
+      "msg": "Buy window has closed"
+    },
+    {
+      "code": 6010,
+      "name": "SlippageExceeded",
+      "msg": "Slippage exceeded — price moved beyond max_price / below min_price"
+    },
+    {
+      "code": 6011,
+      "name": "MintCapExceeded",
+      "msg": "Mint cap exceeded"
+    },
+    {
+      "code": 6012,
+      "name": "PurchaseCapExceeded",
+      "msg": "Purchase cap exceeded"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidRoyalty",
+      "msg": "Royalty percentage exceeds 100%"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidAccount",
+      "msg": "Provided account does not match expected PDA / mint"
+    },
+    {
+      "code": 6015,
+      "name": "MissingAuthority",
+      "msg": "Missing required authority signature"
+    },
+    {
+      "code": 6016,
+      "name": "AmbiguousBuyArgs",
+      "msg": "Both desired_target_amount and base_amount are set, exactly one is required"
+    },
+    {
+      "code": 6017,
+      "name": "MissingBuyArgs",
+      "msg": "Neither desired_target_amount nor base_amount were set"
+    },
+    {
+      "code": 6018,
+      "name": "EmptyCurve",
+      "msg": "Curve definition is empty"
+    },
+    {
+      "code": 6019,
+      "name": "InsolventReserve",
+      "msg": "Reserve would become insolvent"
+    }
+  ],
+  "types": [
+    {
+      "name": "BuyV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "desired_target_amount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "base_amount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "slippage_max_base",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "slippage_min_target",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateCurveArgsV0",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "definition",
+            "type": {
+              "defined": {
+                "name": "PiecewiseCurve"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CurveV0",
+      "docs": [
+        "A reusable curve definition. Token bondings reference a curve account",
+        "rather than embedding the math, so the same curve can power many bondings."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "definition",
+            "type": {
+              "defined": {
+                "name": "PiecewiseCurve"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeProgramArgsV0",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wrapped_sol_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "sol_storage",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeTokenBondingArgsV0",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "index",
+            "type": "u16"
+          },
+          {
+            "name": "go_live_unix_time",
+            "type": "i64"
+          },
+          {
+            "name": "freeze_buy_unix_time",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "buy_base_royalty_percentage",
+            "type": "u32"
+          },
+          {
+            "name": "buy_target_royalty_percentage",
+            "type": "u32"
+          },
+          {
+            "name": "sell_base_royalty_percentage",
+            "type": "u32"
+          },
+          {
+            "name": "sell_target_royalty_percentage",
+            "type": "u32"
+          },
+          {
+            "name": "mint_cap",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "purchase_cap",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "general_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "reserve_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "curve_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "buy_frozen",
+            "type": "bool"
+          },
+          {
+            "name": "ignore_external_reserve_changes",
+            "type": "bool"
+          },
+          {
+            "name": "ignore_external_supply_changes",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PiecewiseCurve",
+      "docs": [
+        "Outer wrapper enum so we can later add `LinearV0`, `LogarithmicV0`, etc."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "TimeV0",
+            "fields": [
+              {
+                "name": "curves",
+                "type": {
+                  "vec": {
+                    "defined": {
+                      "name": "TimeCurveV0"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "PrimitiveCurve",
+      "docs": [
+        "We avoid tuple variants on enums that cross the IDL boundary because",
+        "Anchor 0.30+ encodes tuple variant fields as positional `_0` keys in",
+        "the TS coder, which is easy to mis-serialize from the client. Inlining",
+        "the named fields makes the wire format unambiguous on both sides."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "ExponentialCurveV0",
+            "fields": [
+              {
+                "name": "c",
+                "type": "u128"
+              },
+              {
+                "name": "b",
+                "type": "u128"
+              },
+              {
+                "name": "pow",
+                "type": "u8"
+              },
+              {
+                "name": "frac",
+                "type": "u8"
+              }
+            ]
+          },
+          {
+            "name": "ConstantPriceCurveV0",
+            "fields": [
+              {
+                "name": "price",
+                "type": "u64"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramStateV0",
+      "docs": [
+        "Global program state. There is exactly one of these, derived at PDA",
+        "`[\"state\"]`. Holds canonical references for the wrapped SOL mint and",
+        "the program's SOL storage."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wrapped_sol_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "sol_storage",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump_seed",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SellV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "target_amount",
+            "type": "u64"
+          },
+          {
+            "name": "slippage_min_base",
+            "docs": [
+              "Minimum base tokens the seller is willing to receive (slippage floor)."
+            ],
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TimeCurveV0",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "offset",
+            "type": "u64"
+          },
+          {
+            "name": "curve",
+            "type": {
+              "defined": {
+                "name": "PrimitiveCurve"
+              }
+            }
+          },
+          {
+            "name": "buy_transition_fees",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "TransitionFeeV0"
+                }
+              }
+            }
+          },
+          {
+            "name": "sell_transition_fees",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "TransitionFeeV0"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenBondingV0",
+      "docs": [
+        "One bonding curve instance. The `(target_mint, index)` pair is unique."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "base_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "target_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "general_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "reserve_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "curve_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "base_storage",
+            "docs": [
+              "Token account holding the base reserves."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "buy_base_royalties",
+            "type": "pubkey"
+          },
+          {
+            "name": "buy_target_royalties",
+            "type": "pubkey"
+          },
+          {
+            "name": "sell_base_royalties",
+            "type": "pubkey"
+          },
+          {
+            "name": "sell_target_royalties",
+            "type": "pubkey"
+          },
+          {
+            "name": "buy_base_royalty_percentage",
+            "type": "u32"
+          },
+          {
+            "name": "buy_target_royalty_percentage",
+            "type": "u32"
+          },
+          {
+            "name": "sell_base_royalty_percentage",
+            "type": "u32"
+          },
+          {
+            "name": "sell_target_royalty_percentage",
+            "type": "u32"
+          },
+          {
+            "name": "curve",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_cap",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "purchase_cap",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "go_live_unix_time",
+            "type": "i64"
+          },
+          {
+            "name": "freeze_buy_unix_time",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "created_at_unix_time",
+            "type": "i64"
+          },
+          {
+            "name": "buy_frozen",
+            "type": "bool"
+          },
+          {
+            "name": "sell_frozen",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "u16"
+          },
+          {
+            "name": "bump_seed",
+            "type": "u8"
+          },
+          {
+            "name": "base_storage_bump_seed",
+            "type": "u8"
+          },
+          {
+            "name": "target_mint_authority_bump_seed",
+            "type": "u8"
+          },
+          {
+            "name": "reserve_authority_bump_seed",
+            "type": "u8"
+          },
+          {
+            "name": "reserve_balance_from_bonding",
+            "docs": [
+              "Virtual reserve / supply tracked by the program. Used when the",
+              "real mint can be inflated externally and we still want a stable",
+              "curve domain."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "supply_from_bonding",
+            "type": "u64"
+          },
+          {
+            "name": "ignore_external_reserve_changes",
+            "type": "bool"
+          },
+          {
+            "name": "ignore_external_supply_changes",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferReservesArgsV0",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransitionFeeV0",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "percentage",
+            "docs": [
+              "Fee in basis points. 100 == 1.00%."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "interval",
+            "docs": [
+              "Time in seconds over which the fee linearly decays to zero."
+            ],
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateTokenBondingArgsV0",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "general_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "reserve_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "curve_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "buy_base_royalty_percentage",
+            "type": {
+              "option": "u32"
+            }
+          },
+          {
+            "name": "buy_target_royalty_percentage",
+            "type": {
+              "option": "u32"
+            }
+          },
+          {
+            "name": "sell_base_royalty_percentage",
+            "type": {
+              "option": "u32"
+            }
+          },
+          {
+            "name": "sell_target_royalty_percentage",
+            "type": {
+              "option": "u32"
+            }
+          },
+          {
+            "name": "buy_frozen",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "sell_frozen",
+            "type": {
+              "option": "bool"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
