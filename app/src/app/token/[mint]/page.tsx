@@ -111,17 +111,16 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
       </div>
 
       <section className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat label="Price" value={price !== undefined ? formatNumber(price, 8) : "—"} />
         <Stat
-          label="Supply"
-          value={formatNumber(supplyRaw / Math.pow(10, targetDecimals), 4)}
+          label="Price (raw)"
+          value={price !== undefined ? formatNumber(price, 0) : "—"}
         />
+        <Stat label="Supply (raw)" value={formatNumber(supplyRaw, 0)} />
         <Stat
-          label="Reserve"
+          label="Reserve (raw)"
           value={formatNumber(
-            tokenBonding.reserveBalanceFromBonding.toNumber() /
-              Math.pow(10, baseDecimals),
-            6,
+            tokenBonding.reserveBalanceFromBonding.toNumber(),
+            0,
           )}
         />
         <Stat label="Index" value={tokenBonding.index.toString()} />

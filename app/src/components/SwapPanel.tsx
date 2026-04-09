@@ -80,7 +80,6 @@ export function SwapPanel({
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <div
-        role="tablist"
         aria-label="Trade mode"
         className="mb-4 flex rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800"
       >
@@ -88,8 +87,6 @@ export function SwapPanel({
           <button
             key={m}
             type="button"
-            role="tab"
-            aria-selected={mode === m ? "true" : "false"}
             aria-label={`Switch to ${m} mode`}
             onClick={() => setMode(m)}
             className={cn(
@@ -137,7 +134,6 @@ export function SwapPanel({
       </dl>
 
       <div
-        role="radiogroup"
         aria-label="Slippage tolerance"
         className="mb-4 flex items-center gap-2 text-xs"
       >
@@ -146,8 +142,6 @@ export function SwapPanel({
           <button
             key={s}
             type="button"
-            role="radio"
-            aria-checked={slippage === s ? "true" : "false"}
             aria-label={`${(s * 100).toFixed(s < 0.01 ? 1 : 0)} percent slippage`}
             onClick={() => setSlippage(s)}
             className={cn(
