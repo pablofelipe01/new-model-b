@@ -33,7 +33,9 @@ export const BASE_TOKENS: Record<"devnet" | "mainnet", BaseTokenInfo[]> = {
       symbol: "TEST",
       decimals: 9,
     },
-    { mint: "So11111111111111111111111111111111111111112", symbol: "SOL", decimals: 9 },
+    // Native SOL (So111...112) requires wrapped-SOL handling that the SDK
+    // doesn't implement yet (Phase 5). Disabled to prevent runtime errors.
+    // { mint: "So11111111111111111111111111111111111111112", symbol: "SOL", decimals: 9 },
   ],
   mainnet: [
     { mint: "So11111111111111111111111111111111111111112", symbol: "SOL", decimals: 9 },
