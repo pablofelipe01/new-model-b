@@ -17,11 +17,35 @@ import { BondingCurveChart } from "./BondingCurveChart";
 
 type Step = 1 | 2 | 3;
 
-const PRESETS: { label: string; key: keyof typeof CURVES }[] = [
-  { label: "Square root", key: "sqrt" },
-  { label: "Linear", key: "linear" },
-  { label: "Quadratic", key: "quadratic" },
-  { label: "Fixed price", key: "fixed" },
+const PRESETS: {
+  label: string;
+  key: keyof typeof CURVES;
+  description: string;
+}[] = [
+  {
+    label: "Square root",
+    key: "sqrt",
+    description:
+      "Price grows slowly at first, then faster. Most popular for community tokens — early buyers get a better deal.",
+  },
+  {
+    label: "Linear",
+    key: "linear",
+    description:
+      "Price grows at a constant rate. Each new token costs the same amount more than the last one.",
+  },
+  {
+    label: "Quadratic",
+    key: "quadratic",
+    description:
+      "Price grows very fast. Heavily rewards the earliest buyers. Best for scarce, high-demand tokens.",
+  },
+  {
+    label: "Fixed price",
+    key: "fixed",
+    description:
+      "Every token costs the same, regardless of how many exist. No bonding curve — just a fixed rate.",
+  },
 ];
 
 /**
@@ -40,29 +64,36 @@ export function LaunchForm() {
   const [decimals, setDecimals] = useState(9);
 
   // Step 2
-  const [curveParams, setCurveParams] = useState<CurveParams>(CURVES.sqrt);
+  const [selectedPreset, setSelectedPreset] = useState(PRESETS[0]);
   const [baseMint, setBaseMint] = useState(BASE_TOKENS[CLUSTER][0].mint);
-  const [mintCap, setMintCap] = useState<string>("");
-  // `<input type="datetime-local">` reads/writes its value in LOCAL time
-  // (no timezone), so we have to format the default with the user's
-  // local offset. Using `toISOString().slice(0,16)` gives a UTC string,
-  // which the input then re-interprets as local — pushing the go-live
-  // time hours into the future and tripping the on-chain `NotLiveYet`
-  // error.
-  const [goLive, setGoLive] = useState<string>(() => {
-    const now = new Date();
-    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
-    return local.toISOString().slice(0, 16);
-  });
+  const [startingPrice, setStartingPrice] = useState(0);
+  const [growthRate, setGrowthRate] = useState(1);
   const [buyRoyalty, setBuyRoyalty] = useState(0);
   const [sellRoyalty, setSellRoyalty] = useState(0);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [advPow, setAdvPow] = useState(1);
+  const [advFrac, setAdvFrac] = useState(2);
+
+  // Build the curve params from the user-friendly inputs.
+  // P(S) = growthRate * S^(pow/frac) + startingPrice
+  const curveParams = useMemo<CurveParams>(() => {
+    const base = CURVES[selectedPreset.key];
+    return {
+      c: selectedPreset.key === "fixed" ? 0 : growthRate,
+      b: selectedPreset.key === "fixed" ? growthRate : startingPrice,
+      pow: showAdvanced ? advPow : base.pow,
+      frac: showAdvanced ? advFrac : base.frac,
+    };
+  }, [selectedPreset, growthRate, startingPrice, showAdvanced, advPow, advFrac]);
 
   // Submission state
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ mint: string; bonding: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const previewMaxSupply = useMemo(() => 1_000_000, []);
+  const previewMaxSupply = useMemo(() => 1_000, []);
+  const baseSymbol =
+    BASE_TOKENS[CLUSTER].find((t) => t.mint === baseMint)?.symbol ?? "base";
 
   async function onLaunch() {
     if (!sdk || !ready) {
@@ -111,8 +142,7 @@ export function LaunchForm() {
         baseMint: new PublicKey(baseMint),
         curve: curveKey,
         decimals,
-        mintCap: mintCap ? new BN(mintCap) : undefined,
-        goLiveDate: new Date(goLive),
+        goLiveDate: new Date(), // always live immediately
         buyBaseRoyaltyPercentage: Math.round(buyRoyalty * 100),
         sellBaseRoyaltyPercentage: Math.round(sellRoyalty * 100),
       });
@@ -180,8 +210,8 @@ export function LaunchForm() {
       )}
 
       {step === 2 && (
-        <Card title="2. Bonding curve">
-          <Field label="Base token">
+        <Card title="2. Pricing model">
+          <Field label="Base token (what buyers pay with)">
             <select
               title="Base token"
               aria-label="Base token"
@@ -197,110 +227,95 @@ export function LaunchForm() {
             </select>
           </Field>
 
-          <Field label="Curve preset">
+          <Field label="How should the price change?">
             <div className="flex flex-wrap gap-2">
               {PRESETS.map((p) => (
                 <button
                   key={p.key}
                   type="button"
-                  aria-label={`Use ${p.label} preset`}
-                  onClick={() => setCurveParams(CURVES[p.key])}
-                  className="rounded-lg border border-zinc-200 px-3 py-1 text-sm hover:border-brand-500 dark:border-zinc-700"
+                  aria-label={`Use ${p.label} pricing`}
+                  onClick={() => {
+                    setSelectedPreset(p);
+                    setAdvPow(CURVES[p.key].pow);
+                    setAdvFrac(CURVES[p.key].frac);
+                  }}
+                  className={`rounded-lg border px-3 py-1.5 text-sm transition ${
+                    selectedPreset.key === p.key
+                      ? "border-brand-500 bg-brand-500/10 text-brand-400"
+                      : "border-zinc-200 hover:border-brand-500 dark:border-zinc-700"
+                  }`}
                 >
                   {p.label}
                 </button>
               ))}
             </div>
+            <p className="mt-2 text-xs text-zinc-500">{selectedPreset.description}</p>
           </Field>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="c (slope)">
+          {selectedPreset.key !== "fixed" ? (
+            <>
+              <Field label={`Starting price (${baseSymbol} per token when supply is 0)`}>
+                <input
+                  title="Starting price"
+                  aria-label="Starting price"
+                  type="number"
+                  step="0.001"
+                  min={0}
+                  value={startingPrice}
+                  onChange={(e) => setStartingPrice(Number(e.target.value))}
+                  className="input"
+                  placeholder="0"
+                />
+              </Field>
+              <Field label="Growth rate (how fast the price rises with demand)">
+                <input
+                  title="Growth rate"
+                  aria-label="Growth rate"
+                  type="number"
+                  step="0.1"
+                  min={0}
+                  value={growthRate}
+                  onChange={(e) => setGrowthRate(Number(e.target.value))}
+                  className="input"
+                  placeholder="1"
+                />
+                <p className="mt-1 text-xs text-zinc-500">
+                  Higher = price increases faster as people buy. Try 0.1 for gentle, 1 for moderate, 10 for aggressive.
+                </p>
+              </Field>
+            </>
+          ) : (
+            <Field label={`Fixed price (${baseSymbol} per token)`}>
               <input
-                title="Coefficient c (slope)"
-                aria-label="Coefficient c (slope)"
+                title="Fixed price per token"
+                aria-label="Fixed price per token"
                 type="number"
-                step="0.01"
-                value={curveParams.c}
-                onChange={(e) => setCurveParams({ ...curveParams, c: Number(e.target.value) })}
-                className="input"
-                placeholder="1"
-              />
-            </Field>
-            <Field label="b (floor)">
-              <input
-                title="Coefficient b (floor)"
-                aria-label="Coefficient b (floor)"
-                type="number"
-                step="0.01"
-                value={curveParams.b}
-                onChange={(e) => setCurveParams({ ...curveParams, b: Number(e.target.value) })}
-                className="input"
-                placeholder="0"
-              />
-            </Field>
-            <Field label="pow">
-              <input
-                title="Numerator of the rational exponent"
-                aria-label="Numerator of the rational exponent"
-                type="number"
+                step="0.001"
                 min={0}
-                max={10}
-                value={curveParams.pow}
-                onChange={(e) => setCurveParams({ ...curveParams, pow: Number(e.target.value) })}
+                value={growthRate}
+                onChange={(e) => setGrowthRate(Number(e.target.value))}
                 className="input"
                 placeholder="1"
               />
             </Field>
-            <Field label="frac">
-              <input
-                title="Denominator of the rational exponent"
-                aria-label="Denominator of the rational exponent"
-                type="number"
-                min={1}
-                max={10}
-                value={curveParams.frac}
-                onChange={(e) => setCurveParams({ ...curveParams, frac: Number(e.target.value) })}
-                className="input"
-                placeholder="2"
-              />
-            </Field>
-          </div>
+          )}
 
-          <Field label="Preview">
+          <Field label="Price preview">
             <div className="h-48 rounded-xl border border-zinc-200 p-2 dark:border-zinc-800">
               <BondingCurveChart
                 curve={curveParams}
                 currentSupply={0}
                 maxSupply={previewMaxSupply}
+                baseMintSymbol={baseSymbol}
               />
             </div>
           </Field>
 
-          <Field label="Mint cap (optional)">
-            <input
-              title="Optional maximum total supply"
-              aria-label="Optional maximum total supply"
-              value={mintCap}
-              onChange={(e) => setMintCap(e.target.value)}
-              className="input"
-              placeholder="e.g. 1000000"
-            />
-          </Field>
-          <Field label="Go-live date">
-            <input
-              title="Date the bonding starts accepting buys"
-              aria-label="Go-live date"
-              type="datetime-local"
-              value={goLive}
-              onChange={(e) => setGoLive(e.target.value)}
-              className="input"
-            />
-          </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Buy royalty %">
+            <Field label="Buy fee %">
               <input
-                title="Buy royalty percentage"
-                aria-label="Buy royalty percentage"
+                title="Fee taken on every buy"
+                aria-label="Buy fee percentage"
                 type="number"
                 min={0}
                 max={100}
@@ -311,10 +326,10 @@ export function LaunchForm() {
                 placeholder="0"
               />
             </Field>
-            <Field label="Sell royalty %">
+            <Field label="Sell fee %">
               <input
-                title="Sell royalty percentage"
-                aria-label="Sell royalty percentage"
+                title="Fee taken on every sell"
+                aria-label="Sell fee percentage"
                 type="number"
                 min={0}
                 max={100}
@@ -327,6 +342,51 @@ export function LaunchForm() {
             </Field>
           </div>
 
+          {showAdvanced ? (
+            <div className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+              <p className="mb-2 text-xs font-medium text-zinc-500">
+                Advanced: exponent (pow / frac)
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  title="Exponent numerator"
+                  aria-label="Exponent numerator (pow)"
+                  type="number"
+                  min={0}
+                  max={10}
+                  value={advPow}
+                  onChange={(e) => setAdvPow(Number(e.target.value))}
+                  className="input"
+                />
+                <input
+                  title="Exponent denominator"
+                  aria-label="Exponent denominator (frac)"
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={advFrac}
+                  onChange={(e) => setAdvFrac(Number(e.target.value))}
+                  className="input"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(false)}
+                className="mt-2 text-xs text-zinc-500 underline"
+              >
+                Hide advanced
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(true)}
+              className="text-xs text-zinc-500 underline"
+            >
+              Show advanced settings
+            </button>
+          )}
+
           <NavButtons onBack={() => setStep(1)} onNext={() => setStep(3)} />
         </Card>
       )}
@@ -336,11 +396,14 @@ export function LaunchForm() {
           <ul className="mb-4 space-y-1 text-sm">
             <li><strong>Name:</strong> {name} ({symbol})</li>
             <li><strong>Decimals:</strong> {decimals}</li>
-            <li><strong>Curve:</strong> {curveParams.c} · S^({curveParams.pow}/{curveParams.frac}) + {curveParams.b}</li>
-            <li><strong>Base:</strong> {BASE_TOKENS[CLUSTER].find((t) => t.mint === baseMint)?.symbol}</li>
-            <li><strong>Mint cap:</strong> {mintCap || "none"}</li>
-            <li><strong>Royalties:</strong> buy {buyRoyalty}% / sell {sellRoyalty}%</li>
-            <li><strong>Go-live:</strong> {new Date(goLive).toLocaleString()}</li>
+            <li><strong>Pricing:</strong> {selectedPreset.label}</li>
+            <li><strong>Starting price:</strong> {selectedPreset.key === "fixed" ? growthRate : startingPrice} {baseSymbol}</li>
+            {selectedPreset.key !== "fixed" && (
+              <li><strong>Growth rate:</strong> {growthRate}</li>
+            )}
+            <li><strong>Buyers pay with:</strong> {baseSymbol}</li>
+            <li><strong>Fees:</strong> buy {buyRoyalty}% / sell {sellRoyalty}%</li>
+            <li><strong>Go-live:</strong> immediately</li>
           </ul>
 
           <button
