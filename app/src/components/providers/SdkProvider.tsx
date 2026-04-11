@@ -33,8 +33,15 @@ export function SdkProvider({ children }: { children: ReactNode }) {
     if (!wallet) {
       return { sdk: null, ready: false };
     }
+    // skipPreflight avoids the "This transaction has already been
+    // processed" simulation error that devnet RPCs produce when a
+    // transaction landed on one node but the preflight simulation
+    // runs against another that already saw it. Safe to skip because
+    // the program validates everything on-chain anyway.
     const provider = new AnchorProvider(connection, wallet, {
       commitment: "confirmed",
+      preflightCommitment: "confirmed",
+      skipPreflight: true,
     });
     const sdk = TokenBondingSDK.init(provider, { programId: TOKEN_BONDING_PROGRAM_ID });
     return { sdk, ready: true };

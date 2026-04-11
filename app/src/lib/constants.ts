@@ -27,16 +27,12 @@ export interface BaseTokenInfo {
 
 export const BASE_TOKENS: Record<"devnet" | "mainnet", BaseTokenInfo[]> = {
   devnet: [
-    // Localnet test token created with `spl-token create-token`. Replace
-    // with the SOL/USDC mints below when deploying to actual devnet.
+    // Devnet test token for base-mint. Created via `spl-token create-token`.
     {
-      mint: "5GkZWyykUuYUbyrN6NsAW1AHNH6183cpihFguqGXLRwp",
+      mint: "578EySLFY4o5R1Tui3KvEbHaseRRBqZcfx1on2NZ8UXb",
       symbol: "TEST",
       decimals: 9,
     },
-    // The wrapped-SOL mint only exists on real devnet/mainnet — keep it
-    // here so devnet deploys still work, but the localnet form will pick
-    // the TEST mint by default since it's first.
     { mint: "So11111111111111111111111111111111111111112", symbol: "SOL", decimals: 9 },
   ],
   mainnet: [
