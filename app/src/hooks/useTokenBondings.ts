@@ -18,10 +18,12 @@ import { useSdk } from "@/components/providers/SdkProvider";
 export interface BondingRow {
   publicKey: PublicKey;
   account: TokenBondingV0;
-  /** Spot price computed off-chain from the live curve and supply. */
+  /** Spot price computed off-chain from the live curve and supply (human units). */
   price: number | undefined;
   /** Raw on-chain supply (smallest units of the target mint). */
   supplyRaw: number;
+  targetDecimals: number;
+  baseDecimals: number;
 }
 
 interface State {
@@ -91,7 +93,7 @@ export function useTokenBondings(): State & { refresh: () => void } {
               ? currentPrice(curveParams, supplyHuman)
               : undefined;
 
-            return { publicKey, account, price, supplyRaw } satisfies BondingRow;
+            return { publicKey, account, price, supplyRaw, targetDecimals, baseDecimals } satisfies BondingRow;
           }),
         );
 

@@ -13,10 +13,10 @@ interface Props {
   name?: string;
   symbol?: string;
   price?: number;
-  /** Raw on-chain supply (smallest units of the target mint). */
-  supplyRaw?: number;
-  /** Raw reserve (lamports of the base mint). */
-  reserveRaw?: number;
+  /** Supply in human token units (already divided by 10^decimals). */
+  supply?: number;
+  /** Reserve in human base units (already divided by 10^decimals). */
+  reserve?: number;
   imageUrl?: string;
 }
 
@@ -25,8 +25,8 @@ export function TokenCard({
   name,
   symbol,
   price,
-  supplyRaw,
-  reserveRaw,
+  supply,
+  reserve,
   imageUrl,
 }: Props) {
   const displayName = name ?? shortenAddress(mint, 6);
@@ -67,13 +67,13 @@ export function TokenCard({
         <div>
           <dt className="text-zinc-500">Supply</dt>
           <dd className="font-medium">
-            {supplyRaw !== undefined ? formatNumber(supplyRaw, 0) : "—"}
+            {supply !== undefined ? formatNumber(supply, 2) : "—"}
           </dd>
         </div>
         <div>
           <dt className="text-zinc-500">Reserve</dt>
           <dd className="font-medium">
-            {reserveRaw !== undefined ? formatNumber(reserveRaw, 0) : "—"}
+            {reserve !== undefined ? formatNumber(reserve, 2) : "—"}
           </dd>
         </div>
       </dl>

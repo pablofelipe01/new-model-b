@@ -70,8 +70,11 @@ export default function HomePage() {
               key={row.publicKey.toBase58()}
               mint={row.account.targetMint.toBase58()}
               price={row.price}
-              supplyRaw={row.supplyRaw}
-              reserveRaw={row.account.reserveBalanceFromBonding.toNumber()}
+              supply={row.supplyRaw / Math.pow(10, row.targetDecimals)}
+              reserve={
+                row.account.reserveBalanceFromBonding.toNumber() /
+                Math.pow(10, row.baseDecimals)
+              }
             />
           ))}
         </div>
