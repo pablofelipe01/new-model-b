@@ -162,18 +162,20 @@ export class TokenBondingSDK {
     const index = args.index ?? 0;
     const decimals = args.decimals ?? 9;
 
-    const tx = new Transaction();
-    const signers: Keypair[] = [];
-
-    // 1. Resolve / create target mint --------------------------------------
+    // ── TX A: create the mint + metadata + transfer authority ──────────
+    // Separated from the bonding init because the Metaplex metadata
+    // instruction + its URI data can push the combined transaction
+    // over the 1232-byte limit.
     let targetMint: PublicKey;
     if (args.targetMint) {
       targetMint = args.targetMint;
     } else {
       const mintKp = Keypair.generate();
       targetMint = mintKp.publicKey;
+
+      const txA = new Transaction();
       const lamports = await getMinimumBalanceForRentExemptMint(this.provider.connection);
-      tx.add(
+      txA.add(
         SystemProgram.createAccount({
           fromPubkey: payer,
           newAccountPubkey: targetMint,
@@ -181,63 +183,51 @@ export class TokenBondingSDK {
           lamports,
           programId: TOKEN_PROGRAM_ID,
         }),
-        // Initialize with the payer as temporary mint authority so we can
-        // hand it off to the PDA in the next instruction.
         createInitializeMintInstruction(targetMint, decimals, payer, payer),
       );
-      signers.push(mintKp);
-    }
 
-    // 2. Derive PDAs --------------------------------------------------------
-    const [tokenBonding] = tokenBondingPda(this.programId, targetMint, index);
-    const [mintAuthority] = targetMintAuthorityPda(this.programId, tokenBonding);
-    const [baseStorage] = baseStoragePda(this.programId, tokenBonding);
-    const [baseStorageAuthority] = baseStorageAuthorityPda(this.programId, tokenBonding);
-
-    // 3. Create Metaplex metadata (if name/symbol were provided).
-    //    Must happen BEFORE transferring mint authority to the PDA,
-    //    because `mintAuthority` in the metadata instruction needs to
-    //    sign, and at this point the payer still holds authority.
-    if (args.tokenName && !args.targetMint) {
-      const [metadataPda] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("metadata"),
-          TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-          targetMint.toBuffer(),
-        ],
-        TOKEN_METADATA_PROGRAM_ID,
-      );
-      tx.add(
-        createCreateMetadataAccountV3Instruction(
-          {
-            metadata: metadataPda,
-            mint: targetMint,
-            mintAuthority: payer,
-            payer,
-            updateAuthority: payer,
-          },
-          {
-            createMetadataAccountArgsV3: {
-              data: {
-                name: args.tokenName,
-                symbol: args.tokenSymbol ?? "",
-                uri: args.tokenUri ?? "",
-                sellerFeeBasisPoints: 0,
-                creators: null,
-                collection: null,
-                uses: null,
-              },
-              isMutable: true,
-              collectionDetails: null,
+      // Metaplex metadata (optional but strongly recommended).
+      if (args.tokenName) {
+        const [metadataPda] = PublicKey.findProgramAddressSync(
+          [
+            Buffer.from("metadata"),
+            TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+            targetMint.toBuffer(),
+          ],
+          TOKEN_METADATA_PROGRAM_ID,
+        );
+        txA.add(
+          createCreateMetadataAccountV3Instruction(
+            {
+              metadata: metadataPda,
+              mint: targetMint,
+              mintAuthority: payer,
+              payer,
+              updateAuthority: payer,
             },
-          },
-        ),
-      );
-    }
+            {
+              createMetadataAccountArgsV3: {
+                data: {
+                  name: args.tokenName,
+                  symbol: args.tokenSymbol ?? "",
+                  uri: args.tokenUri ?? "",
+                  sellerFeeBasisPoints: 0,
+                  creators: null,
+                  collection: null,
+                  uses: null,
+                },
+                isMutable: true,
+                collectionDetails: null,
+              },
+            },
+          ),
+        );
+      }
 
-    // 4. Hand off mint authority to the PDA (only if we just created it).
-    if (!args.targetMint) {
-      tx.add(
+      // Derive the PDA that will own the mint going forward.
+      const [tokenBondingPk] = tokenBondingPda(this.programId, targetMint, index);
+      const [mintAuthority] = targetMintAuthorityPda(this.programId, tokenBondingPk);
+      txA.add(
         createSetAuthorityInstruction(
           targetMint,
           payer,
@@ -245,9 +235,19 @@ export class TokenBondingSDK {
           mintAuthority,
         ),
       );
+
+      // Send TX A (createMint + metadata + setAuthority).
+      await this.provider.sendAndConfirm!(txA, [mintKp]);
     }
 
-    // 4. Royalty ATAs (created if missing) ---------------------------------
+    // ── TX B: royalty ATAs + initTokenBonding ──────────────────────────
+    const tx = new Transaction();
+
+    const [tokenBonding] = tokenBondingPda(this.programId, targetMint, index);
+    const [mintAuthority] = targetMintAuthorityPda(this.programId, tokenBonding);
+    const [baseStorage] = baseStoragePda(this.programId, tokenBonding);
+    const [baseStorageAuthority] = baseStorageAuthorityPda(this.programId, tokenBonding);
+
     const royaltyOwner = args.royaltyOwner ?? payer;
     const royalties = await this.ensureRoyaltyAtas(tx, {
       payer,
@@ -301,11 +301,8 @@ export class TokenBondingSDK {
       .instruction();
     tx.add(initIx);
 
-    // Anchor's provider.sendAndConfirm sets recentBlockhash + feePayer,
-    // signs with the wallet, then signs with any extra signers we pass in.
-    // Doing partialSign manually before the blockhash is set produces
-    // invalid signatures and trips `Transaction recentBlockhash required`.
-    const signature = await this.provider.sendAndConfirm!(tx, signers);
+    // TX B has no extra signers — the mint keypair was consumed in TX A.
+    const signature = await this.provider.sendAndConfirm!(tx, []);
     return { tokenBondingKey: tokenBonding, targetMint, signature };
   }
 
