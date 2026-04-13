@@ -62,6 +62,7 @@ export function LaunchForm() {
   const [symbol, setSymbol] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [decimals, setDecimals] = useState(9);
 
   // Step 2
@@ -210,27 +211,82 @@ export function LaunchForm() {
               placeholder="What is this token for?"
             />
           </Field>
-          <Field label="Logo / image URL">
-            <input
-              title="Token logo URL"
-              aria-label="Token logo URL"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="input"
-              placeholder="https://example.com/logo.png"
-            />
-            {imageUrl && (
-              <div className="mt-2 flex items-center gap-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imageUrl}
-                  alt="Token logo preview"
-                  className="h-12 w-12 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          <Field label="Token logo">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <label
+                  htmlFor="logo-upload"
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-zinc-300 p-4 transition hover:border-brand-500 dark:border-zinc-600"
+                >
+                  {uploading ? (
+                    <span className="text-sm text-zinc-500">Uploading...</span>
+                  ) : (
+                    <>
+                      <span className="text-sm font-medium text-brand-500">
+                        Click to upload
+                      </span>
+                      <span className="mt-1 text-xs text-zinc-500">
+                        PNG, JPG, SVG or GIF
+                      </span>
+                    </>
+                  )}
+                  <input
+                    id="logo-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    title="Upload token logo"
+                    aria-label="Upload token logo"
+                    disabled={uploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploading(true);
+                      try {
+                        const fd = new FormData();
+                        fd.append("file", file);
+                        const res = await fetch("/api/upload", {
+                          method: "POST",
+                          body: fd,
+                        });
+                        const data = await res.json();
+                        if (data.url) setImageUrl(data.url);
+                        else setError(data.error ?? "Upload failed");
+                      } catch (err) {
+                        setError((err as Error).message);
+                      } finally {
+                        setUploading(false);
+                      }
+                    }}
+                  />
+                </label>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Or paste a URL:
+                </p>
+                <input
+                  title="Token logo URL"
+                  aria-label="Token logo URL"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  className="input mt-1"
+                  placeholder="https://example.com/logo.png"
                 />
-                <span className="text-xs text-zinc-500">Preview</span>
               </div>
-            )}
+              {imageUrl && (
+                <div className="flex flex-col items-center gap-1">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageUrl}
+                    alt="Token logo preview"
+                    className="h-16 w-16 rounded-full object-cover border-2 border-brand-500"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                  <span className="text-xs text-zinc-500">Preview</span>
+                </div>
+              )}
+            </div>
           </Field>
           <Field label="Decimals">
             <input
