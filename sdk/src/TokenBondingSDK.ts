@@ -237,7 +237,24 @@ export class TokenBondingSDK {
       );
 
       // Send TX A (createMint + metadata + setAuthority).
-      await this.provider.sendAndConfirm!(txA, [mintKp]);
+      // Use manual sign → send → confirm instead of provider.sendAndConfirm
+      // because the latter throws "Unknown action 'undefined'" on some
+      // Anchor 0.31 + wallet-adapter combos.
+      const { blockhash, lastValidBlockHeight } =
+        await this.provider.connection.getLatestBlockhash("confirmed");
+      txA.recentBlockhash = blockhash;
+      txA.lastValidBlockHeight = lastValidBlockHeight;
+      txA.feePayer = payer;
+      txA.partialSign(mintKp);
+      const signedA = await this.provider.wallet.signTransaction(txA);
+      const sigA = await this.provider.connection.sendRawTransaction(
+        signedA.serialize(),
+        { skipPreflight: true },
+      );
+      await this.provider.connection.confirmTransaction(
+        { signature: sigA, blockhash, lastValidBlockHeight },
+        "confirmed",
+      );
     }
 
     // ── TX B: royalty ATAs + initTokenBonding ──────────────────────────
@@ -301,8 +318,21 @@ export class TokenBondingSDK {
       .instruction();
     tx.add(initIx);
 
-    // TX B has no extra signers — the mint keypair was consumed in TX A.
-    const signature = await this.provider.sendAndConfirm!(tx, []);
+    // TX B: manual sign → send → confirm (same pattern as TX A).
+    const { blockhash: bh, lastValidBlockHeight: lvbh } =
+      await this.provider.connection.getLatestBlockhash("confirmed");
+    tx.recentBlockhash = bh;
+    tx.lastValidBlockHeight = lvbh;
+    tx.feePayer = payer;
+    const signedB = await this.provider.wallet.signTransaction(tx);
+    const signature = await this.provider.connection.sendRawTransaction(
+      signedB.serialize(),
+      { skipPreflight: true },
+    );
+    await this.provider.connection.confirmTransaction(
+      { signature, blockhash: bh, lastValidBlockHeight: lvbh },
+      "confirmed",
+    );
     return { tokenBondingKey: tokenBonding, targetMint, signature };
   }
 
