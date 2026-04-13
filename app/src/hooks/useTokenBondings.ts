@@ -214,24 +214,38 @@ async function fetchTokenMetadata(
       .toString("utf8")
       .replace(/\0+$/, "");
 
-    // If the URI is our /api/metadata route, extract the image from the
-    // query string directly (saves a network round-trip).
+    // Extract the image URL from the metadata URI. We support:
+    // 1. Our short route: /api/m?i=<encoded_url>
+    // 2. Our old route: /api/metadata?image=<encoded_url>
+    // 3. Standard Metaplex JSON URI (fetch + parse)
+    // 4. Raw image URL (used as fallback when URI was too long)
     let image: string | undefined;
     if (uri) {
       try {
         const url = new URL(uri);
-        image = url.searchParams.get("image") ?? undefined;
+        // Our routes encode the image in query params
+        image =
+          url.searchParams.get("i") ??
+          url.searchParams.get("image") ??
+          undefined;
       } catch {
-        // Not a URL we can parse — skip the image.
+        // Not a parseable URL — might be a raw image path
       }
-    }
-    // Fallback: fetch the URI JSON and read the image field.
-    if (!image && uri && uri.startsWith("http")) {
-      try {
-        const json = await fetch(uri).then((r) => r.json());
-        image = json.image ?? undefined;
-      } catch {
-        // ignore
+      // If no query-param image found, try fetching JSON
+      if (!image && uri.startsWith("http")) {
+        try {
+          const resp = await fetch(uri);
+          const contentType = resp.headers.get("content-type") ?? "";
+          if (contentType.includes("json")) {
+            const json = await resp.json();
+            image = json.image ?? undefined;
+          } else if (contentType.includes("image")) {
+            // The URI itself is a direct image
+            image = uri;
+          }
+        } catch {
+          // ignore
+        }
       }
     }
 

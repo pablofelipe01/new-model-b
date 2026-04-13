@@ -139,16 +139,19 @@ export function LaunchForm() {
       // await the high-level helpers and read the resulting addresses.
       const { curveKey } = await sdk.createCurve({ definition });
 
-      // Build a metadata URI that our /api/metadata route can serve as
-      // Metaplex-compatible JSON. Wallets fetch this URI and display the
-      // returned `image` field as the token logo.
-      const metadataParams = new URLSearchParams({
-        name,
-        symbol,
-        ...(description && { desc: description }),
-        ...(imageUrl && { image: imageUrl }),
-      });
-      const tokenUri = `${window.location.origin}/api/metadata?${metadataParams.toString()}`;
+      // Build a metadata URI. Wallets fetch this URI and display the
+      // returned `image` field as the token logo. Name + symbol are
+      // already stored on-chain in the metadata account, so the URI
+      // only carries the image URL. We use a short route path
+      // (`/api/m?i=`) to stay under the 200-char Metaplex URI limit.
+      let tokenUri = "";
+      if (imageUrl) {
+        const short = `${window.location.origin}/api/m?i=${encodeURIComponent(imageUrl)}`;
+        // Metaplex metadata URI field max is ~200 chars. If our
+        // wrapped URI fits, use it (wallets get proper JSON). If not,
+        // fall back to the raw image URL (most wallets still show it).
+        tokenUri = short.length <= 200 ? short : imageUrl;
+      }
 
       const { tokenBondingKey, targetMint } = await sdk.initTokenBonding({
         baseMint: new PublicKey(baseMint),
