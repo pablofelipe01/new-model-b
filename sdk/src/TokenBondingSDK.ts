@@ -251,10 +251,16 @@ export class TokenBondingSDK {
         signedA.serialize(),
         { skipPreflight: true },
       );
-      await this.provider.connection.confirmTransaction(
+      const confA = await this.provider.connection.confirmTransaction(
         { signature: sigA, blockhash, lastValidBlockHeight },
         "confirmed",
       );
+      if (confA.value.err) {
+        throw new Error(
+          `Mint creation failed: ${JSON.stringify(confA.value.err)}. ` +
+          `TX: ${sigA}`,
+        );
+      }
     }
 
     // ── TX B: royalty ATAs + initTokenBonding ──────────────────────────
@@ -329,10 +335,16 @@ export class TokenBondingSDK {
       signedB.serialize(),
       { skipPreflight: true },
     );
-    await this.provider.connection.confirmTransaction(
+    const confB = await this.provider.connection.confirmTransaction(
       { signature, blockhash: bh, lastValidBlockHeight: lvbh },
       "confirmed",
     );
+    if (confB.value.err) {
+      throw new Error(
+        `Token bonding init failed: ${JSON.stringify(confB.value.err)}. ` +
+        `TX: ${signature}`,
+      );
+    }
     return { tokenBondingKey: tokenBonding, targetMint, signature };
   }
 
