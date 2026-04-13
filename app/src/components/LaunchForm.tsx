@@ -145,6 +145,8 @@ export function LaunchForm() {
         goLiveDate: new Date(), // always live immediately
         buyBaseRoyaltyPercentage: Math.round(buyRoyalty * 100),
         sellBaseRoyaltyPercentage: Math.round(sellRoyalty * 100),
+        tokenName: name,
+        tokenSymbol: symbol,
       });
 
       setResult({ mint: targetMint.toBase58(), bonding: tokenBondingKey.toBase58() });

@@ -69,6 +69,8 @@ export default function HomePage() {
             <TokenCard
               key={row.publicKey.toBase58()}
               mint={row.account.targetMint.toBase58()}
+              name={row.tokenName}
+              symbol={row.tokenSymbol}
               price={row.price}
               supply={row.supplyRaw / Math.pow(10, row.targetDecimals)}
               reserve={

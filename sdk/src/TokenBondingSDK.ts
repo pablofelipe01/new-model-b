@@ -31,6 +31,10 @@ import {
   getAccount,
 } from "@solana/spl-token";
 import {
+  createCreateMetadataAccountV3Instruction,
+  PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID,
+} from "@metaplex-foundation/mpl-token-metadata";
+import {
   Keypair,
   PublicKey,
   SystemProgram,
@@ -137,6 +141,11 @@ export class TokenBondingSDK {
     sellBaseRoyaltyPercentage?: number;
     buyTargetRoyaltyPercentage?: number;
     sellTargetRoyaltyPercentage?: number;
+    /** Token metadata — if set, a Metaplex metadata account is created
+     *  alongside the mint so wallets display the name/symbol. */
+    tokenName?: string;
+    tokenSymbol?: string;
+    tokenUri?: string;
     /** ATA owners for the four royalty accounts. Defaults to provider wallet. */
     royaltyOwner?: PublicKey;
     generalAuthority?: PublicKey | null;
@@ -185,7 +194,48 @@ export class TokenBondingSDK {
     const [baseStorage] = baseStoragePda(this.programId, tokenBonding);
     const [baseStorageAuthority] = baseStorageAuthorityPda(this.programId, tokenBonding);
 
-    // 3. Hand off mint authority to the PDA (only if we just created it).
+    // 3. Create Metaplex metadata (if name/symbol were provided).
+    //    Must happen BEFORE transferring mint authority to the PDA,
+    //    because `mintAuthority` in the metadata instruction needs to
+    //    sign, and at this point the payer still holds authority.
+    if (args.tokenName && !args.targetMint) {
+      const [metadataPda] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("metadata"),
+          TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+          targetMint.toBuffer(),
+        ],
+        TOKEN_METADATA_PROGRAM_ID,
+      );
+      tx.add(
+        createCreateMetadataAccountV3Instruction(
+          {
+            metadata: metadataPda,
+            mint: targetMint,
+            mintAuthority: payer,
+            payer,
+            updateAuthority: payer,
+          },
+          {
+            createMetadataAccountArgsV3: {
+              data: {
+                name: args.tokenName,
+                symbol: args.tokenSymbol ?? "",
+                uri: args.tokenUri ?? "",
+                sellerFeeBasisPoints: 0,
+                creators: null,
+                collection: null,
+                uses: null,
+              },
+              isMutable: true,
+              collectionDetails: null,
+            },
+          },
+        ),
+      );
+    }
+
+    // 4. Hand off mint authority to the PDA (only if we just created it).
     if (!args.targetMint) {
       tx.add(
         createSetAuthorityInstruction(

@@ -6,10 +6,15 @@ import {
   type CurveParams,
   type TokenBondingV0,
 } from "@new-model-b/sdk";
-import type { PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 
 import { useSdk } from "@/components/providers/SdkProvider";
+
+/** Metaplex Token Metadata program ID. */
+const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
+  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+);
 
 /**
  * Single row in the explore grid: a bonding plus enough fetched data to
@@ -24,6 +29,9 @@ export interface BondingRow {
   supplyRaw: number;
   targetDecimals: number;
   baseDecimals: number;
+  /** On-chain Metaplex metadata (if present). */
+  tokenName: string | undefined;
+  tokenSymbol: string | undefined;
 }
 
 interface State {
@@ -93,7 +101,22 @@ export function useTokenBondings(): State & { refresh: () => void } {
               ? currentPrice(curveParams, supplyHuman)
               : undefined;
 
-            return { publicKey, account, price, supplyRaw, targetDecimals, baseDecimals } satisfies BondingRow;
+            // Read Metaplex metadata for the target mint (name + symbol).
+            const meta = await fetchTokenMetadata(
+              sdk.provider.connection,
+              account.targetMint,
+            );
+
+            return {
+              publicKey,
+              account,
+              price,
+              supplyRaw,
+              targetDecimals,
+              baseDecimals,
+              tokenName: meta?.name,
+              tokenSymbol: meta?.symbol,
+            } satisfies BondingRow;
           }),
         );
 
@@ -138,4 +161,50 @@ async function fetchCurveParams(
 function rawToHumanNumber(s: string): number {
   if (s.length <= 12) return Number("0." + s.padStart(12, "0"));
   return Number(s.slice(0, -12) + "." + s.slice(-12));
+}
+
+/**
+ * Read the Metaplex Token Metadata account for a given mint. Returns
+ * `{ name, symbol }` or null if the account doesn't exist (pre-metadata
+ * tokens). Metadata is stored in a PDA at
+ * `["metadata", TOKEN_METADATA_PROGRAM_ID, mint]` and serialised with a
+ * simple Borsh layout. We parse manually to avoid pulling in the full
+ * `@metaplex-foundation/mpl-token-metadata` client in the frontend bundle.
+ */
+async function fetchTokenMetadata(
+  connection: import("@solana/web3.js").Connection,
+  mint: PublicKey,
+): Promise<{ name: string; symbol: string } | null> {
+  try {
+    const [pda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("metadata"),
+        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        mint.toBuffer(),
+      ],
+      TOKEN_METADATA_PROGRAM_ID,
+    );
+    const info = await connection.getAccountInfo(pda);
+    if (!info || !info.data || info.data.length < 100) return null;
+    // The metadata account layout (v1):
+    //   0     : 1 byte  — key (enum discriminator)
+    //   1     : 32 bytes — update authority
+    //   33    : 32 bytes — mint
+    //   65    : 4 bytes  — name string length (little-endian u32)
+    //   69    : N bytes  — name (padded with \0 to 32 bytes)
+    //   69+N  : 4 bytes  — symbol length
+    //   ...
+    const data = info.data;
+    const nameLen = data.readUInt32LE(65);
+    const name = data.subarray(69, 69 + nameLen).toString("utf8").replace(/\0+$/, "");
+    const symOffset = 69 + nameLen;
+    const symLen = data.readUInt32LE(symOffset);
+    const symbol = data
+      .subarray(symOffset + 4, symOffset + 4 + symLen)
+      .toString("utf8")
+      .replace(/\0+$/, "");
+    return { name, symbol };
+  } catch {
+    return null;
+  }
 }
