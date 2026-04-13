@@ -32,6 +32,7 @@ export interface BondingRow {
   /** On-chain Metaplex metadata (if present). */
   tokenName: string | undefined;
   tokenSymbol: string | undefined;
+  tokenImage: string | undefined;
 }
 
 interface State {
@@ -101,7 +102,7 @@ export function useTokenBondings(): State & { refresh: () => void } {
               ? currentPrice(curveParams, supplyHuman)
               : undefined;
 
-            // Read Metaplex metadata for the target mint (name + symbol).
+            // Read Metaplex metadata for the target mint (name + symbol + image).
             const meta = await fetchTokenMetadata(
               sdk.provider.connection,
               account.targetMint,
@@ -116,6 +117,7 @@ export function useTokenBondings(): State & { refresh: () => void } {
               baseDecimals,
               tokenName: meta?.name,
               tokenSymbol: meta?.symbol,
+              tokenImage: meta?.image,
             } satisfies BondingRow;
           }),
         );
@@ -174,7 +176,7 @@ function rawToHumanNumber(s: string): number {
 async function fetchTokenMetadata(
   connection: import("@solana/web3.js").Connection,
   mint: PublicKey,
-): Promise<{ name: string; symbol: string } | null> {
+): Promise<{ name: string; symbol: string; image: string | undefined } | null> {
   try {
     const [pda] = PublicKey.findProgramAddressSync(
       [
@@ -193,7 +195,9 @@ async function fetchTokenMetadata(
     //   65    : 4 bytes  — name string length (little-endian u32)
     //   69    : N bytes  — name (padded with \0 to 32 bytes)
     //   69+N  : 4 bytes  — symbol length
-    //   ...
+    //   69+N+4: M bytes  — symbol
+    //   ...   : 4 bytes  — uri length
+    //   ...   : K bytes  — uri
     const data = info.data;
     const nameLen = data.readUInt32LE(65);
     const name = data.subarray(69, 69 + nameLen).toString("utf8").replace(/\0+$/, "");
@@ -203,7 +207,35 @@ async function fetchTokenMetadata(
       .subarray(symOffset + 4, symOffset + 4 + symLen)
       .toString("utf8")
       .replace(/\0+$/, "");
-    return { name, symbol };
+    const uriOffset = symOffset + 4 + symLen;
+    const uriLen = data.readUInt32LE(uriOffset);
+    const uri = data
+      .subarray(uriOffset + 4, uriOffset + 4 + uriLen)
+      .toString("utf8")
+      .replace(/\0+$/, "");
+
+    // If the URI is our /api/metadata route, extract the image from the
+    // query string directly (saves a network round-trip).
+    let image: string | undefined;
+    if (uri) {
+      try {
+        const url = new URL(uri);
+        image = url.searchParams.get("image") ?? undefined;
+      } catch {
+        // Not a URL we can parse — skip the image.
+      }
+    }
+    // Fallback: fetch the URI JSON and read the image field.
+    if (!image && uri && uri.startsWith("http")) {
+      try {
+        const json = await fetch(uri).then((r) => r.json());
+        image = json.image ?? undefined;
+      } catch {
+        // ignore
+      }
+    }
+
+    return { name, symbol, image };
   } catch {
     return null;
   }

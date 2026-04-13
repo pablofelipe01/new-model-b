@@ -71,6 +71,7 @@ export default function HomePage() {
               mint={row.account.targetMint.toBase58()}
               name={row.tokenName}
               symbol={row.tokenSymbol}
+              imageUrl={row.tokenImage}
               price={row.price}
               supply={row.supplyRaw / Math.pow(10, row.targetDecimals)}
               reserve={

@@ -61,6 +61,7 @@ export function LaunchForm() {
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [description, setDescription] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [decimals, setDecimals] = useState(9);
 
   // Step 2
@@ -138,6 +139,17 @@ export function LaunchForm() {
       // await the high-level helpers and read the resulting addresses.
       const { curveKey } = await sdk.createCurve({ definition });
 
+      // Build a metadata URI that our /api/metadata route can serve as
+      // Metaplex-compatible JSON. Wallets fetch this URI and display the
+      // returned `image` field as the token logo.
+      const metadataParams = new URLSearchParams({
+        name,
+        symbol,
+        ...(description && { desc: description }),
+        ...(imageUrl && { image: imageUrl }),
+      });
+      const tokenUri = `${window.location.origin}/api/metadata?${metadataParams.toString()}`;
+
       const { tokenBondingKey, targetMint } = await sdk.initTokenBonding({
         baseMint: new PublicKey(baseMint),
         curve: curveKey,
@@ -147,6 +159,7 @@ export function LaunchForm() {
         sellBaseRoyaltyPercentage: Math.round(sellRoyalty * 100),
         tokenName: name,
         tokenSymbol: symbol,
+        tokenUri,
       });
 
       setResult({ mint: targetMint.toBase58(), bonding: tokenBondingKey.toBase58() });
@@ -193,6 +206,28 @@ export function LaunchForm() {
               className="input min-h-[80px]"
               placeholder="What is this token for?"
             />
+          </Field>
+          <Field label="Logo / image URL">
+            <input
+              title="Token logo URL"
+              aria-label="Token logo URL"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              className="input"
+              placeholder="https://example.com/logo.png"
+            />
+            {imageUrl && (
+              <div className="mt-2 flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl}
+                  alt="Token logo preview"
+                  className="h-12 w-12 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+                <span className="text-xs text-zinc-500">Preview</span>
+              </div>
+            )}
           </Field>
           <Field label="Decimals">
             <input
