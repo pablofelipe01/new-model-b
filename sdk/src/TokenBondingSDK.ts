@@ -9,6 +9,7 @@ import {
   AnchorProvider,
   BN,
   Program,
+  utils as anchorUtils,
 } from "@coral-xyz/anchor";
 
 import idlJson from "./idl/spl_token_bonding.json";
@@ -604,20 +605,53 @@ export class TokenBondingSDK {
   }
 
   /**
-   * List every `TokenBondingV0` account owned by this program. Anchor's
-   * `account.tokenBondingV0.all()` performs a `getProgramAccounts` RPC
-   * filtered by the account's 8-byte discriminator, so this returns
-   * exactly the bondings created by this protocol — not by other forks
-   * that happen to share the type name.
+   * List every `TokenBondingV0` account owned by this program that we can
+   * successfully decode with the current IDL. Anchor's `account.all()`
+   * throws on the first undecodable row, which breaks the UI whenever an
+   * old account layout lingers on the cluster after a program upgrade.
+   *
+   * We replicate the low-level filter ourselves: `getProgramAccounts` with
+   * the 8-byte discriminator for `TokenBondingV0`, then decode each row
+   * individually and silently drop the ones that fail. Stale accounts from
+   * before the last layout change are thus ignored, not fatal.
    */
   async listTokenBondings(): Promise<
     { publicKey: PublicKey; account: TokenBondingV0 }[]
   > {
-    const rows = await this.program.account.tokenBondingV0.all();
-    return rows.map((r) => ({
-      publicKey: r.publicKey,
-      account: r.account as unknown as TokenBondingV0,
-    }));
+    const discriminator =
+      // @ts-expect-error — the accounts coder exposes discriminators at
+      // runtime even though the public type doesn't include this field.
+      this.program.account.tokenBondingV0.coder.accounts.accountDiscriminator(
+        "tokenBondingV0",
+      ) as Buffer;
+
+    const raw = await this.provider.connection.getProgramAccounts(
+      this.programId,
+      {
+        filters: [
+          {
+            memcmp: {
+              offset: 0,
+              bytes: anchorUtils.bytes.bs58.encode(discriminator),
+            },
+          },
+        ],
+      },
+    );
+
+    const out: { publicKey: PublicKey; account: TokenBondingV0 }[] = [];
+    for (const row of raw) {
+      try {
+        const decoded = this.program.coder.accounts.decode(
+          "tokenBondingV0",
+          row.account.data,
+        );
+        out.push({ publicKey: row.pubkey, account: decoded as unknown as TokenBondingV0 });
+      } catch {
+        // Old layout / corrupted account — skip it rather than break the list.
+      }
+    }
+    return out;
   }
 
   // ── Internals ──────────────────────────────────────────────────────────

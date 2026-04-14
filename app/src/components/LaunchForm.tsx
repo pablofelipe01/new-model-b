@@ -73,21 +73,20 @@ export function LaunchForm() {
   const [growthRate, setGrowthRate] = useState(1);
   // Launcher fee in PERCENT (UI). The on-chain field is basis points.
   const [launcherFeePct, setLauncherFeePct] = useState(0);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [advPow, setAdvPow] = useState(1);
-  const [advFrac, setAdvFrac] = useState(2);
 
-  // Build the curve params from the user-friendly inputs.
-  // P(S) = growthRate * S^(pow/frac) + startingPrice
+  // Build the curve params from the user-friendly inputs. Exponent always
+  // comes from the selected preset — exposing pow/frac directly in the UI
+  // lets users shoot themselves in the foot with exotic curves that the
+  // presets already cover.
   const curveParams = useMemo<CurveParams>(() => {
     const base = CURVES[selectedPreset.key];
     return {
       c: selectedPreset.key === "fixed" ? 0 : growthRate,
       b: selectedPreset.key === "fixed" ? growthRate : startingPrice,
-      pow: showAdvanced ? advPow : base.pow,
-      frac: showAdvanced ? advFrac : base.frac,
+      pow: base.pow,
+      frac: base.frac,
     };
-  }, [selectedPreset, growthRate, startingPrice, showAdvanced, advPow, advFrac]);
+  }, [selectedPreset, growthRate, startingPrice]);
 
   // Submission state
   const [submitting, setSubmitting] = useState(false);
@@ -315,11 +314,7 @@ export function LaunchForm() {
                   key={p.key}
                   type="button"
                   aria-label={`Use ${p.label} pricing`}
-                  onClick={() => {
-                    setSelectedPreset(p);
-                    setAdvPow(CURVES[p.key].pow);
-                    setAdvFrac(CURVES[p.key].frac);
-                  }}
+                  onClick={() => setSelectedPreset(p)}
                   className={`rounded-lg border px-3 py-1.5 text-sm transition ${
                     selectedPreset.key === p.key
                       ? "border-brand-500 bg-brand-500/10 text-brand-400"
@@ -411,51 +406,6 @@ export function LaunchForm() {
               {(launcherFeePct + PLATFORM_FEE_BPS / 100).toFixed(2)}%.
             </p>
           </Field>
-
-          {showAdvanced ? (
-            <div className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
-              <p className="mb-2 text-xs font-medium text-zinc-500">
-                Advanced: exponent (pow / frac)
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  title="Exponent numerator"
-                  aria-label="Exponent numerator (pow)"
-                  type="number"
-                  min={0}
-                  max={10}
-                  value={advPow}
-                  onChange={(e) => setAdvPow(Number(e.target.value))}
-                  className="input"
-                />
-                <input
-                  title="Exponent denominator"
-                  aria-label="Exponent denominator (frac)"
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={advFrac}
-                  onChange={(e) => setAdvFrac(Number(e.target.value))}
-                  className="input"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(false)}
-                className="mt-2 text-xs text-zinc-500 underline"
-              >
-                Hide advanced
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(true)}
-              className="text-xs text-zinc-500 underline"
-            >
-              Show advanced settings
-            </button>
-          )}
 
           <NavButtons onBack={() => setStep(1)} onNext={() => setStep(3)} />
         </Card>
