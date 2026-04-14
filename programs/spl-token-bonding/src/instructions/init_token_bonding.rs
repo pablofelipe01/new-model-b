@@ -1,45 +1,52 @@
 //! Initialize a `TokenBondingV0` instance.
 //!
-//! The caller passes in the base mint, an existing curve, and a target mint
-//! whose mint authority is the program's `mint-authority` PDA. (The frontend /
-//! SDK is responsible for creating the target mint and assigning authority
-//! before calling this — keeping the on-chain footprint smaller.)
+//! Flow on a successful call:
+//!   1. Validate `launcher_fee_basis_points <= LAUNCHER_FEE_BPS_MAX`.
+//!   2. Validate `base_mint == USDC_MINT`.
+//!   3. Validate that `master_usdc` is the USDC ATA of `MASTER_WALLET` and
+//!      that `launcher_fee_usdc` is owned by `args.launcher_fee_wallet`.
+//!   4. CPI-transfer the one-time launch fee (`LAUNCH_FEE_USDC`) from the
+//!      payer's USDC ATA to `master_usdc`.
+//!   5. Persist the bonding state with the platform and launcher fees frozen.
+//!
+//! There is intentionally no instruction in the program that can later
+//! change `master_wallet`, `platform_fee_basis_points`, or extract funds
+//! from `base_storage`. Those fields are immutable for the lifetime of the
+//! bonding.
 
 use crate::errors::ErrorCode;
 use crate::state::*;
+use crate::{LAUNCHER_FEE_BPS_MAX, LAUNCH_FEE_USDC, MASTER_WALLET, PLATFORM_FEE_BPS, USDC_MINT};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeTokenBondingArgsV0 {
     pub index: u16,
     pub go_live_unix_time: i64,
     pub freeze_buy_unix_time: Option<i64>,
-    pub buy_base_royalty_percentage: u32,
-    pub buy_target_royalty_percentage: u32,
-    pub sell_base_royalty_percentage: u32,
-    pub sell_target_royalty_percentage: u32,
     pub mint_cap: Option<u64>,
     pub purchase_cap: Option<u64>,
     pub general_authority: Option<Pubkey>,
-    pub reserve_authority: Option<Pubkey>,
     pub curve_authority: Option<Pubkey>,
     pub buy_frozen: bool,
     pub ignore_external_reserve_changes: bool,
     pub ignore_external_supply_changes: bool,
+    /// Launcher-chosen per-trade fee in basis points. Must be <= 500 (5%).
+    pub launcher_fee_basis_points: u16,
+    /// System account that owns `launcher_fee_usdc`. Stored on the bonding
+    /// so buy/sell can validate the destination at trade time.
+    pub launcher_fee_wallet: Pubkey,
 }
 
-// All `Account<…>` fields are boxed because the un-boxed struct frame
-// exceeds the BPF 4 KB stack budget — Anchor 0.30 stores `…Bumps` inline
-// in the `try_accounts` frame and `TokenBondingV0` + `CurveV0` + 6
-// `TokenAccount`s push the total over 6 KB. Box moves the heap pointer
-// onto the stack, dropping the per-field cost to 8 bytes.
+// All `Account<…>` fields are boxed to keep the BPF stack frame under 4 KB.
 #[derive(Accounts)]
 #[instruction(args: InitializeTokenBondingArgsV0)]
 pub struct InitializeTokenBondingV0<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    #[account(address = USDC_MINT @ ErrorCode::InvalidBaseMint)]
     pub base_mint: Box<Account<'info, Mint>>,
     pub target_mint: Box<Account<'info, Mint>>,
     pub curve: Box<Account<'info, CurveV0>>,
@@ -82,45 +89,35 @@ pub struct InitializeTokenBondingV0<'info> {
     )]
     pub base_storage_authority: UncheckedAccount<'info>,
 
-    /// Royalty destinations. Stored as `UncheckedAccount` rather than
-    /// `Account<TokenAccount>` to keep the `try_accounts` stack frame
-    /// under the 4 KB BPF limit — full deserialization of 4 token
-    /// accounts pushes the frame over budget. The buy/sell instructions
-    /// re-validate these as `TokenAccount`s when actually used, so the
-    /// looser typing here is safe.
-    /// CHECK: stored only; validated at buy/sell time.
-    pub buy_base_royalties: UncheckedAccount<'info>,
-    /// CHECK: stored only; validated at buy/sell time.
-    pub buy_target_royalties: UncheckedAccount<'info>,
-    /// CHECK: stored only; validated at buy/sell time.
-    pub sell_base_royalties: UncheckedAccount<'info>,
-    /// CHECK: stored only; validated at buy/sell time.
-    pub sell_target_royalties: UncheckedAccount<'info>,
+    // ----- Launch fee accounts ------------------------------------------
+    /// Payer's USDC ATA. Source of the 25 USDC launch fee.
+    #[account(mut, token::mint = base_mint, token::authority = payer)]
+    pub payer_usdc: Box<Account<'info, TokenAccount>>,
+
+    /// MASTER_WALLET's USDC ATA. Destination of the launch fee. Validated
+    /// here so that no rogue client can divert the fee elsewhere.
+    #[account(
+        mut,
+        token::mint = base_mint,
+        constraint = master_usdc.owner == MASTER_WALLET @ ErrorCode::InvalidFeeAccount,
+    )]
+    pub master_usdc: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
-    // `rent: Sysvar<'info, Rent>` is intentionally omitted — Anchor 0.30
-    // calls `Rent::get()` from the runtime when an `init` constraint
-    // needs it, so the explicit field just inflates the `try_accounts`
-    // stack frame for no benefit.
 }
 
 pub fn handler(
     ctx: Context<InitializeTokenBondingV0>,
     args: InitializeTokenBondingArgsV0,
 ) -> Result<()> {
-    // Sanity-check royalty percentages. 10_000 bps == 100%.
-    let bps_max = 10_000u32;
-    if args.buy_base_royalty_percentage > bps_max
-        || args.buy_target_royalty_percentage > bps_max
-        || args.sell_base_royalty_percentage > bps_max
-        || args.sell_target_royalty_percentage > bps_max
-    {
-        return err!(ErrorCode::InvalidRoyalty);
+    // 1. Validate launcher fee bound.
+    if args.launcher_fee_basis_points > LAUNCHER_FEE_BPS_MAX {
+        return err!(ErrorCode::LauncherFeeExceedsMaximum);
     }
 
-    // Verify the target mint has the program's PDA as its mint authority.
-    // This catches the most common SDK bug — forgetting to transfer authority.
+    // 2. Verify the target mint has the program's PDA as its mint authority.
+    //    Catches the most common SDK bug — forgetting to transfer authority.
     let expected_authority = ctx.accounts.target_mint_authority.key();
     let actual_authority = ctx
         .accounts
@@ -131,21 +128,28 @@ pub fn handler(
         return err!(ErrorCode::InvalidAccount);
     }
 
+    // 3. Charge the one-time launch fee (25 USDC -> MASTER_WALLET ATA).
+    //    This happens BEFORE we persist any state so a failed transfer
+    //    aborts the whole instruction atomically.
+    token::transfer(
+        CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.payer_usdc.to_account_info(),
+                to: ctx.accounts.master_usdc.to_account_info(),
+                authority: ctx.accounts.payer.to_account_info(),
+            },
+        ),
+        LAUNCH_FEE_USDC,
+    )?;
+
+    // 4. Persist bonding state.
     let bonding = &mut ctx.accounts.token_bonding;
     bonding.base_mint = ctx.accounts.base_mint.key();
     bonding.target_mint = ctx.accounts.target_mint.key();
     bonding.general_authority = args.general_authority;
-    bonding.reserve_authority = args.reserve_authority;
     bonding.curve_authority = args.curve_authority;
     bonding.base_storage = ctx.accounts.base_storage.key();
-    bonding.buy_base_royalties = ctx.accounts.buy_base_royalties.key();
-    bonding.buy_target_royalties = ctx.accounts.buy_target_royalties.key();
-    bonding.sell_base_royalties = ctx.accounts.sell_base_royalties.key();
-    bonding.sell_target_royalties = ctx.accounts.sell_target_royalties.key();
-    bonding.buy_base_royalty_percentage = args.buy_base_royalty_percentage;
-    bonding.buy_target_royalty_percentage = args.buy_target_royalty_percentage;
-    bonding.sell_base_royalty_percentage = args.sell_base_royalty_percentage;
-    bonding.sell_target_royalty_percentage = args.sell_target_royalty_percentage;
     bonding.curve = ctx.accounts.curve.key();
     bonding.mint_cap = args.mint_cap;
     bonding.purchase_cap = args.purchase_cap;
@@ -163,6 +167,12 @@ pub fn handler(
     bonding.supply_from_bonding = ctx.accounts.target_mint.supply;
     bonding.ignore_external_reserve_changes = args.ignore_external_reserve_changes;
     bonding.ignore_external_supply_changes = args.ignore_external_supply_changes;
+
+    // Fee model — frozen for the lifetime of the bonding.
+    bonding.platform_fee_basis_points = PLATFORM_FEE_BPS;
+    bonding.launcher_fee_basis_points = args.launcher_fee_basis_points;
+    bonding.master_wallet = MASTER_WALLET;
+    bonding.launcher_fee_wallet = args.launcher_fee_wallet;
 
     Ok(())
 }

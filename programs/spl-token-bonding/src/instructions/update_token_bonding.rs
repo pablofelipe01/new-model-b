@@ -1,5 +1,11 @@
-//! Update authorities, royalty destinations, freeze flags. Only callable by
-//! the current `general_authority`.
+//! Update mutable fields on a `TokenBondingV0`. Only callable by the current
+//! `general_authority`.
+//!
+//! NOTE — what this CANNOT change, by design:
+//!   * `master_wallet` and `platform_fee_basis_points` (frozen at init).
+//!   * `launcher_fee_wallet` and `launcher_fee_basis_points` (frozen at init —
+//!     a launcher cannot retroactively raise the fee on existing holders).
+//!   * Anything that would let funds leave `base_storage` outside of `sell_v1`.
 
 use crate::errors::ErrorCode;
 use crate::state::*;
@@ -8,12 +14,7 @@ use anchor_lang::prelude::*;
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct UpdateTokenBondingArgsV0 {
     pub general_authority: Option<Pubkey>,
-    pub reserve_authority: Option<Pubkey>,
     pub curve_authority: Option<Pubkey>,
-    pub buy_base_royalty_percentage: Option<u32>,
-    pub buy_target_royalty_percentage: Option<u32>,
-    pub sell_base_royalty_percentage: Option<u32>,
-    pub sell_target_royalty_percentage: Option<u32>,
     pub buy_frozen: Option<bool>,
     pub sell_frozen: Option<bool>,
 }
@@ -42,37 +43,8 @@ pub fn handler(
     if let Some(v) = args.general_authority {
         bonding.general_authority = Some(v);
     }
-    if let Some(v) = args.reserve_authority {
-        bonding.reserve_authority = Some(v);
-    }
     if let Some(v) = args.curve_authority {
         bonding.curve_authority = Some(v);
-    }
-
-    let bps_max = 10_000u32;
-    if let Some(v) = args.buy_base_royalty_percentage {
-        if v > bps_max {
-            return err!(ErrorCode::InvalidRoyalty);
-        }
-        bonding.buy_base_royalty_percentage = v;
-    }
-    if let Some(v) = args.buy_target_royalty_percentage {
-        if v > bps_max {
-            return err!(ErrorCode::InvalidRoyalty);
-        }
-        bonding.buy_target_royalty_percentage = v;
-    }
-    if let Some(v) = args.sell_base_royalty_percentage {
-        if v > bps_max {
-            return err!(ErrorCode::InvalidRoyalty);
-        }
-        bonding.sell_base_royalty_percentage = v;
-    }
-    if let Some(v) = args.sell_target_royalty_percentage {
-        if v > bps_max {
-            return err!(ErrorCode::InvalidRoyalty);
-        }
-        bonding.sell_target_royalty_percentage = v;
     }
     if let Some(v) = args.buy_frozen {
         bonding.buy_frozen = v;

@@ -4,10 +4,14 @@
 //!   * `desired_target_amount` — fix the tokens received, compute base cost.
 //!   * `base_amount`           — fix the base spent, compute tokens out.
 //!
-//! Royalty handling: a percentage of the base spend goes to
-//! `buy_base_royalties`, and a percentage of the tokens minted goes to
-//! `buy_target_royalties`. The royalty target tokens come *out* of the user's
-//! mint amount (i.e. the same total supply increment, just split).
+//! Fee model on every buy:
+//!   `platform_fee = base_total * platform_bps / 10_000` -> MASTER_WALLET ATA
+//!   `launcher_fee = base_total * launcher_bps / 10_000` -> launcher_fee ATA
+//!   `base_to_reserve = base_total - platform_fee - launcher_fee` -> base_storage
+//! Only `base_to_reserve` moves the curve. The fees are skimmed BEFORE the
+//! reserve calculation so that the curve invariant
+//!     reserve_balance >= integral(curve, 0, supply)
+//! is preserved.
 //!
 //! Slippage: `slippage_max_base` (when buying tokens-out fixed) or
 //! `slippage_min_target` (when buying base-fixed) bounds the worst direction.
@@ -62,16 +66,22 @@ pub struct BuyV1<'info> {
     )]
     pub base_storage: Box<Account<'info, TokenAccount>>,
 
+    /// MASTER_WALLET's USDC ATA. Receives the platform fee.
     #[account(
         mut,
-        address = token_bonding.buy_base_royalties @ ErrorCode::InvalidAccount,
+        token::mint = base_mint,
+        constraint = master_usdc.owner == token_bonding.master_wallet @ ErrorCode::InvalidFeeAccount,
     )]
-    pub buy_base_royalties: Box<Account<'info, TokenAccount>>,
+    pub master_usdc: Box<Account<'info, TokenAccount>>,
+
+    /// Launcher's USDC ATA. Receives the launcher fee. Owner must equal the
+    /// `launcher_fee_wallet` recorded on the bonding at init time.
     #[account(
         mut,
-        address = token_bonding.buy_target_royalties @ ErrorCode::InvalidAccount,
+        token::mint = base_mint,
+        constraint = launcher_usdc.owner == token_bonding.launcher_fee_wallet @ ErrorCode::InvalidFeeAccount,
     )]
-    pub buy_target_royalties: Box<Account<'info, TokenAccount>>,
+    pub launcher_usdc: Box<Account<'info, TokenAccount>>,
 
     /// Source of base tokens spent by the buyer.
     #[account(mut, token::mint = base_mint, token::authority = payer)]
@@ -105,7 +115,6 @@ pub fn handler(ctx: Context<BuyV1>, args: BuyV1Args) -> Result<()> {
     let curve_def = match &ctx.accounts.curve.definition {
         PiecewiseCurve::TimeV0 { curves } => {
             let elapsed = (now - bonding.go_live_unix_time).max(0) as u64;
-            // Pick the latest piece whose offset has been reached.
             let mut chosen = &curves[0];
             for piece in curves.iter() {
                 if piece.offset <= elapsed {
@@ -122,15 +131,12 @@ pub fn handler(ctx: Context<BuyV1>, args: BuyV1Args) -> Result<()> {
             pow: *pow,
             frac: *frac,
         },
-        PrimitiveCurve::ConstantPriceCurveV0 { price } => {
-            // Treat constant as `c=0, b=price` so the rest of the math works.
-            ExponentialCurveV0 {
-                c: 0,
-                b: (*price as u128) * crate::curve::precise_number::ONE_PREC,
-                pow: 1,
-                frac: 1,
-            }
-        }
+        PrimitiveCurve::ConstantPriceCurveV0 { price } => ExponentialCurveV0 {
+            c: 0,
+            b: (*price as u128) * crate::curve::precise_number::ONE_PREC,
+            pow: 1,
+            frac: 1,
+        },
     };
 
     let current_supply = if bonding.ignore_external_supply_changes {
@@ -139,21 +145,82 @@ pub fn handler(ctx: Context<BuyV1>, args: BuyV1Args) -> Result<()> {
         ctx.accounts.target_mint.supply
     };
 
-    // 3. Compute amounts ---------------------------------------------------
-    let (target_amount, base_needed): (u64, u64) =
+    // 3. Compute amounts. The caller fixes either tokens-out or base-in;
+    //    we resolve the other side AFTER subtracting the fees, so the curve
+    //    only ever sees `base_to_reserve`.
+    //
+    //    Let f = (platform_bps + launcher_bps) / 10_000 be the total fee rate.
+    //    Then for any quoted total `base_total`:
+    //        base_to_reserve = base_total * (1 - f)
+    //    and equivalently
+    //        base_total = base_to_reserve / (1 - f)
+    //                   = base_to_reserve * 10_000 / (10_000 - platform_bps - launcher_bps)
+    let platform_bps = bonding.platform_fee_basis_points as u128;
+    let launcher_bps = bonding.launcher_fee_basis_points as u128;
+    let total_fee_bps = platform_bps
+        .checked_add(launcher_bps)
+        .ok_or(error!(ErrorCode::ArithmeticOverflow))?;
+    // Defensive: must always be < 10_000 (we cap launcher at 500 and platform at 50).
+    if total_fee_bps >= 10_000 {
+        return err!(ErrorCode::ArithmeticOverflow);
+    }
+    let net_bps = 10_000u128 - total_fee_bps;
+
+    let (target_amount, base_total): (u64, u64) =
         match (args.desired_target_amount, args.base_amount) {
             (Some(_), Some(_)) => return err!(ErrorCode::AmbiguousBuyArgs),
             (None, None) => return err!(ErrorCode::MissingBuyArgs),
             (Some(t), None) => {
-                let cost = price_for_tokens(&exp_curve, current_supply, t)?;
-                (t, cost)
+                // Fixed tokens out: compute reserve cost from curve, then gross
+                // up by the fee rate to find the user's total spend.
+                let base_to_reserve = price_for_tokens(&exp_curve, current_supply, t)?;
+                // base_total = ceil(base_to_reserve * 10_000 / net_bps)
+                let numer = (base_to_reserve as u128)
+                    .checked_mul(10_000)
+                    .ok_or(error!(ErrorCode::ArithmeticOverflow))?;
+                let total = numer
+                    .checked_add(net_bps - 1)
+                    .ok_or(error!(ErrorCode::ArithmeticOverflow))?
+                    / net_bps;
+                let total_u64: u64 =
+                    total.try_into().map_err(|_| error!(ErrorCode::U64ConversionFailed))?;
+                (t, total_u64)
             }
             (None, Some(b)) => {
-                let t = tokens_for_price(&exp_curve, current_supply, b)?;
+                // Fixed base in: skim fees, hand the remainder to the curve.
+                let base_to_reserve_u128 = (b as u128)
+                    .checked_mul(net_bps)
+                    .ok_or(error!(ErrorCode::ArithmeticOverflow))?
+                    / 10_000;
+                let base_to_reserve: u64 = base_to_reserve_u128
+                    .try_into()
+                    .map_err(|_| error!(ErrorCode::U64ConversionFailed))?;
+                let t = tokens_for_price(&exp_curve, current_supply, base_to_reserve)?;
                 (t, b)
             }
         };
 
+    // Final fee split derived from `base_total` so on-chain accounting is
+    // exact regardless of which mode the caller used.
+    let platform_fee: u64 = ((base_total as u128)
+        .checked_mul(platform_bps)
+        .ok_or(error!(ErrorCode::ArithmeticOverflow))?
+        / 10_000)
+        .try_into()
+        .map_err(|_| error!(ErrorCode::U64ConversionFailed))?;
+    let launcher_fee: u64 = ((base_total as u128)
+        .checked_mul(launcher_bps)
+        .ok_or(error!(ErrorCode::ArithmeticOverflow))?
+        / 10_000)
+        .try_into()
+        .map_err(|_| error!(ErrorCode::U64ConversionFailed))?;
+    let base_to_reserve = base_total
+        .checked_sub(platform_fee)
+        .ok_or(error!(ErrorCode::ArithmeticUnderflow))?
+        .checked_sub(launcher_fee)
+        .ok_or(error!(ErrorCode::ArithmeticUnderflow))?;
+
+    // 4. Caps & slippage --------------------------------------------------
     if let Some(cap) = bonding.purchase_cap {
         if target_amount > cap {
             return err!(ErrorCode::PurchaseCapExceeded);
@@ -167,25 +234,8 @@ pub fn handler(ctx: Context<BuyV1>, args: BuyV1Args) -> Result<()> {
             return err!(ErrorCode::MintCapExceeded);
         }
     }
-
-    // 4. Royalty splits ----------------------------------------------------
-    let buy_base_royalty = ((base_needed as u128)
-        * bonding.buy_base_royalty_percentage as u128
-        / 10_000u128) as u64;
-    let buy_target_royalty = ((target_amount as u128)
-        * bonding.buy_target_royalty_percentage as u128
-        / 10_000u128) as u64;
-
-    let base_to_reserve = base_needed
-        .checked_sub(buy_base_royalty)
-        .ok_or(error!(ErrorCode::ArithmeticUnderflow))?;
-    let target_to_buyer = target_amount
-        .checked_sub(buy_target_royalty)
-        .ok_or(error!(ErrorCode::ArithmeticUnderflow))?;
-
-    // 5. Slippage checks ---------------------------------------------------
     if let Some(max_base) = args.slippage_max_base {
-        if base_needed > max_base {
+        if base_total > max_base {
             return err!(ErrorCode::SlippageExceeded);
         }
     }
@@ -195,18 +245,31 @@ pub fn handler(ctx: Context<BuyV1>, args: BuyV1Args) -> Result<()> {
         }
     }
 
-    // 6. Transfer base from buyer -----------------------------------------
-    if buy_base_royalty > 0 {
+    // 5. Move base tokens: platform fee, launcher fee, then reserve. -------
+    if platform_fee > 0 {
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
                     from: ctx.accounts.source.to_account_info(),
-                    to: ctx.accounts.buy_base_royalties.to_account_info(),
+                    to: ctx.accounts.master_usdc.to_account_info(),
                     authority: ctx.accounts.payer.to_account_info(),
                 },
             ),
-            buy_base_royalty,
+            platform_fee,
+        )?;
+    }
+    if launcher_fee > 0 {
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.source.to_account_info(),
+                    to: ctx.accounts.launcher_usdc.to_account_info(),
+                    authority: ctx.accounts.payer.to_account_info(),
+                },
+            ),
+            launcher_fee,
         )?;
     }
     if base_to_reserve > 0 {
@@ -223,7 +286,7 @@ pub fn handler(ctx: Context<BuyV1>, args: BuyV1Args) -> Result<()> {
         )?;
     }
 
-    // 7. Mint target tokens (royalty + buyer) ------------------------------
+    // 6. Mint target tokens to the buyer -----------------------------------
     let bonding_key = ctx.accounts.token_bonding.key();
     let mint_auth_bump = ctx.accounts.token_bonding.target_mint_authority_bump_seed;
     let signer_seeds: &[&[&[u8]]] = &[&[
@@ -232,21 +295,7 @@ pub fn handler(ctx: Context<BuyV1>, args: BuyV1Args) -> Result<()> {
         &[mint_auth_bump],
     ]];
 
-    if buy_target_royalty > 0 {
-        token::mint_to(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                MintTo {
-                    mint: ctx.accounts.target_mint.to_account_info(),
-                    to: ctx.accounts.buy_target_royalties.to_account_info(),
-                    authority: ctx.accounts.target_mint_authority.to_account_info(),
-                },
-                signer_seeds,
-            ),
-            buy_target_royalty,
-        )?;
-    }
-    if target_to_buyer > 0 {
+    if target_amount > 0 {
         token::mint_to(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -257,11 +306,11 @@ pub fn handler(ctx: Context<BuyV1>, args: BuyV1Args) -> Result<()> {
                 },
                 signer_seeds,
             ),
-            target_to_buyer,
+            target_amount,
         )?;
     }
 
-    // 8. Track virtual reserve & supply -----------------------------------
+    // 7. Track virtual reserve & supply -----------------------------------
     let bonding = &mut ctx.accounts.token_bonding;
     bonding.supply_from_bonding = bonding
         .supply_from_bonding

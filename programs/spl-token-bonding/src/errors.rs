@@ -42,4 +42,10 @@ pub enum ErrorCode {
     EmptyCurve,
     #[msg("Reserve would become insolvent")]
     InsolventReserve,
+    #[msg("Launcher fee exceeds maximum of 500 basis points (5%)")]
+    LauncherFeeExceedsMaximum,
+    #[msg("Base mint must be the canonical USDC mint")]
+    InvalidBaseMint,
+    #[msg("Provided account does not match the bonding's master_wallet or launcher_fee_wallet")]
+    InvalidFeeAccount,
 }

@@ -110,27 +110,25 @@ impl TransitionFeeV0 {
 }
 
 /// One bonding curve instance. The `(target_mint, index)` pair is unique.
+///
+/// Fee model (replaces the legacy royalty system):
+///   * `platform_fee_basis_points`  — frozen at `PLATFORM_FEE_BPS` on init.
+///                                    Charged on every buy/sell, sent to `master_wallet`.
+///   * `launcher_fee_basis_points`  — chosen by the launcher (0..=500). Charged on
+///                                    every buy/sell, sent to `launcher_fee_wallet`.
+///   * `master_wallet`              — frozen at `MASTER_WALLET` on init.
 #[account]
 pub struct TokenBondingV0 {
     pub base_mint: Pubkey,
     pub target_mint: Pubkey,
 
     pub general_authority: Option<Pubkey>,
-    pub reserve_authority: Option<Pubkey>,
     pub curve_authority: Option<Pubkey>,
 
-    /// Token account holding the base reserves.
+    /// Token account holding the base (USDC) reserves. Funds in here can ONLY
+    /// leave via `sell_v1` (which burns the matching target tokens). There is
+    /// no other instruction in the program that withdraws from this account.
     pub base_storage: Pubkey,
-
-    pub buy_base_royalties: Pubkey,
-    pub buy_target_royalties: Pubkey,
-    pub sell_base_royalties: Pubkey,
-    pub sell_target_royalties: Pubkey,
-
-    pub buy_base_royalty_percentage: u32,
-    pub buy_target_royalty_percentage: u32,
-    pub sell_base_royalty_percentage: u32,
-    pub sell_target_royalty_percentage: u32,
 
     pub curve: Pubkey,
 
@@ -157,15 +155,25 @@ pub struct TokenBondingV0 {
 
     pub ignore_external_reserve_changes: bool,
     pub ignore_external_supply_changes: bool,
+
+    // ----- Fee model -----------------------------------------------------
+    /// Always equal to `crate::PLATFORM_FEE_BPS` (50 bps == 0.5%). Stored in
+    /// the account so clients can read it without hardcoding the constant.
+    pub platform_fee_basis_points: u16,
+    /// Launcher-chosen fee, 0..=`LAUNCHER_FEE_BPS_MAX` (500 == 5%).
+    pub launcher_fee_basis_points: u16,
+    /// Always equal to `crate::MASTER_WALLET`. Stored for client convenience
+    /// and for runtime validation of the fee destination accounts.
+    pub master_wallet: Pubkey,
+    /// Wallet (system account) that owns the launcher fee USDC ATA.
+    pub launcher_fee_wallet: Pubkey,
 }
 
 impl TokenBondingV0 {
     pub const LEN: usize = 8 // discriminator
         + 32 + 32                       // base_mint, target_mint
-        + (1 + 32) * 3                  // 3 optional authorities
+        + (1 + 32) * 2                  // 2 optional authorities
         + 32                            // base_storage
-        + 32 * 4                        // royalty destinations
-        + 4 * 4                         // royalty percentages
         + 32                            // curve
         + (1 + 8) * 2                   // optional u64 caps
         + 8                             // go_live
@@ -175,7 +183,9 @@ impl TokenBondingV0 {
         + 2                             // index
         + 1 * 4                         // 4 bump seeds
         + 8 + 8                         // virtual reserve & supply
-        + 1 + 1; // ignore flags
+        + 1 + 1                         // ignore flags
+        + 2 + 2                         // platform & launcher fee bps
+        + 32 + 32; // master_wallet, launcher_fee_wallet
 
     pub const SEED_PREFIX: &'static [u8] = b"token-bonding";
     pub const MINT_AUTHORITY_SEED: &'static [u8] = b"mint-authority";

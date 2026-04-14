@@ -1,11 +1,23 @@
-//! Sell tokens back along the curve. Burn from the seller, transfer base out
-//! of `base_storage` (signed by the storage authority PDA).
+//! Sell tokens back along the curve.
+//!
+//! Flow on a successful call:
+//!   1. Burn the seller's `target_amount` tokens.
+//!   2. Compute `base_out_gross` from the curve (the integral over the burned
+//!      slice of supply).
+//!   3. Skim `platform_fee` and `launcher_fee` from the gross, both transferred
+//!      out of `base_storage` to their respective ATAs.
+//!   4. Transfer `base_out_net = base_out_gross - platform_fee - launcher_fee`
+//!      to the seller.
+//!
+//! All four moves out of `base_storage` (3 transfers + 0 fresh mints) are
+//! signed by the storage authority PDA. There is no other path that can
+//! withdraw from `base_storage`.
 
 use crate::curve::exponential::price_for_tokens;
 use crate::errors::ErrorCode;
 use crate::state::*;
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Burn, Mint, MintTo, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct SellV1Args {
@@ -50,16 +62,21 @@ pub struct SellV1<'info> {
     )]
     pub base_storage_authority: UncheckedAccount<'info>,
 
+    /// MASTER_WALLET's USDC ATA. Receives the platform fee.
     #[account(
         mut,
-        address = token_bonding.sell_base_royalties @ ErrorCode::InvalidAccount,
+        token::mint = base_mint,
+        constraint = master_usdc.owner == token_bonding.master_wallet @ ErrorCode::InvalidFeeAccount,
     )]
-    pub sell_base_royalties: Box<Account<'info, TokenAccount>>,
+    pub master_usdc: Box<Account<'info, TokenAccount>>,
+
+    /// Launcher's USDC ATA. Receives the launcher fee.
     #[account(
         mut,
-        address = token_bonding.sell_target_royalties @ ErrorCode::InvalidAccount,
+        token::mint = base_mint,
+        constraint = launcher_usdc.owner == token_bonding.launcher_fee_wallet @ ErrorCode::InvalidFeeAccount,
     )]
-    pub sell_target_royalties: Box<Account<'info, TokenAccount>>,
+    pub launcher_usdc: Box<Account<'info, TokenAccount>>,
 
     /// Source of target tokens being sold (seller's ATA).
     #[account(mut, token::mint = target_mint, token::authority = seller)]
@@ -67,14 +84,6 @@ pub struct SellV1<'info> {
     /// Destination of base tokens (seller's base ATA).
     #[account(mut, token::mint = base_mint)]
     pub destination: Box<Account<'info, TokenAccount>>,
-
-    /// Mint authority PDA — needed to mint the target-side royalty.
-    /// CHECK: PDA, validated by seeds.
-    #[account(
-        seeds = [TokenBondingV0::MINT_AUTHORITY_SEED, token_bonding.key().as_ref()],
-        bump = token_bonding.target_mint_authority_bump_seed,
-    )]
-    pub target_mint_authority: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub clock: Sysvar<'info, Clock>,
@@ -129,39 +138,48 @@ pub fn handler(ctx: Context<SellV1>, args: SellV1Args) -> Result<()> {
         return err!(ErrorCode::ArithmeticUnderflow);
     }
 
-    // base_out = R(S) - R(S - amount) = price_for_tokens at the lower supply.
-    let new_supply = current_supply - args.target_amount;
-    let base_out = price_for_tokens(&exp_curve, new_supply, args.target_amount)?;
-
-    // Royalty split (same convention as buy).
-    let sell_base_royalty = ((base_out as u128)
-        * bonding.sell_base_royalty_percentage as u128
-        / 10_000u128) as u64;
-    let sell_target_royalty = ((args.target_amount as u128)
-        * bonding.sell_target_royalty_percentage as u128
-        / 10_000u128) as u64;
-
-    let base_to_seller = base_out
-        .checked_sub(sell_base_royalty)
+    // base_out_gross = R(S) - R(S - amount) = price_for_tokens at the lower supply.
+    let new_supply = current_supply
+        .checked_sub(args.target_amount)
         .ok_or(error!(ErrorCode::ArithmeticUnderflow))?;
-    let amount_to_burn = args
-        .target_amount
-        .checked_sub(sell_target_royalty)
+    let base_out_gross = price_for_tokens(&exp_curve, new_supply, args.target_amount)?;
+
+    // Fees skimmed from the gross. The seller receives the net.
+    let platform_bps = bonding.platform_fee_basis_points as u128;
+    let launcher_bps = bonding.launcher_fee_basis_points as u128;
+    let platform_fee: u64 = ((base_out_gross as u128)
+        .checked_mul(platform_bps)
+        .ok_or(error!(ErrorCode::ArithmeticOverflow))?
+        / 10_000)
+        .try_into()
+        .map_err(|_| error!(ErrorCode::U64ConversionFailed))?;
+    let launcher_fee: u64 = ((base_out_gross as u128)
+        .checked_mul(launcher_bps)
+        .ok_or(error!(ErrorCode::ArithmeticOverflow))?
+        / 10_000)
+        .try_into()
+        .map_err(|_| error!(ErrorCode::U64ConversionFailed))?;
+    let base_out_net = base_out_gross
+        .checked_sub(platform_fee)
+        .ok_or(error!(ErrorCode::ArithmeticUnderflow))?
+        .checked_sub(launcher_fee)
         .ok_or(error!(ErrorCode::ArithmeticUnderflow))?;
 
     if let Some(min_base) = args.slippage_min_base {
-        if base_to_seller < min_base {
+        if base_out_net < min_base {
             return err!(ErrorCode::SlippageExceeded);
         }
     }
 
-    // Reserve solvency check — we should never overdraw the storage.
-    if base_out > ctx.accounts.base_storage.amount {
+    // Reserve solvency check — never overdraw the storage.
+    if base_out_gross > ctx.accounts.base_storage.amount {
         return err!(ErrorCode::InsolventReserve);
     }
 
-    // Burn the bulk of the seller's tokens.
-    if amount_to_burn > 0 {
+    // 1. Burn the seller's tokens. Tokens leave the curve domain BEFORE any
+    //    base flows out, so an early failure leaves the system in a state
+    //    that still satisfies the solvency invariant.
+    if args.target_amount > 0 {
         token::burn(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -171,37 +189,11 @@ pub fn handler(ctx: Context<SellV1>, args: SellV1Args) -> Result<()> {
                     authority: ctx.accounts.seller.to_account_info(),
                 },
             ),
-            amount_to_burn,
+            args.target_amount,
         )?;
     }
 
-    // The target-side royalty is implemented as: burn the full amount from the
-    // seller, then mint the royalty back to the royalty account. We already
-    // only burned `amount_to_burn`, so the remaining `sell_target_royalty`
-    // tokens still sit in the seller's account — we need to *transfer* those
-    // to the royalty destination instead of minting fresh ones, to keep total
-    // supply consistent with the curve.
-    if sell_target_royalty > 0 {
-        token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.source.to_account_info(),
-                    to: ctx.accounts.sell_target_royalties.to_account_info(),
-                    authority: ctx.accounts.seller.to_account_info(),
-                },
-            ),
-            sell_target_royalty,
-        )?;
-        // Suppress unused-import warning when royalty == 0.
-        let _ = MintTo {
-            mint: ctx.accounts.target_mint.to_account_info(),
-            to: ctx.accounts.sell_target_royalties.to_account_info(),
-            authority: ctx.accounts.target_mint_authority.to_account_info(),
-        };
-    }
-
-    // Transfer base out of storage to seller (and royalty destination).
+    // 2. Pay out base from storage: platform fee, launcher fee, then seller.
     let bonding_key = ctx.accounts.token_bonding.key();
     let storage_bump = ctx.accounts.token_bonding.reserve_authority_bump_seed;
     let signer_seeds: &[&[&[u8]]] = &[&[
@@ -210,21 +202,35 @@ pub fn handler(ctx: Context<SellV1>, args: SellV1Args) -> Result<()> {
         &[storage_bump],
     ]];
 
-    if sell_base_royalty > 0 {
+    if platform_fee > 0 {
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
                     from: ctx.accounts.base_storage.to_account_info(),
-                    to: ctx.accounts.sell_base_royalties.to_account_info(),
+                    to: ctx.accounts.master_usdc.to_account_info(),
                     authority: ctx.accounts.base_storage_authority.to_account_info(),
                 },
                 signer_seeds,
             ),
-            sell_base_royalty,
+            platform_fee,
         )?;
     }
-    if base_to_seller > 0 {
+    if launcher_fee > 0 {
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.base_storage.to_account_info(),
+                    to: ctx.accounts.launcher_usdc.to_account_info(),
+                    authority: ctx.accounts.base_storage_authority.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            launcher_fee,
+        )?;
+    }
+    if base_out_net > 0 {
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -235,21 +241,19 @@ pub fn handler(ctx: Context<SellV1>, args: SellV1Args) -> Result<()> {
                 },
                 signer_seeds,
             ),
-            base_to_seller,
+            base_out_net,
         )?;
     }
 
-    // Update virtual counters. We model the royalty target tokens as still
-    // circulating (they were transferred, not burned) — only `amount_to_burn`
-    // leaves the curve domain.
+    // 3. Update virtual counters. Both supply and reserve drop atomically.
     let bonding = &mut ctx.accounts.token_bonding;
     bonding.supply_from_bonding = bonding
         .supply_from_bonding
-        .checked_sub(amount_to_burn)
+        .checked_sub(args.target_amount)
         .ok_or(error!(ErrorCode::ArithmeticUnderflow))?;
     bonding.reserve_balance_from_bonding = bonding
         .reserve_balance_from_bonding
-        .checked_sub(base_out)
+        .checked_sub(base_out_gross)
         .ok_or(error!(ErrorCode::ArithmeticUnderflow))?;
 
     Ok(())

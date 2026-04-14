@@ -8,6 +8,7 @@
 //! curve, guaranteeing solvency by construction.
 
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::pubkey;
 
 pub mod curve;
 pub mod errors;
@@ -19,6 +20,26 @@ pub use instructions::*;
 pub use state::*;
 
 declare_id!("41nppqSazESeBmrgnud2j5Nz1MbsnPGeyAryPcKAefqa");
+
+/// Platform master wallet. Receives the one-time launch fee and the 0.5% per-trade
+/// platform fee. Hardcoded so that any auditor can verify the recipient by reading
+/// the source: the program has no instruction that can change this.
+pub const MASTER_WALLET: Pubkey = pubkey!("CQ4n8D3ThynAdKyqiQifo9k79sumBWtNRHZH1TCk2BZ1");
+
+/// Base mint accepted as the reserve currency. Currently devnet USDC.
+/// To migrate to mainnet, replace with `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
+/// and redeploy.
+pub const USDC_MINT: Pubkey = pubkey!("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
+
+/// One-time launch fee charged to the creator on `initialize_token_bonding_v0`.
+/// 25 USDC, with USDC's 6 decimals.
+pub const LAUNCH_FEE_USDC: u64 = 25_000_000;
+
+/// Platform fee charged on every buy and sell, in basis points (50 = 0.5%).
+pub const PLATFORM_FEE_BPS: u16 = 50;
+
+/// Hard cap on the launcher-configurable fee, in basis points (500 = 5%).
+pub const LAUNCHER_FEE_BPS_MAX: u16 = 500;
 
 #[program]
 pub mod spl_token_bonding {
@@ -64,14 +85,5 @@ pub mod spl_token_bonding {
     /// Sell tokens back along the curve.
     pub fn sell_v1(ctx: Context<SellV1>, args: SellV1Args) -> Result<()> {
         instructions::sell_v1::handler(ctx, args)
-    }
-
-    /// Move base reserves out of `base_storage`. Only the reserve authority
-    /// can call this. Useful for migrations.
-    pub fn transfer_reserves_v0(
-        ctx: Context<TransferReservesV0>,
-        args: TransferReservesArgsV0,
-    ) -> Result<()> {
-        instructions::transfer_reserves::handler(ctx, args)
     }
 }
