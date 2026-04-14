@@ -19,6 +19,9 @@ export function Header() {
           <Link href="/launch" className="hover:text-brand-500">
             Launch
           </Link>
+          <Link href="/dashboard" className="hover:text-brand-500">
+            Dashboard
+          </Link>
           <WalletButton />
         </nav>
       </div>
