@@ -4,11 +4,6 @@
  * Exposes a small number of imperative helpers (`createCurve`,
  * `initTokenBonding`, `buy`, `sell`) plus typed account getters. Aimed at
  * the frontend & integration tests.
- *
- * The SDK uses Anchor's `Program` under the hood. Until `anchor build` runs
- * and an IDL JSON is generated, we cast through `any` for the program type so
- * the SDK can be type-checked in isolation. Replace `AnchorProgram` with the
- * generated IDL type once available — search for the `AnchorProgram` alias.
  */
 import {
   AnchorProvider,
@@ -45,20 +40,21 @@ import {
 import {
   baseStorageAuthorityPda,
   baseStoragePda,
-  programStatePda,
   targetMintAuthorityPda,
   tokenBondingPda,
 } from "./pdas";
 import {
   buyBaseAmount as offchainBuyBaseAmount,
   buyTargetAmount as offchainBuyTargetAmount,
-  toExponentialCurve,
   type CurveParams,
 } from "./math";
-import type {
-  CurveV0,
-  PiecewiseCurve,
-  TokenBondingV0,
+import {
+  LAUNCHER_FEE_BPS_MAX,
+  MASTER_WALLET,
+  USDC_MINT,
+  type CurveV0,
+  type PiecewiseCurve,
+  type TokenBondingV0,
 } from "./types";
 
 /** Fully-typed Anchor program handle. */
@@ -76,9 +72,6 @@ export class TokenBondingSDK {
 
   constructor(provider: AnchorProvider, opts: TokenBondingSDKOptions = {}) {
     this.provider = provider;
-    // Anchor 0.30+ embeds the program ID in the IDL itself, so we just hand
-    // the IDL to `new Program` and trust its `address` field. Allow callers
-    // to override for tests / forks via `opts.programId`.
     const idl = idlJson as unknown as SplTokenBonding;
     this.program = new Program<SplTokenBonding>(idl, provider);
     this.programId = opts.programId ?? this.program.programId;
@@ -93,19 +86,10 @@ export class TokenBondingSDK {
 
   // ── Curve creation ─────────────────────────────────────────────────────
 
-  /**
-   * Create a reusable curve definition account, send the tx, and wait for
-   * confirmation. Anchor's `.rpc()` handles blockhash + fee payer + signing
-   * by both the wallet and the extra `curveKp` signer.
-   */
   async createCurve(args: {
     definition: PiecewiseCurve;
   }): Promise<{ curveKey: PublicKey; signature: string }> {
     const curveKp = Keypair.generate();
-    // Anchor 0.31 generates exhaustive variant-discriminated enum types from
-    // the IDL, which our hand-written `PiecewiseCurve` shape almost matches
-    // but not literally. Cast at the boundary; the runtime serialization is
-    // identical (Borsh enum encoding).
     const signature = await this.program.methods
       .createCurveV0({ definition: args.definition as never })
       .accountsPartial({
@@ -121,15 +105,22 @@ export class TokenBondingSDK {
   // ── Token bonding init ─────────────────────────────────────────────────
 
   /**
-   * Initialize a `TokenBondingV0`.
+   * Initialize a `TokenBondingV0`. Charges the launch fee (25 USDC) on-chain
+   * via the program's `initialize_token_bonding_v0` ix.
+   *
+   * The base mint is hardcoded to USDC — the program enforces this and the
+   * SDK does not expose it as an option.
    *
    * If `targetMint` is omitted, a fresh mint is created and its mint
    * authority is set to the program's `mint-authority` PDA before the
    * `init_token_bonding_v0` ix is run.
    */
   async initTokenBonding(args: {
-    baseMint: PublicKey;
     curve: PublicKey;
+    /** Launcher's per-trade fee in basis points (0..=500). */
+    launcherFeeBasisPoints: number;
+    /** Wallet that owns the launcher's USDC ATA where fees are deposited. */
+    launcherFeeWallet?: PublicKey;
     targetMint?: PublicKey;
     decimals?: number;
     index?: number;
@@ -137,19 +128,12 @@ export class TokenBondingSDK {
     freezeBuyDate?: Date;
     mintCap?: BN;
     purchaseCap?: BN;
-    buyBaseRoyaltyPercentage?: number;
-    sellBaseRoyaltyPercentage?: number;
-    buyTargetRoyaltyPercentage?: number;
-    sellTargetRoyaltyPercentage?: number;
     /** Token metadata — if set, a Metaplex metadata account is created
      *  alongside the mint so wallets display the name/symbol. */
     tokenName?: string;
     tokenSymbol?: string;
     tokenUri?: string;
-    /** ATA owners for the four royalty accounts. Defaults to provider wallet. */
-    royaltyOwner?: PublicKey;
     generalAuthority?: PublicKey | null;
-    reserveAuthority?: PublicKey | null;
     curveAuthority?: PublicKey | null;
     ignoreExternalReserveChanges?: boolean;
     ignoreExternalSupplyChanges?: boolean;
@@ -158,14 +142,21 @@ export class TokenBondingSDK {
     targetMint: PublicKey;
     signature: string;
   }> {
+    if (
+      args.launcherFeeBasisPoints < 0 ||
+      args.launcherFeeBasisPoints > LAUNCHER_FEE_BPS_MAX
+    ) {
+      throw new Error(
+        `launcherFeeBasisPoints must be in [0, ${LAUNCHER_FEE_BPS_MAX}]`,
+      );
+    }
+
     const payer = this.provider.wallet.publicKey;
     const index = args.index ?? 0;
     const decimals = args.decimals ?? 9;
+    const launcherFeeWallet = args.launcherFeeWallet ?? payer;
 
     // ── TX A: create the mint + metadata + transfer authority ──────────
-    // Separated from the bonding init because the Metaplex metadata
-    // instruction + its URI data can push the combined transaction
-    // over the 1232-byte limit.
     let targetMint: PublicKey;
     if (args.targetMint) {
       targetMint = args.targetMint;
@@ -224,7 +215,6 @@ export class TokenBondingSDK {
         );
       }
 
-      // Derive the PDA that will own the mint going forward.
       const [tokenBondingPk] = tokenBondingPda(this.programId, targetMint, index);
       const [mintAuthority] = targetMintAuthorityPda(this.programId, tokenBondingPk);
       txA.add(
@@ -236,10 +226,6 @@ export class TokenBondingSDK {
         ),
       );
 
-      // Send TX A (createMint + metadata + setAuthority).
-      // Use manual sign → send → confirm instead of provider.sendAndConfirm
-      // because the latter throws "Unknown action 'undefined'" on some
-      // Anchor 0.31 + wallet-adapter combos.
       const { blockhash, lastValidBlockHeight } =
         await this.provider.connection.getLatestBlockhash("confirmed");
       txA.recentBlockhash = blockhash;
@@ -263,7 +249,7 @@ export class TokenBondingSDK {
       }
     }
 
-    // ── TX B: royalty ATAs + initTokenBonding ──────────────────────────
+    // ── TX B: ensure fee ATAs exist + initTokenBonding ─────────────────
     const tx = new Transaction();
 
     const [tokenBonding] = tokenBondingPda(this.programId, targetMint, index);
@@ -271,15 +257,25 @@ export class TokenBondingSDK {
     const [baseStorage] = baseStoragePda(this.programId, tokenBonding);
     const [baseStorageAuthority] = baseStorageAuthorityPda(this.programId, tokenBonding);
 
-    const royaltyOwner = args.royaltyOwner ?? payer;
-    const royalties = await this.ensureRoyaltyAtas(tx, {
-      payer,
-      owner: royaltyOwner,
-      baseMint: args.baseMint,
-      targetMint,
-    });
+    const payerUsdc = getAssociatedTokenAddressSync(USDC_MINT, payer);
+    const masterUsdc = getAssociatedTokenAddressSync(USDC_MINT, MASTER_WALLET, true);
 
-    // 5. The actual init ix -------------------------------------------------
+    // Idempotent: only add the create ix if the master ATA doesn't exist.
+    // The payer ATA is the user's responsibility — if missing, the fee
+    // transfer will simply fail with a clear error.
+    try {
+      await getAccount(this.provider.connection, masterUsdc);
+    } catch {
+      tx.add(
+        createAssociatedTokenAccountInstruction(
+          payer,
+          masterUsdc,
+          MASTER_WALLET,
+          USDC_MINT,
+        ),
+      );
+    }
+
     const goLive = new BN(Math.floor((args.goLiveDate ?? new Date()).getTime() / 1000));
     const freezeBuy = args.freezeBuyDate
       ? new BN(Math.floor(args.freezeBuyDate.getTime() / 1000))
@@ -289,42 +285,36 @@ export class TokenBondingSDK {
       index,
       goLiveUnixTime: goLive,
       freezeBuyUnixTime: freezeBuy,
-      buyBaseRoyaltyPercentage: args.buyBaseRoyaltyPercentage ?? 0,
-      buyTargetRoyaltyPercentage: args.buyTargetRoyaltyPercentage ?? 0,
-      sellBaseRoyaltyPercentage: args.sellBaseRoyaltyPercentage ?? 0,
-      sellTargetRoyaltyPercentage: args.sellTargetRoyaltyPercentage ?? 0,
       mintCap: args.mintCap ?? null,
       purchaseCap: args.purchaseCap ?? null,
       generalAuthority: args.generalAuthority === undefined ? payer : args.generalAuthority,
-      reserveAuthority: args.reserveAuthority === undefined ? payer : args.reserveAuthority,
       curveAuthority: args.curveAuthority === undefined ? payer : args.curveAuthority,
       buyFrozen: false,
       ignoreExternalReserveChanges: args.ignoreExternalReserveChanges ?? false,
       ignoreExternalSupplyChanges: args.ignoreExternalSupplyChanges ?? false,
+      launcherFeeBasisPoints: args.launcherFeeBasisPoints,
+      launcherFeeWallet,
     };
 
     const initIx = await this.program.methods
       .initializeTokenBondingV0(ixArgs)
       .accountsPartial({
         payer,
-        baseMint: args.baseMint,
+        baseMint: USDC_MINT,
         targetMint,
         curve: args.curve,
         tokenBonding,
         targetMintAuthority: mintAuthority,
         baseStorage,
         baseStorageAuthority,
-        buyBaseRoyalties: royalties.buyBase,
-        buyTargetRoyalties: royalties.buyTarget,
-        sellBaseRoyalties: royalties.sellBase,
-        sellTargetRoyalties: royalties.sellTarget,
+        payerUsdc,
+        masterUsdc,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
       .instruction();
     tx.add(initIx);
 
-    // TX B: manual sign → send → confirm (same pattern as TX A).
     const { blockhash: bh, lastValidBlockHeight: lvbh } =
       await this.provider.connection.getLatestBlockhash("confirmed");
     tx.recentBlockhash = bh;
@@ -369,20 +359,33 @@ export class TokenBondingSDK {
       args.destination ?? getAssociatedTokenAddressSync(bonding.targetMint, payer);
     const source = getAssociatedTokenAddressSync(bonding.baseMint, payer);
 
+    const masterUsdc = getAssociatedTokenAddressSync(
+      bonding.baseMint,
+      bonding.masterWallet,
+      true,
+    );
+    const launcherUsdc = getAssociatedTokenAddressSync(
+      bonding.baseMint,
+      bonding.launcherFeeWallet,
+      true,
+    );
+
     const tx = new Transaction();
 
-    // Best-effort: create destination ATA if it does not exist.
-    try {
-      await getAccount(this.provider.connection, destination);
-    } catch {
-      tx.add(
-        createAssociatedTokenAccountInstruction(
-          payer,
-          destination,
-          payer,
-          bonding.targetMint,
-        ),
-      );
+    // Best-effort: create destination + fee ATAs if missing. The payer
+    // funds the rent for any account that has to be lazily created.
+    for (const [mint, ata, owner] of [
+      [bonding.targetMint, destination, payer],
+      [bonding.baseMint, masterUsdc, bonding.masterWallet],
+      [bonding.baseMint, launcherUsdc, bonding.launcherFeeWallet],
+    ] as const) {
+      try {
+        await getAccount(this.provider.connection, ata);
+      } catch {
+        tx.add(
+          createAssociatedTokenAccountInstruction(payer, ata, owner, mint),
+        );
+      }
     }
 
     // Quote off-chain to derive slippage bounds.
@@ -412,8 +415,8 @@ export class TokenBondingSDK {
         targetMint: bonding.targetMint,
         targetMintAuthority: mintAuthority,
         baseStorage: bonding.baseStorage,
-        buyBaseRoyalties: bonding.buyBaseRoyalties,
-        buyTargetRoyalties: bonding.buyTargetRoyalties,
+        masterUsdc,
+        launcherUsdc,
         source,
         destination,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -436,7 +439,6 @@ export class TokenBondingSDK {
     const bonding = await this.getTokenBonding(args.tokenBonding);
     if (!bonding) throw new Error("token bonding account not found");
 
-    const [mintAuthority] = targetMintAuthorityPda(this.programId, args.tokenBonding);
     const [baseStorageAuthority] = baseStorageAuthorityPda(
       this.programId,
       args.tokenBonding,
@@ -445,6 +447,33 @@ export class TokenBondingSDK {
     const source = getAssociatedTokenAddressSync(bonding.targetMint, seller);
     const destination =
       args.destination ?? getAssociatedTokenAddressSync(bonding.baseMint, seller);
+
+    const masterUsdc = getAssociatedTokenAddressSync(
+      bonding.baseMint,
+      bonding.masterWallet,
+      true,
+    );
+    const launcherUsdc = getAssociatedTokenAddressSync(
+      bonding.baseMint,
+      bonding.launcherFeeWallet,
+      true,
+    );
+
+    const tx = new Transaction();
+
+    for (const [mint, ata, owner] of [
+      [bonding.baseMint, destination, seller],
+      [bonding.baseMint, masterUsdc, bonding.masterWallet],
+      [bonding.baseMint, launcherUsdc, bonding.launcherFeeWallet],
+    ] as const) {
+      try {
+        await getAccount(this.provider.connection, ata);
+      } catch {
+        tx.add(
+          createAssociatedTokenAccountInstruction(seller, ata, owner, mint),
+        );
+      }
+    }
 
     // Quote
     const quote = await this.quoteSell(bonding, args.targetAmount);
@@ -463,46 +492,89 @@ export class TokenBondingSDK {
         targetMint: bonding.targetMint,
         baseStorage: bonding.baseStorage,
         baseStorageAuthority,
-        sellBaseRoyalties: bonding.sellBaseRoyalties,
-        sellTargetRoyalties: bonding.sellTargetRoyalties,
+        masterUsdc,
+        launcherUsdc,
         source,
         destination,
-        targetMintAuthority: mintAuthority,
         tokenProgram: TOKEN_PROGRAM_ID,
         clock: SYSVAR_CLOCK_PUBKEY,
       })
       .instruction();
-    return new Transaction().add(ix);
+    tx.add(ix);
+    return tx;
   }
 
   // ── Quotes (off-chain previews) ────────────────────────────────────────
 
+  /**
+   * Quote a buy. Returns both the gross `baseAmount` paid by the user and
+   * the fee breakdown so callers can show a preview without re-deriving the
+   * fee math themselves.
+   *
+   * The on-chain logic skims fees BEFORE handing the remainder to the curve,
+   * so we mirror that here: when the caller fixes `baseAmount`, we subtract
+   * the fees first; when they fix `desiredTargetAmount`, we gross up.
+   */
   async quoteBuy(
     bonding: TokenBondingV0,
     args: { desiredTargetAmount?: BN; baseAmount?: BN },
-  ): Promise<{ targetAmount: number; baseAmount: number }> {
+  ): Promise<{
+    targetAmount: number;
+    baseAmount: number;
+    platformFee: number;
+    launcherFee: number;
+    baseToReserve: number;
+  }> {
     const curveDef = await this.getCurveParams(bonding.curve);
     const supply = (await this.getMintSupply(bonding.targetMint)).toNumber();
+
+    const platformBps = bonding.platformFeeBasisPoints;
+    const launcherBps = bonding.launcherFeeBasisPoints;
+    const totalBps = platformBps + launcherBps;
+    const netBps = 10_000 - totalBps;
+
+    let targetAmount: number;
+    let baseAmount: number;
+
     if (args.desiredTargetAmount) {
-      const t = args.desiredTargetAmount.toNumber();
-      return { targetAmount: t, baseAmount: offchainBuyTargetAmount(curveDef, supply, t) };
+      targetAmount = args.desiredTargetAmount.toNumber();
+      const baseToReserve = offchainBuyTargetAmount(curveDef, supply, targetAmount);
+      baseAmount = Math.ceil((baseToReserve * 10_000) / netBps);
+    } else if (args.baseAmount) {
+      baseAmount = args.baseAmount.toNumber();
+      const baseToReserve = Math.floor((baseAmount * netBps) / 10_000);
+      targetAmount = offchainBuyBaseAmount(curveDef, supply, baseToReserve);
+    } else {
+      throw new Error("Pass either desiredTargetAmount or baseAmount");
     }
-    if (args.baseAmount) {
-      const b = args.baseAmount.toNumber();
-      return { targetAmount: offchainBuyBaseAmount(curveDef, supply, b), baseAmount: b };
-    }
-    throw new Error("Pass either desiredTargetAmount or baseAmount");
+
+    const platformFee = Math.floor((baseAmount * platformBps) / 10_000);
+    const launcherFee = Math.floor((baseAmount * launcherBps) / 10_000);
+    const baseToReserve = baseAmount - platformFee - launcherFee;
+    return { targetAmount, baseAmount, platformFee, launcherFee, baseToReserve };
   }
 
+  /**
+   * Quote a sell. `baseAmount` is the NET the seller actually receives after
+   * the platform and launcher fees are skimmed from the curve gross.
+   */
   async quoteSell(
     bonding: TokenBondingV0,
     targetAmount: BN,
-  ): Promise<{ baseAmount: number }> {
+  ): Promise<{
+    baseAmount: number;
+    grossBaseAmount: number;
+    platformFee: number;
+    launcherFee: number;
+  }> {
     const curveDef = await this.getCurveParams(bonding.curve);
     const supply = (await this.getMintSupply(bonding.targetMint)).toNumber();
     const t = targetAmount.toNumber();
-    const baseAmount = offchainBuyTargetAmount(curveDef, supply - t, t);
-    return { baseAmount };
+    const grossBaseAmount = offchainBuyTargetAmount(curveDef, supply - t, t);
+    const platformFee = Math.floor((grossBaseAmount * bonding.platformFeeBasisPoints) / 10_000);
+    const launcherFee = Math.floor((grossBaseAmount * bonding.launcherFeeBasisPoints) / 10_000);
+    const baseAmount = grossBaseAmount - platformFee - launcherFee;
+    return { baseAmount, grossBaseAmount, platformFee, launcherFee };
   }
 
   // ── Account getters ────────────────────────────────────────────────────
@@ -552,15 +624,14 @@ export class TokenBondingSDK {
 
   /**
    * Resolve the *currently active* primitive curve and return human params.
-   * Picks the latest piece whose offset has elapsed since `goLive`.
+   * Picks the first piece (single-piece curves are the common case for the
+   * launch wizard).
    */
   private async getCurveParams(curveKey: PublicKey): Promise<CurveParams> {
     const curve = await this.getCurve(curveKey);
     if (!curve) throw new Error("curve account not found");
     const pieces = curve.definition.timeV0.curves;
     if (pieces.length === 0) throw new Error("empty curve");
-    // We don't have the bonding's goLive here, so just take the first piece —
-    // the frontend uses this for previews and almost all curves are single-piece.
     const primitive = pieces[0].curve;
     if ("exponentialCurveV0" in primitive) {
       const e = primitive.exponentialCurveV0;
@@ -578,47 +649,6 @@ export class TokenBondingSDK {
     const info = await this.provider.connection.getTokenSupply(mint);
     return new BN(info.value.amount);
   }
-
-  /** Idempotently add ATA-create ixs for the four royalty destinations. */
-  private async ensureRoyaltyAtas(
-    tx: Transaction,
-    args: {
-      payer: PublicKey;
-      owner: PublicKey;
-      baseMint: PublicKey;
-      targetMint: PublicKey;
-    },
-  ): Promise<{
-    buyBase: PublicKey;
-    buyTarget: PublicKey;
-    sellBase: PublicKey;
-    sellTarget: PublicKey;
-  }> {
-    const buyBase = getAssociatedTokenAddressSync(args.baseMint, args.owner);
-    const sellBase = buyBase; // same ATA — owner gets all base royalties
-    const buyTarget = getAssociatedTokenAddressSync(args.targetMint, args.owner);
-    const sellTarget = buyTarget;
-
-    for (const [mint, ata] of [
-      [args.baseMint, buyBase],
-      [args.targetMint, buyTarget],
-    ] as const) {
-      try {
-        await getAccount(this.provider.connection, ata);
-      } catch {
-        tx.add(
-          createAssociatedTokenAccountInstruction(
-            args.payer,
-            ata,
-            args.owner,
-            mint,
-          ),
-        );
-      }
-    }
-
-    return { buyBase, buyTarget, sellBase, sellTarget };
-  }
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────
@@ -626,8 +656,6 @@ export class TokenBondingSDK {
 function bnRawToHuman(raw: BN | bigint | { toString(): string }): number {
   // Convert via string to dodge BN.toNumber() throwing on >53-bit values.
   const s = raw.toString();
-  // Raw values are scaled by PRECISION = 10^12. Slice off the last 12 digits
-  // and treat as a decimal.
   if (s.length <= 12) {
     return Number("0." + s.padStart(12, "0"));
   }

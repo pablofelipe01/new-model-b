@@ -116,11 +116,18 @@ export type SplTokenBonding = {
           "writable": true
         },
         {
-          "name": "buyBaseRoyalties",
+          "name": "masterUsdc",
+          "docs": [
+            "MASTER_WALLET's USDC ATA. Receives the platform fee."
+          ],
           "writable": true
         },
         {
-          "name": "buyTargetRoyalties",
+          "name": "launcherUsdc",
+          "docs": [
+            "Launcher's USDC ATA. Receives the launcher fee. Owner must equal the",
+            "`launcher_fee_wallet` recorded on the bonding at init time."
+          ],
           "writable": true
         },
         {
@@ -278,7 +285,8 @@ export type SplTokenBonding = {
           "signer": true
         },
         {
-          "name": "baseMint"
+          "name": "baseMint",
+          "address": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
         },
         {
           "name": "targetMint"
@@ -416,24 +424,19 @@ export type SplTokenBonding = {
           }
         },
         {
-          "name": "buyBaseRoyalties",
+          "name": "payerUsdc",
           "docs": [
-            "Royalty destinations. Stored as `UncheckedAccount` rather than",
-            "`Account<TokenAccount>` to keep the `try_accounts` stack frame",
-            "under the 4 KB BPF limit — full deserialization of 4 token",
-            "accounts pushes the frame over budget. The buy/sell instructions",
-            "re-validate these as `TokenAccount`s when actually used, so the",
-            "looser typing here is safe."
-          ]
+            "Payer's USDC ATA. Source of the 25 USDC launch fee."
+          ],
+          "writable": true
         },
         {
-          "name": "buyTargetRoyalties"
-        },
-        {
-          "name": "sellBaseRoyalties"
-        },
-        {
-          "name": "sellTargetRoyalties"
+          "name": "masterUsdc",
+          "docs": [
+            "MASTER_WALLET's USDC ATA. Destination of the launch fee. Validated",
+            "here so that no rogue client can divert the fee elsewhere."
+          ],
+          "writable": true
         },
         {
           "name": "tokenProgram",
@@ -560,11 +563,17 @@ export type SplTokenBonding = {
           }
         },
         {
-          "name": "sellBaseRoyalties",
+          "name": "masterUsdc",
+          "docs": [
+            "MASTER_WALLET's USDC ATA. Receives the platform fee."
+          ],
           "writable": true
         },
         {
-          "name": "sellTargetRoyalties",
+          "name": "launcherUsdc",
+          "docs": [
+            "Launcher's USDC ATA. Receives the launcher fee."
+          ],
           "writable": true
         },
         {
@@ -582,39 +591,6 @@ export type SplTokenBonding = {
           "writable": true
         },
         {
-          "name": "targetMintAuthority",
-          "docs": [
-            "Mint authority PDA — needed to mint the target-side royalty."
-          ],
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  109,
-                  105,
-                  110,
-                  116,
-                  45,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "tokenBonding"
-              }
-            ]
-          }
-        },
-        {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
@@ -629,120 +605,6 @@ export type SplTokenBonding = {
           "type": {
             "defined": {
               "name": "sellV1Args"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "transferReservesV0",
-      "docs": [
-        "Move base reserves out of `base_storage`. Only the reserve authority",
-        "can call this. Useful for migrations."
-      ],
-      "discriminator": [
-        7,
-        142,
-        255,
-        166,
-        164,
-        247,
-        159,
-        157
-      ],
-      "accounts": [
-        {
-          "name": "reserveAuthority",
-          "signer": true
-        },
-        {
-          "name": "tokenBonding",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  45,
-                  98,
-                  111,
-                  110,
-                  100,
-                  105,
-                  110,
-                  103
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "token_bonding.target_mint",
-                "account": "tokenBondingV0"
-              },
-              {
-                "kind": "account",
-                "path": "token_bonding.index",
-                "account": "tokenBondingV0"
-              }
-            ]
-          }
-        },
-        {
-          "name": "baseStorage",
-          "writable": true
-        },
-        {
-          "name": "baseStorageAuthority",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  115,
-                  116,
-                  111,
-                  114,
-                  97,
-                  103,
-                  101,
-                  45,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "tokenBonding"
-              }
-            ]
-          }
-        },
-        {
-          "name": "destination",
-          "writable": true
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": {
-              "name": "transferReservesArgsV0"
             }
           }
         }
@@ -926,6 +788,21 @@ export type SplTokenBonding = {
       "code": 6019,
       "name": "insolventReserve",
       "msg": "Reserve would become insolvent"
+    },
+    {
+      "code": 6020,
+      "name": "launcherFeeExceedsMaximum",
+      "msg": "Launcher fee exceeds maximum of 500 basis points (5%)"
+    },
+    {
+      "code": 6021,
+      "name": "invalidBaseMint",
+      "msg": "Base mint must be the canonical USDC mint"
+    },
+    {
+      "code": 6022,
+      "name": "invalidFeeAccount",
+      "msg": "Provided account does not match the bonding's master_wallet or launcher_fee_wallet"
     }
   ],
   "types": [
@@ -1033,22 +910,6 @@ export type SplTokenBonding = {
             }
           },
           {
-            "name": "buyBaseRoyaltyPercentage",
-            "type": "u32"
-          },
-          {
-            "name": "buyTargetRoyaltyPercentage",
-            "type": "u32"
-          },
-          {
-            "name": "sellBaseRoyaltyPercentage",
-            "type": "u32"
-          },
-          {
-            "name": "sellTargetRoyaltyPercentage",
-            "type": "u32"
-          },
-          {
             "name": "mintCap",
             "type": {
               "option": "u64"
@@ -1062,12 +923,6 @@ export type SplTokenBonding = {
           },
           {
             "name": "generalAuthority",
-            "type": {
-              "option": "pubkey"
-            }
-          },
-          {
-            "name": "reserveAuthority",
             "type": {
               "option": "pubkey"
             }
@@ -1089,6 +944,21 @@ export type SplTokenBonding = {
           {
             "name": "ignoreExternalSupplyChanges",
             "type": "bool"
+          },
+          {
+            "name": "launcherFeeBasisPoints",
+            "docs": [
+              "Launcher-chosen per-trade fee in basis points. Must be <= 500 (5%)."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "launcherFeeWallet",
+            "docs": [
+              "System account that owns `launcher_fee_usdc`. Stored on the bonding",
+              "so buy/sell can validate the destination at trade time."
+            ],
+            "type": "pubkey"
           }
         ]
       }
@@ -1252,7 +1122,14 @@ export type SplTokenBonding = {
     {
       "name": "tokenBondingV0",
       "docs": [
-        "One bonding curve instance. The `(target_mint, index)` pair is unique."
+        "One bonding curve instance. The `(target_mint, index)` pair is unique.",
+        "",
+        "Fee model (replaces the legacy royalty system):",
+        "* `platform_fee_basis_points`  — frozen at `PLATFORM_FEE_BPS` on init.",
+        "Charged on every buy/sell, sent to `master_wallet`.",
+        "* `launcher_fee_basis_points`  — chosen by the launcher (0..=500). Charged on",
+        "every buy/sell, sent to `launcher_fee_wallet`.",
+        "* `master_wallet`              — frozen at `MASTER_WALLET` on init."
       ],
       "type": {
         "kind": "struct",
@@ -1272,12 +1149,6 @@ export type SplTokenBonding = {
             }
           },
           {
-            "name": "reserveAuthority",
-            "type": {
-              "option": "pubkey"
-            }
-          },
-          {
             "name": "curveAuthority",
             "type": {
               "option": "pubkey"
@@ -1286,41 +1157,11 @@ export type SplTokenBonding = {
           {
             "name": "baseStorage",
             "docs": [
-              "Token account holding the base reserves."
+              "Token account holding the base (USDC) reserves. Funds in here can ONLY",
+              "leave via `sell_v1` (which burns the matching target tokens). There is",
+              "no other instruction in the program that withdraws from this account."
             ],
             "type": "pubkey"
-          },
-          {
-            "name": "buyBaseRoyalties",
-            "type": "pubkey"
-          },
-          {
-            "name": "buyTargetRoyalties",
-            "type": "pubkey"
-          },
-          {
-            "name": "sellBaseRoyalties",
-            "type": "pubkey"
-          },
-          {
-            "name": "sellTargetRoyalties",
-            "type": "pubkey"
-          },
-          {
-            "name": "buyBaseRoyaltyPercentage",
-            "type": "u32"
-          },
-          {
-            "name": "buyTargetRoyaltyPercentage",
-            "type": "u32"
-          },
-          {
-            "name": "sellBaseRoyaltyPercentage",
-            "type": "u32"
-          },
-          {
-            "name": "sellTargetRoyaltyPercentage",
-            "type": "u32"
           },
           {
             "name": "curve",
@@ -1400,18 +1241,36 @@ export type SplTokenBonding = {
           {
             "name": "ignoreExternalSupplyChanges",
             "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "transferReservesArgsV0",
-      "type": {
-        "kind": "struct",
-        "fields": [
+          },
           {
-            "name": "amount",
-            "type": "u64"
+            "name": "platformFeeBasisPoints",
+            "docs": [
+              "Always equal to `crate::PLATFORM_FEE_BPS` (50 bps == 0.5%). Stored in",
+              "the account so clients can read it without hardcoding the constant."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "launcherFeeBasisPoints",
+            "docs": [
+              "Launcher-chosen fee, 0..=`LAUNCHER_FEE_BPS_MAX` (500 == 5%)."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "masterWallet",
+            "docs": [
+              "Always equal to `crate::MASTER_WALLET`. Stored for client convenience",
+              "and for runtime validation of the fee destination accounts."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "launcherFeeWallet",
+            "docs": [
+              "Wallet (system account) that owns the launcher fee USDC ATA."
+            ],
+            "type": "pubkey"
           }
         ]
       }
@@ -1450,39 +1309,9 @@ export type SplTokenBonding = {
             }
           },
           {
-            "name": "reserveAuthority",
-            "type": {
-              "option": "pubkey"
-            }
-          },
-          {
             "name": "curveAuthority",
             "type": {
               "option": "pubkey"
-            }
-          },
-          {
-            "name": "buyBaseRoyaltyPercentage",
-            "type": {
-              "option": "u32"
-            }
-          },
-          {
-            "name": "buyTargetRoyaltyPercentage",
-            "type": {
-              "option": "u32"
-            }
-          },
-          {
-            "name": "sellBaseRoyaltyPercentage",
-            "type": {
-              "option": "u32"
-            }
-          },
-          {
-            "name": "sellTargetRoyaltyPercentage",
-            "type": {
-              "option": "u32"
             }
           },
           {

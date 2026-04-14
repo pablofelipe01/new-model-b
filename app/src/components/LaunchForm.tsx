@@ -2,16 +2,18 @@
 
 import {
   CURVES,
+  LAUNCHER_FEE_BPS_MAX,
+  PLATFORM_FEE_BPS,
+  USDC_DECIMALS,
+  USDC_MINT,
   scaleCurveHumanToOnChain,
   type CurveParams,
   type PiecewiseCurve,
 } from "@new-model-b/sdk";
 import BN from "bn.js";
-import { PublicKey } from "@solana/web3.js";
 import { useMemo, useState } from "react";
 
 import { useSdk } from "@/components/providers/SdkProvider";
-import { BASE_TOKENS, CLUSTER } from "@/lib/constants";
 
 import { BondingCurveChart } from "./BondingCurveChart";
 
@@ -67,11 +69,10 @@ export function LaunchForm() {
 
   // Step 2
   const [selectedPreset, setSelectedPreset] = useState(PRESETS[0]);
-  const [baseMint, setBaseMint] = useState(BASE_TOKENS[CLUSTER][0].mint);
   const [startingPrice, setStartingPrice] = useState(0);
   const [growthRate, setGrowthRate] = useState(1);
-  const [buyRoyalty, setBuyRoyalty] = useState(0);
-  const [sellRoyalty, setSellRoyalty] = useState(0);
+  // Launcher fee in PERCENT (UI). The on-chain field is basis points.
+  const [launcherFeePct, setLauncherFeePct] = useState(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [advPow, setAdvPow] = useState(1);
   const [advFrac, setAdvFrac] = useState(2);
@@ -94,8 +95,8 @@ export function LaunchForm() {
   const [error, setError] = useState<string | null>(null);
 
   const previewMaxSupply = useMemo(() => 1_000, []);
-  const baseSymbol =
-    BASE_TOKENS[CLUSTER].find((t) => t.mint === baseMint)?.symbol ?? "base";
+  // Base mint is hardcoded to USDC by the program — no UI selection.
+  const baseSymbol = "USDC";
 
   async function onLaunch() {
     if (!sdk || !ready) {
@@ -105,16 +106,13 @@ export function LaunchForm() {
     setSubmitting(true);
     setError(null);
     try {
-      // 1. Create the curve account.
-      // The user enters HUMAN coefficients (e.g. linear c=1 means
-      // "1 base per 1 token at supply=1 token"). The on-chain program
-      // works in raw lamport units, so scale the coefficients before
-      // serializing — see scaleCurveHumanToOnChain for the derivation.
-      const baseDecimals =
-        BASE_TOKENS[CLUSTER].find((t) => t.mint === baseMint)?.decimals ?? 9;
+      // 1. Create the curve account. Base is USDC (6 decimals), forced by
+      //    the program. The user enters HUMAN coefficients (e.g. linear c=1
+      //    means "1 USDC per 1 token at supply=1 token"); we scale to raw
+      //    units before serializing.
       const onChainCurve = scaleCurveHumanToOnChain(
         curveParams,
-        baseDecimals,
+        USDC_DECIMALS,
         decimals,
       );
       const definition: PiecewiseCurve = {
@@ -155,12 +153,10 @@ export function LaunchForm() {
       }
 
       const { tokenBondingKey, targetMint } = await sdk.initTokenBonding({
-        baseMint: new PublicKey(baseMint),
         curve: curveKey,
         decimals,
         goLiveDate: new Date(), // always live immediately
-        buyBaseRoyaltyPercentage: Math.round(buyRoyalty * 100),
-        sellBaseRoyaltyPercentage: Math.round(sellRoyalty * 100),
+        launcherFeeBasisPoints: Math.round(launcherFeePct * 100),
         tokenName: name,
         tokenSymbol: symbol,
         tokenUri,
@@ -307,21 +303,10 @@ export function LaunchForm() {
 
       {step === 2 && (
         <Card title="2. Pricing model">
-          <Field label="Base token (what buyers pay with)">
-            <select
-              title="Base token"
-              aria-label="Base token"
-              value={baseMint}
-              onChange={(e) => setBaseMint(e.target.value)}
-              className="input"
-            >
-              {BASE_TOKENS[CLUSTER].map((t) => (
-                <option key={t.mint} value={t.mint}>
-                  {t.symbol}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <p className="text-xs text-zinc-500">
+            Buyers pay with USDC. Reserves are held in USDC and locked by the
+            program — only sellers can withdraw them by burning their tokens.
+          </p>
 
           <Field label="How should the price change?">
             <div className="flex flex-wrap gap-2">
@@ -407,36 +392,25 @@ export function LaunchForm() {
             </div>
           </Field>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Buy fee %">
-              <input
-                title="Fee taken on every buy"
-                aria-label="Buy fee percentage"
-                type="number"
-                min={0}
-                max={100}
-                step="0.1"
-                value={buyRoyalty}
-                onChange={(e) => setBuyRoyalty(Number(e.target.value))}
-                className="input"
-                placeholder="0"
-              />
-            </Field>
-            <Field label="Sell fee %">
-              <input
-                title="Fee taken on every sell"
-                aria-label="Sell fee percentage"
-                type="number"
-                min={0}
-                max={100}
-                step="0.1"
-                value={sellRoyalty}
-                onChange={(e) => setSellRoyalty(Number(e.target.value))}
-                className="input"
-                placeholder="0"
-              />
-            </Field>
-          </div>
+          <Field label={`Your fee % (0 to ${LAUNCHER_FEE_BPS_MAX / 100}, charged on every buy AND sell)`}>
+            <input
+              title="Launcher fee percentage"
+              aria-label="Launcher fee percentage"
+              type="number"
+              min={0}
+              max={LAUNCHER_FEE_BPS_MAX / 100}
+              step="0.1"
+              value={launcherFeePct}
+              onChange={(e) => setLauncherFeePct(Number(e.target.value))}
+              className="input"
+              placeholder="0"
+            />
+            <p className="mt-1 text-xs text-zinc-500">
+              You earn this on every trade. Platform fee is fixed at{" "}
+              {PLATFORM_FEE_BPS / 100}%, so total fee per trade ={" "}
+              {(launcherFeePct + PLATFORM_FEE_BPS / 100).toFixed(2)}%.
+            </p>
+          </Field>
 
           {showAdvanced ? (
             <div className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
@@ -497,8 +471,12 @@ export function LaunchForm() {
             {selectedPreset.key !== "fixed" && (
               <li><strong>Growth rate:</strong> {growthRate}</li>
             )}
-            <li><strong>Buyers pay with:</strong> {baseSymbol}</li>
-            <li><strong>Fees:</strong> buy {buyRoyalty}% / sell {sellRoyalty}%</li>
+            <li><strong>Buyers pay with:</strong> USDC</li>
+            <li>
+              <strong>Fee per trade:</strong> {launcherFeePct}% to you +{" "}
+              {PLATFORM_FEE_BPS / 100}% platform
+            </li>
+            <li><strong>Launch fee:</strong> 25 USDC (one-time)</li>
             <li><strong>Go-live:</strong> immediately</li>
           </ul>
 

@@ -5,7 +5,7 @@
  * can be consumed without first running `anchor build`. Once the program is
  * built, replace `unknown` in `Program<unknown>` with the generated IDL type.
  */
-import type { PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import type BN from "bn.js";
 
 /** Fixed-point precision used by both on-chain and off-chain math. */
@@ -13,6 +13,31 @@ export const PRECISION = 1_000_000_000_000n;
 
 /** Basis-points denominator. 10_000 == 100%. */
 export const BPS_DENOMINATOR = 10_000;
+
+// ── Platform constants — must mirror the on-chain `lib.rs` constants ─────
+
+/** Platform master wallet. Hardcoded in the program; mirrored here so the
+ *  frontend can show it without an extra RPC. */
+export const MASTER_WALLET = new PublicKey(
+  "CQ4n8D3ThynAdKyqiQifo9k79sumBWtNRHZH1TCk2BZ1",
+);
+
+/** Devnet USDC mint accepted as base. Swap for mainnet USDC at deploy. */
+export const USDC_MINT = new PublicKey(
+  "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+);
+
+/** USDC has 6 decimals. */
+export const USDC_DECIMALS = 6;
+
+/** One-time launch fee charged on `initializeTokenBondingV0`, in raw USDC. */
+export const LAUNCH_FEE_USDC_RAW = 25_000_000n;
+
+/** Platform per-trade fee, in basis points (50 == 0.5%). */
+export const PLATFORM_FEE_BPS = 50;
+
+/** Hard cap on the launcher-configurable per-trade fee, in basis points. */
+export const LAUNCHER_FEE_BPS_MAX = 500;
 
 // ── Curve definitions ──────────────────────────────────────────────────────
 
@@ -64,17 +89,8 @@ export interface TokenBondingV0 {
   baseMint: PublicKey;
   targetMint: PublicKey;
   generalAuthority: PublicKey | null;
-  reserveAuthority: PublicKey | null;
   curveAuthority: PublicKey | null;
   baseStorage: PublicKey;
-  buyBaseRoyalties: PublicKey;
-  buyTargetRoyalties: PublicKey;
-  sellBaseRoyalties: PublicKey;
-  sellTargetRoyalties: PublicKey;
-  buyBaseRoyaltyPercentage: number;
-  buyTargetRoyaltyPercentage: number;
-  sellBaseRoyaltyPercentage: number;
-  sellTargetRoyaltyPercentage: number;
   curve: PublicKey;
   mintCap: BN | null;
   purchaseCap: BN | null;
@@ -92,4 +108,9 @@ export interface TokenBondingV0 {
   supplyFromBonding: BN;
   ignoreExternalReserveChanges: boolean;
   ignoreExternalSupplyChanges: boolean;
+  // Fee model
+  platformFeeBasisPoints: number;
+  launcherFeeBasisPoints: number;
+  masterWallet: PublicKey;
+  launcherFeeWallet: PublicKey;
 }
