@@ -1,7 +1,7 @@
 "use client";
 
 import { PrivyProvider, usePrivy } from "@privy-io/react-auth";
-import { useWallets } from "@privy-io/react-auth/solana";
+import { useWallets, useSignTransaction } from "@privy-io/react-auth/solana";
 import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
@@ -18,17 +18,10 @@ export interface PrivyAnchorWallet {
 
 const PrivyWalletContext = createContext<PrivyAnchorWallet | null>(null);
 
-/** Hook consumed by SdkProvider to get the Privy wallet as Anchor Wallet. */
 export function usePrivyWallet(): PrivyAnchorWallet | null {
   return useContext(PrivyWalletContext);
 }
 
-/**
- * Privy handles auth (Google / email) and creates an embedded Solana
- * wallet for every new user. The inner bridge component wraps that wallet
- * in Anchor's Wallet interface and exposes it via context so SdkProvider
- * can use it without knowing about Privy.
- */
 export function PrivyAuthProvider({ children }: { children: ReactNode }) {
   if (!PRIVY_APP_ID) {
     return (
@@ -62,12 +55,17 @@ export function PrivyAuthProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * Inner component that MUST be inside PrivyProvider. Reads the Privy
- * Solana embedded wallet and wraps it in an Anchor-compatible interface.
+ * Bridges Privy's embedded Solana wallet into Anchor's Wallet interface.
+ *
+ * Uses `useSignTransaction` from Privy which takes `{transaction: Uint8Array,
+ * wallet}` and returns `{signedTransaction: Uint8Array}`. This is the correct
+ * hook for Anchor because AnchorProvider.sendAndConfirm calls
+ * wallet.signTransaction(tx) and then sends the signed bytes itself.
  */
 function PrivyWalletBridge({ children }: { children: ReactNode }) {
   const privy = usePrivy();
   const { wallets } = useWallets();
+  const { signTransaction: privySignTx } = useSignTransaction();
   const [anchorWallet, setAnchorWallet] = useState<PrivyAnchorWallet | null>(null);
 
   const authValue = {
@@ -83,9 +81,7 @@ function PrivyWalletBridge({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Find the Privy embedded wallet (not an external one like Phantom).
     const pw = wallets.find((w) => {
-      // The standard wallet name for Privy's embedded wallet is "Privy".
       const name = w.standardWallet?.name ?? "";
       return name.toLowerCase().includes("privy");
     }) ?? wallets[0];
@@ -97,64 +93,53 @@ function PrivyWalletBridge({ children }: { children: ReactNode }) {
 
     const pubkey = new PublicKey(pw.address);
 
-    const signTransaction = async <T extends Transaction | VersionedTransaction>(
-      tx: T,
-    ): Promise<T> => {
-      const stdWallet = pw.standardWallet;
-      if (!stdWallet) throw new Error("Privy wallet not ready");
-
-      // The wallet-standard `solana:signTransaction` feature requires both
-      // the serialized transaction AND the account that should sign it.
-      const feature = stdWallet.features["solana:signTransaction"] as
-        | {
-            signTransaction: (
-              args: { transaction: Uint8Array; account: unknown }[],
-            ) => Promise<{ signedTransaction: Uint8Array }[]>;
-          }
-        | undefined;
-
-      if (!feature) {
-        throw new Error(
-          "Privy wallet does not support solana:signTransaction. " +
-          "Available features: " + Object.keys(stdWallet.features).join(", "),
-        );
-      }
-
-      // The `account` is the first wallet-standard account registered by
-      // the Privy embedded wallet. It carries the address + signing keys.
-      const account = stdWallet.accounts?.[0];
-      if (!account) {
-        throw new Error("No wallet-standard account available for signing");
-      }
-
-      const serialized = tx.serialize({
-        requireAllSignatures: false,
-        verifySignatures: false,
-      });
-
-      const results = await feature.signTransaction([
-        { transaction: new Uint8Array(serialized), account },
-      ]);
-
-      const signed = results[0]?.signedTransaction;
-      if (!signed) throw new Error("No signed transaction returned");
-
-      if (tx instanceof Transaction) {
-        return Transaction.from(signed) as T;
-      }
-      return VersionedTransaction.deserialize(signed) as T;
-    };
-
     setAnchorWallet({
       publicKey: pubkey,
-      signTransaction,
+
+      signTransaction: async <T extends Transaction | VersionedTransaction>(
+        tx: T,
+      ): Promise<T> => {
+        const serialized = tx.serialize({
+          requireAllSignatures: false,
+          verifySignatures: false,
+        });
+
+        const { signedTransaction } = await privySignTx({
+          transaction: new Uint8Array(serialized),
+          wallet: pw,
+        });
+
+        // Deserialize back into the same type Anchor expects.
+        if (tx instanceof Transaction) {
+          return Transaction.from(signedTransaction) as T;
+        }
+        return VersionedTransaction.deserialize(signedTransaction) as T;
+      },
+
       signAllTransactions: async <T extends Transaction | VersionedTransaction>(
         txs: T[],
       ): Promise<T[]> => {
-        return Promise.all(txs.map((t) => signTransaction(t)));
+        const results: T[] = [];
+        for (const tx of txs) {
+          const serialized = tx.serialize({
+            requireAllSignatures: false,
+            verifySignatures: false,
+          });
+          const { signedTransaction } = await privySignTx({
+            transaction: new Uint8Array(serialized),
+            wallet: pw,
+          });
+          if (tx instanceof Transaction) {
+            results.push(Transaction.from(signedTransaction) as T);
+          } else {
+            results.push(VersionedTransaction.deserialize(signedTransaction) as T);
+          }
+        }
+        return results;
       },
     });
-  }, [privy.authenticated, wallets]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [privy.authenticated, wallets.length]);
 
   return (
     <PrivyAuthContext.Provider value={authValue}>
