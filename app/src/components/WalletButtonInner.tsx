@@ -1,10 +1,29 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useState } from "react";
 import { useSdk } from "@/components/providers/SdkProvider";
 import { shortenAddress } from "@/lib/utils";
+
+const PRIVY_ENABLED = !!process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+
+// Conditional import: usePrivy throws if PrivyProvider is missing.
+// We only call it when we know the provider is in the tree.
+let usePrivyHook: (() => {
+  authenticated: boolean;
+  user: { email?: { address: string }; google?: { email: string } } | null;
+  login: () => void;
+  logout: () => void;
+}) | null = null;
+
+if (PRIVY_ENABLED) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    usePrivyHook = require("@privy-io/react-auth").usePrivy;
+  } catch {
+    // Privy not installed.
+  }
+}
 
 /**
  * Auth button with two paths:
@@ -16,12 +35,8 @@ import { shortenAddress } from "@/lib/utils";
  *     users who want to use Phantom / Solflare.
  */
 export default function WalletButtonInner() {
-  let privy: ReturnType<typeof usePrivy> | null = null;
-  try {
-    privy = usePrivy();
-  } catch {
-    // PrivyProvider not in tree.
-  }
+  // Only call usePrivy when we know the provider is mounted.
+  const privy = usePrivyHook ? usePrivyHook() : null;
 
   const { sdk, ready } = useSdk();
   const [copied, setCopied] = useState(false);
