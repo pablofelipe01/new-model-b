@@ -103,11 +103,12 @@ function PrivyWalletBridge({ children }: { children: ReactNode }) {
       const stdWallet = pw.standardWallet;
       if (!stdWallet) throw new Error("Privy wallet not ready");
 
-      // Access the wallet-standard `solana:signTransaction` feature.
+      // The wallet-standard `solana:signTransaction` feature requires both
+      // the serialized transaction AND the account that should sign it.
       const feature = stdWallet.features["solana:signTransaction"] as
         | {
             signTransaction: (
-              args: { transaction: Uint8Array }[],
+              args: { transaction: Uint8Array; account: unknown }[],
             ) => Promise<{ signedTransaction: Uint8Array }[]>;
           }
         | undefined;
@@ -119,14 +120,20 @@ function PrivyWalletBridge({ children }: { children: ReactNode }) {
         );
       }
 
-      // wallet-standard signTransaction takes an array and returns an array.
+      // The `account` is the first wallet-standard account registered by
+      // the Privy embedded wallet. It carries the address + signing keys.
+      const account = stdWallet.accounts?.[0];
+      if (!account) {
+        throw new Error("No wallet-standard account available for signing");
+      }
+
       const serialized = tx.serialize({
         requireAllSignatures: false,
         verifySignatures: false,
       });
 
       const results = await feature.signTransaction([
-        { transaction: new Uint8Array(serialized) },
+        { transaction: new Uint8Array(serialized), account },
       ]);
 
       const signed = results[0]?.signedTransaction;
