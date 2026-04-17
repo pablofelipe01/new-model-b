@@ -2,12 +2,17 @@
 
 import { PrivyProvider, usePrivy } from "@privy-io/react-auth";
 import { useWallets, useSignTransaction } from "@privy-io/react-auth/solana";
+import { createSolanaRpc, createSolanaRpcSubscriptions } from "@solana/kit";
 import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 import { PrivyAuthContext } from "@/hooks/usePrivyAuth";
+import { CLUSTER, RPC_ENDPOINT } from "@/lib/constants";
 
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
+
+/** Map our cluster to Privy's Solana chain identifier. */
+const SOLANA_CHAIN = CLUSTER === "mainnet" ? "solana:mainnet" : "solana:devnet";
 
 /** Anchor-compatible wallet shape. */
 export interface PrivyAnchorWallet {
@@ -45,6 +50,16 @@ export function PrivyAuthProvider({ children }: { children: ReactNode }) {
         embeddedWallets: {
           solana: {
             createOnLogin: "all-users",
+          },
+        },
+        solana: {
+          rpcs: {
+            [SOLANA_CHAIN]: {
+              rpc: createSolanaRpc(RPC_ENDPOINT),
+              rpcSubscriptions: createSolanaRpcSubscriptions(
+                RPC_ENDPOINT.replace("https://", "wss://"),
+              ),
+            },
           },
         },
       }}
