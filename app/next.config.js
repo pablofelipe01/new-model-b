@@ -10,18 +10,29 @@ const nextConfig = {
       path: false,
       crypto: false,
     };
-    // pino-pretty is an optional dep of pino (pulled in by
-    // @walletconnect/logger). It doesn't ship a browser bundle, and
-    // locally Next.js only warns, but on Vercel the missing module
-    // becomes a hard build error. Marking it as external lets webpack
-    // skip it without failing.
-    if (isServer) {
-      config.externals = [...(config.externals || []), "pino-pretty"];
-    } else {
+    // Privy pulls in @solana/kit and @solana-program/* for features we
+    // don't use (funding flows). These packages have version mismatches
+    // that cause import errors. Alias them to false so webpack skips
+    // them — our Anchor SDK uses @solana/web3.js v1 directly.
+    if (!isServer) {
       config.resolve.alias = {
         ...config.resolve.alias,
         "pino-pretty": false,
+        "@solana/kit": false,
+        "@solana-program/token": false,
+        "@solana-program/memo": false,
+        "@solana-program/system": false,
       };
+    }
+    if (isServer) {
+      config.externals = [
+        ...(config.externals || []),
+        "pino-pretty",
+        "@solana/kit",
+        "@solana-program/token",
+        "@solana-program/memo",
+        "@solana-program/system",
+      ];
     }
     return config;
   },

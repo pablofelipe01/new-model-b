@@ -3,6 +3,7 @@ import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
 
 import { Header } from "@/components/Header";
+import { PrivyAuthProvider } from "@/components/providers/PrivyAuthProvider";
 import { SdkProvider } from "@/components/providers/SdkProvider";
 import { WalletContextProvider } from "@/components/providers/WalletContextProvider";
 import { PROJECT_DESCRIPTION, PROJECT_NAME } from "@/lib/constants";
@@ -19,14 +20,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <WalletContextProvider>
-            <SdkProvider>
+          <PrivyAuthProvider>
+            <WalletContextProvider>
+              <SdkProvider>
               <div className="flex min-h-screen flex-col">
                 <Header />
                 <main className="flex-1">{children}</main>
               </div>
-            </SdkProvider>
-          </WalletContextProvider>
+              </SdkProvider>
+            </WalletContextProvider>
+          </PrivyAuthProvider>
         </ThemeProvider>
       </body>
     </html>
