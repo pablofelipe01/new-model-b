@@ -11,7 +11,7 @@ import {
   type PiecewiseCurve,
 } from "@new-model-b/sdk";
 import BN from "bn.js";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { useSdk } from "@/components/providers/SdkProvider";
 
@@ -58,6 +58,8 @@ const PRESETS: {
 export function LaunchForm() {
   const { sdk, ready } = useSdk();
   const [step, setStep] = useState<Step>(1);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Step 1
   const [name, setName] = useState("");
@@ -220,9 +222,40 @@ export function LaunchForm() {
           <Field label="Token logo">
             <div className="flex items-start gap-4">
               <div className="flex-1">
-                <label
-                  htmlFor="logo-upload"
-                  className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-zinc-300 p-4 transition hover:border-brand-500 dark:border-zinc-600"
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  title="Upload token logo"
+                  aria-label="Upload token logo"
+                  disabled={uploading}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploading(true);
+                    try {
+                      const fd = new FormData();
+                      fd.append("file", file);
+                      const res = await fetch("/api/upload", {
+                        method: "POST",
+                        body: fd,
+                      });
+                      const data = await res.json();
+                      if (data.url) setImageUrl(data.url);
+                      else setError(data.error ?? "Upload failed");
+                    } catch (err) {
+                      setError((err as Error).message);
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-zinc-300 p-4 transition hover:border-brand-500 dark:border-zinc-600"
                 >
                   {uploading ? (
                     <span className="text-sm text-zinc-500">Uploading...</span>
@@ -236,36 +269,7 @@ export function LaunchForm() {
                       </span>
                     </>
                   )}
-                  <input
-                    id="logo-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    title="Upload token logo"
-                    aria-label="Upload token logo"
-                    disabled={uploading}
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setUploading(true);
-                      try {
-                        const fd = new FormData();
-                        fd.append("file", file);
-                        const res = await fetch("/api/upload", {
-                          method: "POST",
-                          body: fd,
-                        });
-                        const data = await res.json();
-                        if (data.url) setImageUrl(data.url);
-                        else setError(data.error ?? "Upload failed");
-                      } catch (err) {
-                        setError((err as Error).message);
-                      } finally {
-                        setUploading(false);
-                      }
-                    }}
-                  />
-                </label>
+                </button>
                 <p className="mt-1 text-xs text-zinc-500">
                   Or paste a URL:
                 </p>
