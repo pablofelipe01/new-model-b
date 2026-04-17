@@ -5,6 +5,8 @@ import { useWallets } from "@privy-io/react-auth/solana";
 import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
+import { PrivyAuthContext } from "@/hooks/usePrivyAuth";
+
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
 
 /** Anchor-compatible wallet shape. */
@@ -30,9 +32,11 @@ export function usePrivyWallet(): PrivyAnchorWallet | null {
 export function PrivyAuthProvider({ children }: { children: ReactNode }) {
   if (!PRIVY_APP_ID) {
     return (
-      <PrivyWalletContext.Provider value={null}>
-        {children}
-      </PrivyWalletContext.Provider>
+      <PrivyAuthContext.Provider value={null}>
+        <PrivyWalletContext.Provider value={null}>
+          {children}
+        </PrivyWalletContext.Provider>
+      </PrivyAuthContext.Provider>
     );
   }
 
@@ -62,12 +66,19 @@ export function PrivyAuthProvider({ children }: { children: ReactNode }) {
  * Solana embedded wallet and wraps it in an Anchor-compatible interface.
  */
 function PrivyWalletBridge({ children }: { children: ReactNode }) {
-  const { authenticated } = usePrivy();
+  const privy = usePrivy();
   const { wallets } = useWallets();
   const [anchorWallet, setAnchorWallet] = useState<PrivyAnchorWallet | null>(null);
 
+  const authValue = {
+    authenticated: privy.authenticated,
+    user: privy.user as { email?: { address: string }; google?: { email: string } } | null,
+    login: privy.login,
+    logout: privy.logout,
+  };
+
   useEffect(() => {
-    if (!authenticated || wallets.length === 0) {
+    if (!privy.authenticated || wallets.length === 0) {
       setAnchorWallet(null);
       return;
     }
@@ -136,11 +147,13 @@ function PrivyWalletBridge({ children }: { children: ReactNode }) {
         return Promise.all(txs.map((t) => signTransaction(t)));
       },
     });
-  }, [authenticated, wallets]);
+  }, [privy.authenticated, wallets]);
 
   return (
-    <PrivyWalletContext.Provider value={anchorWallet}>
-      {children}
-    </PrivyWalletContext.Provider>
+    <PrivyAuthContext.Provider value={authValue}>
+      <PrivyWalletContext.Provider value={anchorWallet}>
+        {children}
+      </PrivyWalletContext.Provider>
+    </PrivyAuthContext.Provider>
   );
 }
