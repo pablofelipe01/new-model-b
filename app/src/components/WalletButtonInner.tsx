@@ -1,39 +1,63 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useState } from "react";
+import { useSdk } from "@/components/providers/SdkProvider";
 import { shortenAddress } from "@/lib/utils";
 
 /**
- * Renders:
- *  - When not logged in: "Sign in" (Privy) + "Connect wallet" (Phantom etc.)
- *  - When logged in via Privy: user email/avatar + "Sign out"
- *  - When connected via wallet adapter only: default wallet button
+ * Auth button with two paths:
+ *
+ *  1. **Privy** (primary) — "Sign in with Google / Email". Privy creates
+ *     an embedded Solana wallet; SdkProvider bridges it to Anchor.
+ *
+ *  2. **Wallet adapter** (secondary) — "Select Wallet". For crypto-native
+ *     users who want to use Phantom / Solflare.
  */
 export default function WalletButtonInner() {
-  // Privy may not be available if the app ID is missing; guard with try/catch.
   let privy: ReturnType<typeof usePrivy> | null = null;
   try {
     privy = usePrivy();
   } catch {
-    // PrivyProvider not in the tree — wallet-adapter only mode.
+    // PrivyProvider not in tree.
   }
 
-  const { publicKey } = useWallet();
+  const { sdk, ready } = useSdk();
+  const [copied, setCopied] = useState(false);
 
-  // If Privy is available and user is authenticated.
+  // Privy authenticated.
   if (privy?.authenticated && privy.user) {
     const label =
       privy.user.email?.address ??
       privy.user.google?.email ??
-      (publicKey ? shortenAddress(publicKey.toBase58()) : "Signed in");
+      "Signed in";
+
+    const walletAddr = sdk?.provider.wallet.publicKey.toBase58();
 
     return (
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-zinc-400 max-w-[160px] truncate">
+      <div className="flex items-center gap-3">
+        {ready && walletAddr && (
+          <button
+            type="button"
+            title="Click to copy address"
+            onClick={() => {
+              navigator.clipboard.writeText(walletAddr);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className="flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+          >
+            {shortenAddress(walletAddr)}
+            <span className="text-[10px]">{copied ? "Copied!" : "Copy"}</span>
+          </button>
+        )}
+        <span className="text-sm text-zinc-400 max-w-[140px] truncate">
           {label}
         </span>
+        {ready && (
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" title="Wallet connected" />
+        )}
         <button
           type="button"
           onClick={privy.logout}
@@ -45,7 +69,7 @@ export default function WalletButtonInner() {
     );
   }
 
-  // If Privy is available but user is NOT authenticated — show both options.
+  // Not authenticated — show both options.
   if (privy && !privy.authenticated) {
     return (
       <div className="flex items-center gap-2">
@@ -68,6 +92,6 @@ export default function WalletButtonInner() {
     );
   }
 
-  // Fallback: no Privy, wallet-adapter only.
+  // Fallback: no Privy.
   return <WalletMultiButton />;
 }
