@@ -54,7 +54,14 @@ export function PrivyAuthProvider({ children }: { children: ReactNode }) {
         },
         solana: {
           rpcs: {
-            [SOLANA_CHAIN]: {
+            // Privy checks solana:mainnet even on devnet, so provide both.
+            "solana:mainnet": {
+              rpc: createSolanaRpc(RPC_ENDPOINT),
+              rpcSubscriptions: createSolanaRpcSubscriptions(
+                RPC_ENDPOINT.replace("https://", "wss://"),
+              ),
+            },
+            "solana:devnet": {
               rpc: createSolanaRpc(RPC_ENDPOINT),
               rpcSubscriptions: createSolanaRpcSubscriptions(
                 RPC_ENDPOINT.replace("https://", "wss://"),
