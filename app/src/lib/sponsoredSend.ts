@@ -3,12 +3,16 @@ import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { RPC_ENDPOINT } from "./constants";
 
 /**
- * Public key of the gas sponsor wallet. Set at build time via env var.
- * When set, all transactions are relayed through `/api/sponsor-tx` so
- * users don't need SOL for gas. When empty, falls back to direct send
- * (user pays gas).
+ * Public key of the gas sponsor wallet. Hardcoded because Next.js
+ * NEXT_PUBLIC_ env vars are inconsistently replaced in client bundles
+ * depending on the import chain. The value MUST match the keypair in
+ * FEE_PAYER_SECRET_KEY on the server side.
+ *
+ * To disable sponsorship, set to empty string "".
  */
-const FEE_PAYER_ADDRESS = process.env.NEXT_PUBLIC_FEE_PAYER_ADDRESS ?? "";
+const FEE_PAYER_ADDRESS =
+  process.env.NEXT_PUBLIC_FEE_PAYER_ADDRESS ||
+  "XrMiSyRsttChRumZiEsTUiBa2Vgt2tJxbia93PsFYW6";
 
 /** Whether gas sponsorship is enabled. */
 export const GAS_SPONSORED = FEE_PAYER_ADDRESS.length > 0;

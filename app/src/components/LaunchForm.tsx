@@ -168,6 +168,7 @@ export function LaunchForm() {
 
       // When gas sponsorship is active, route through the relay so the
       // user doesn't need SOL for rent or gas.
+      console.log("[LaunchForm] FEE_PAYER:", FEE_PAYER?.toBase58() ?? "null");
       const sendFn = FEE_PAYER
         ? async (serializedTx: Buffer): Promise<string> => {
             const res = await fetch("/api/sponsor-tx", {
