@@ -40,7 +40,7 @@ export function useSwap(tokenBonding?: PublicKey | string) {
     // Prepend a compute budget increase — the fee model does 3 transfers +
     // mint + curve math which can exceed the 200k CU default.
     const budgetIx = ComputeBudgetProgram.setComputeUnitLimit({
-      units: 800_000,
+      units: 400_000,
     });
     tx.instructions.unshift(budgetIx);
 

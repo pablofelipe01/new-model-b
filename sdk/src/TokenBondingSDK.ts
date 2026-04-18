@@ -389,24 +389,28 @@ export class TokenBondingSDK {
       }
     }
 
-    // Quote off-chain to derive slippage bounds.
+    // Quote off-chain first. We ALWAYS send `desiredTargetAmount` to the
+    // program — never `baseAmount` — because the on-chain inverse solve
+    // (bisection over reserve_for_supply) is too CU-expensive for BPF
+    // (~1.4M CU). The forward `price_for_tokens` only costs ~40k CU.
     const quote = await this.quoteBuy(bonding, {
       desiredTargetAmount: args.desiredTargetAmount,
       baseAmount: args.baseAmount,
     });
-    const slippageMaxBase = args.desiredTargetAmount
-      ? new BN(Math.ceil(quote.baseAmount * (1 + slippage)))
-      : null;
-    const slippageMinTarget = args.baseAmount
-      ? new BN(Math.floor(quote.targetAmount * (1 - slippage)))
-      : null;
+
+    // Resolve the target amount: either the caller set it directly, or
+    // we computed it from baseAmount via the off-chain quote.
+    const targetAmount = args.desiredTargetAmount ?? new BN(quote.targetAmount);
+
+    // Slippage: cap the base cost the user is willing to pay.
+    const slippageMaxBase = new BN(Math.ceil(quote.baseAmount * (1 + slippage)));
 
     const ix = await this.program.methods
       .buyV1({
-        desiredTargetAmount: args.desiredTargetAmount ?? null,
-        baseAmount: args.baseAmount ?? null,
+        desiredTargetAmount: targetAmount,
+        baseAmount: null,
         slippageMaxBase,
-        slippageMinTarget,
+        slippageMinTarget: null,
       })
       .accountsPartial({
         payer,
