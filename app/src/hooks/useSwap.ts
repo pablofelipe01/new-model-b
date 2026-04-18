@@ -1,7 +1,7 @@
 "use client";
 
 import BN from "bn.js";
-import { PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
 import { useState } from "react";
 
 import { useSdk } from "@/components/providers/SdkProvider";
@@ -37,6 +37,13 @@ export function useSwap(tokenBonding?: PublicKey | string) {
 
     const { blockhash, lastValidBlockHeight } =
       await connection.getLatestBlockhash("confirmed");
+    // Prepend a compute budget increase — the fee model does 3 transfers +
+    // mint + curve math which can exceed the 200k CU default.
+    const budgetIx = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400_000,
+    });
+    tx.instructions.unshift(budgetIx);
+
     tx.recentBlockhash = blockhash;
     tx.lastValidBlockHeight = lastValidBlockHeight;
     tx.feePayer = wallet.publicKey;
