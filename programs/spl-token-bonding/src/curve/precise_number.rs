@@ -170,13 +170,17 @@ impl PreciseNumber {
         None
     }
 
-    /// `self^(p/q)` computed as `(self^p)^(1/q)`.
+    /// `self^(p/q)` computed as `(self^(1/q))^p`.
+    ///
+    /// Root-first avoids cubing a large number (which can produce values
+    /// >10^60 that Newton's method struggles to root within 60 iterations).
+    /// Taking the root first keeps intermediate values much smaller.
     pub fn checked_pow_frac(&self, p: u8, q: u8) -> Option<Self> {
         if q == 0 {
             return None;
         }
-        let powed = self.checked_int_pow(p)?;
-        powed.checked_nth_root(q)
+        let rooted = self.checked_nth_root(q)?;
+        rooted.checked_int_pow(p)
     }
 }
 
