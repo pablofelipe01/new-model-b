@@ -5,7 +5,7 @@ import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
 import { useState } from "react";
 
 import { useSdk } from "@/components/providers/SdkProvider";
-import { sponsoredSend } from "@/lib/sponsoredSend";
+import { sponsoredSend, FEE_PAYER } from "@/lib/sponsoredSend";
 
 interface SwapState {
   buying: boolean;
@@ -38,6 +38,7 @@ export function useSwap(tokenBonding?: PublicKey | string) {
         desiredTargetAmount: mode === "tokens" ? amount : undefined,
         baseAmount: mode === "base" ? amount : undefined,
         slippage,
+        rentPayer: FEE_PAYER ?? undefined,
       });
 
       // buy_v1 does U192 Newton's method + 4 CPI calls — needs extra compute.
@@ -60,7 +61,12 @@ export function useSwap(tokenBonding?: PublicKey | string) {
     setState((s) => ({ ...s, selling: true, error: undefined }));
     try {
       const pk = typeof tokenBonding === "string" ? new PublicKey(tokenBonding) : tokenBonding;
-      const tx = await sdk.sell({ tokenBonding: pk, targetAmount: amount, slippage });
+      const tx = await sdk.sell({
+        tokenBonding: pk,
+        targetAmount: amount,
+        slippage,
+        rentPayer: FEE_PAYER ?? undefined,
+      });
 
       const budgetIx = ComputeBudgetProgram.setComputeUnitLimit({
         units: 600_000,

@@ -348,8 +348,13 @@ export class TokenBondingSDK {
     /** Slippage as a fraction. 0.05 == 5 %. */
     slippage?: number;
     destination?: PublicKey;
+    /** Who pays rent for ATA creation. Defaults to the connected wallet.
+     *  Pass the gas sponsor's pubkey when using fee-payer relay so the
+     *  user doesn't need SOL. */
+    rentPayer?: PublicKey;
   }): Promise<Transaction> {
     const payer = this.provider.wallet.publicKey;
+    const rentPayer = args.rentPayer ?? payer;
     const slippage = args.slippage ?? 0.05;
 
     const bonding = await this.getTokenBonding(args.tokenBonding);
@@ -373,8 +378,9 @@ export class TokenBondingSDK {
 
     const tx = new Transaction();
 
-    // Best-effort: create destination + fee ATAs if missing. The payer
-    // funds the rent for any account that has to be lazily created.
+    // Best-effort: create destination + fee ATAs if missing. `rentPayer`
+    // funds the rent — when gas-sponsored this is the relay wallet so
+    // the user doesn't need SOL at all.
     for (const [mint, ata, owner] of [
       [bonding.targetMint, destination, payer],
       [bonding.baseMint, masterUsdc, bonding.masterWallet],
@@ -384,7 +390,7 @@ export class TokenBondingSDK {
         await getAccount(this.provider.connection, ata);
       } catch {
         tx.add(
-          createAssociatedTokenAccountInstruction(payer, ata, owner, mint),
+          createAssociatedTokenAccountInstruction(rentPayer, ata, owner, mint),
         );
       }
     }
@@ -437,8 +443,11 @@ export class TokenBondingSDK {
     targetAmount: BN;
     slippage?: number;
     destination?: PublicKey;
+    /** Who pays rent for ATA creation. Defaults to the connected wallet. */
+    rentPayer?: PublicKey;
   }): Promise<Transaction> {
     const seller = this.provider.wallet.publicKey;
+    const rentPayer = args.rentPayer ?? seller;
     const slippage = args.slippage ?? 0.05;
 
     const bonding = await this.getTokenBonding(args.tokenBonding);
@@ -475,7 +484,7 @@ export class TokenBondingSDK {
         await getAccount(this.provider.connection, ata);
       } catch {
         tx.add(
-          createAssociatedTokenAccountInstruction(seller, ata, owner, mint),
+          createAssociatedTokenAccountInstruction(rentPayer, ata, owner, mint),
         );
       }
     }
