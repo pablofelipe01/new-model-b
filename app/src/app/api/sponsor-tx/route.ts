@@ -75,10 +75,15 @@ export async function POST(request: NextRequest) {
   let tx: Transaction;
   try {
     const raw = Buffer.from(body.transaction, "base64");
+    console.log("[sponsor-tx] Raw tx bytes:", raw.length, "first byte:", raw[0]);
     tx = Transaction.from(raw);
-  } catch {
+    console.log("[sponsor-tx] Deserialized OK. Instructions:", tx.instructions.length,
+      "Signatures:", tx.signatures.length,
+      "feePayer:", tx.feePayer?.toBase58());
+  } catch (err) {
+    console.error("[sponsor-tx] Deserialize failed:", (err as Error).message);
     return NextResponse.json(
-      { error: "Failed to deserialize transaction" },
+      { error: `Failed to deserialize transaction: ${(err as Error).message}` },
       { status: 400 },
     );
   }
@@ -108,11 +113,15 @@ export async function POST(request: NextRequest) {
   const connection = new Connection(RPC_ENDPOINT, "confirmed");
 
   try {
+    console.log("[sponsor-tx] Signing with fee payer:", feePayer.publicKey.toBase58());
     tx.partialSign(feePayer);
 
-    const signature = await connection.sendRawTransaction(tx.serialize(), {
+    const serialized = tx.serialize();
+    console.log("[sponsor-tx] Serialized OK, sending", serialized.length, "bytes");
+    const signature = await connection.sendRawTransaction(serialized, {
       skipPreflight: true,
     });
+    console.log("[sponsor-tx] Sent, signature:", signature);
 
     // Wait for confirmation before responding so the frontend knows the tx
     // actually landed.
