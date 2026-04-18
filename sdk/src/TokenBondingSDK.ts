@@ -309,6 +309,21 @@ export class TokenBondingSDK {
     const [baseStorage] = baseStoragePda(this.programId, tokenBonding);
     const [baseStorageAuthority] = baseStorageAuthorityPda(this.programId, tokenBonding);
 
+    // When gas-sponsored, the Anchor `init` constraint creates PDAs with
+    // `payer` (the user) as the rent source. The user has 0 SOL, so we
+    // prepend a transfer from the fee payer to the user covering rent for
+    // token_bonding + base_storage PDAs (~0.006 SOL).
+    if (args.rentPayer && !args.rentPayer.equals(payer)) {
+      const rentLamports = 10_000_000; // 0.01 SOL — generous buffer
+      tx.add(
+        SystemProgram.transfer({
+          fromPubkey: args.rentPayer,
+          toPubkey: payer,
+          lamports: rentLamports,
+        }),
+      );
+    }
+
     const payerUsdc = getAssociatedTokenAddressSync(USDC_MINT, payer);
     const masterUsdc = getAssociatedTokenAddressSync(USDC_MINT, MASTER_WALLET, true);
 
