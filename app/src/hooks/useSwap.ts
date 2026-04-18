@@ -39,8 +39,10 @@ export function useSwap(tokenBonding?: PublicKey | string) {
       await connection.getLatestBlockhash("confirmed");
     // Prepend a compute budget increase — the fee model does 3 transfers +
     // mint + curve math which can exceed the 200k CU default.
+    // buy_v1 does U192 Newton's method for S^(3/2) on large supplies + 4 CPI
+    // calls (platform fee, launcher fee, reserve, mint). Genuine cost ~450-500k CU.
     const budgetIx = ComputeBudgetProgram.setComputeUnitLimit({
-      units: 400_000,
+      units: 600_000,
     });
     tx.instructions.unshift(budgetIx);
 
