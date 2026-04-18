@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { SendModal } from "@/components/SendModal";
 import { SwapPanel } from "@/components/SwapPanel";
 import { useSdk } from "@/components/providers/SdkProvider";
 import { usePortfolio, type PortfolioRow } from "@/hooks/usePortfolio";
@@ -16,6 +17,7 @@ export function Dashboard() {
   const { ready } = useSdk();
   const { held, launched, usdcBalance, loading, error, refresh } =
     usePortfolio();
+  const [sendOpen, setSendOpen] = useState(false);
 
   if (!ready) {
     return (
@@ -38,14 +40,23 @@ export function Dashboard() {
               ${formatNumber(usdcBalance, 2)}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={refresh}
-            aria-label="Refresh dashboard"
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm hover:border-brand-500 dark:border-zinc-700"
-          >
-            Refresh
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSendOpen(true)}
+              className="rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-600"
+            >
+              Send
+            </button>
+            <button
+              type="button"
+              onClick={refresh}
+              aria-label="Refresh dashboard"
+              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm hover:border-brand-500 dark:border-zinc-700"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
       </section>
 
@@ -82,6 +93,12 @@ export function Dashboard() {
           <PortfolioCard key={row.publicKey.toBase58()} row={row} launcher />
         ))}
       </Section>
+
+      <SendModal
+        open={sendOpen}
+        onClose={() => setSendOpen(false)}
+        onSuccess={refresh}
+      />
     </div>
   );
 }
