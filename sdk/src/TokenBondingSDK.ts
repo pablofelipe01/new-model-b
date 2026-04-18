@@ -89,17 +89,53 @@ export class TokenBondingSDK {
 
   async createCurve(args: {
     definition: PiecewiseCurve;
+    /** Who pays SOL rent for the curve account. Defaults to the wallet. */
+    rentPayer?: PublicKey;
+    /** Custom send function for gas sponsorship relay. */
+    sendFn?: (serializedTx: Buffer) => Promise<string>;
   }): Promise<{ curveKey: PublicKey; signature: string }> {
+    const payer = this.provider.wallet.publicKey;
+    const rentPayer = args.rentPayer ?? payer;
     const curveKp = Keypair.generate();
-    const signature = await this.program.methods
+
+    const ix = await this.program.methods
       .createCurveV0({ definition: args.definition as never })
       .accountsPartial({
-        payer: this.provider.wallet.publicKey,
+        payer: rentPayer,
         curve: curveKp.publicKey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([curveKp])
-      .rpc();
+      .instruction();
+
+    const tx = new Transaction().add(ix);
+    const { blockhash, lastValidBlockHeight } =
+      await this.provider.connection.getLatestBlockhash("confirmed");
+    tx.recentBlockhash = blockhash;
+    tx.lastValidBlockHeight = lastValidBlockHeight;
+    tx.feePayer = rentPayer;
+    tx.partialSign(curveKp);
+
+    // When using the relay, the user doesn't need to sign createCurve
+    // (the rentPayer/feePayer is the relay wallet, not the user).
+    // When NOT using the relay, the user IS the payer and must sign.
+    if (args.sendFn) {
+      const serialized = tx.serialize({ requireAllSignatures: false });
+      const signature = await args.sendFn(Buffer.from(serialized));
+      return { curveKey: curveKp.publicKey, signature };
+    }
+
+    const signed = await this.provider.wallet.signTransaction(tx);
+    const signature = await this.provider.connection.sendRawTransaction(
+      signed.serialize(),
+      { skipPreflight: true },
+    );
+    const conf = await this.provider.connection.confirmTransaction(
+      { signature, blockhash, lastValidBlockHeight },
+      "confirmed",
+    );
+    if (conf.value.err) {
+      throw new Error(`Curve creation failed: ${JSON.stringify(conf.value.err)}`);
+    }
     return { curveKey: curveKp.publicKey, signature };
   }
 

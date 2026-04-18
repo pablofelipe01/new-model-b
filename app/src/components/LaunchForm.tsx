@@ -137,38 +137,8 @@ export function LaunchForm() {
           ],
         },
       };
-      // The SDK now sends + confirms the transactions itself, so we just
-      // await the high-level helpers and read the resulting addresses.
-      const { curveKey } = await sdk.createCurve({ definition });
-
-      // Build a metadata URI. Wallets fetch this URI and display the
-      // returned `image` field as the token logo.
-      //
-      // We normally wrap the image URL in our own `/api/m?i=` endpoint
-      // which responds with `{image: ...}` — that's the shape Metaplex
-      // expects. But wallets run on remote servers and cannot reach
-      // `http://localhost`, so when the dev server is on localhost we
-      // write the raw image URL on-chain instead. Most wallets accept
-      // a bare image URL as a fallback.
-      let tokenUri = "";
-      if (imageUrl) {
-        const isLocalhost =
-          typeof window !== "undefined" &&
-          /^(localhost|127\.0\.0\.1)(:|$)/.test(window.location.host);
-        if (isLocalhost) {
-          tokenUri = imageUrl;
-        } else {
-          const short = `${window.location.origin}/api/m?i=${encodeURIComponent(imageUrl)}`;
-          // Metaplex metadata URI field max is ~200 chars. If the
-          // wrapped URI fits, use it (wallets get proper JSON).
-          // Otherwise fall back to the raw image URL.
-          tokenUri = short.length <= 200 ? short : imageUrl;
-        }
-      }
-
-      // When gas sponsorship is active, route through the relay so the
-      // user doesn't need SOL for rent or gas.
-      console.log("[LaunchForm] FEE_PAYER:", FEE_PAYER?.toBase58() ?? "null");
+      // Relay function for gas sponsorship: sends partially-signed tx to
+      // backend which adds fee payer signature and broadcasts.
       const sendFn = FEE_PAYER
         ? async (serializedTx: Buffer): Promise<string> => {
             const res = await fetch("/api/sponsor-tx", {
@@ -184,6 +154,28 @@ export function LaunchForm() {
           }
         : undefined;
 
+      // 1. Create the curve account (sponsored if FEE_PAYER is set).
+      const { curveKey } = await sdk.createCurve({
+        definition,
+        rentPayer: FEE_PAYER ?? undefined,
+        sendFn,
+      });
+
+      // 2. Build metadata URI.
+      let tokenUri = "";
+      if (imageUrl) {
+        const isLocalhost =
+          typeof window !== "undefined" &&
+          /^(localhost|127\.0\.0\.1)(:|$)/.test(window.location.host);
+        if (isLocalhost) {
+          tokenUri = imageUrl;
+        } else {
+          const short = `${window.location.origin}/api/m?i=${encodeURIComponent(imageUrl)}`;
+          tokenUri = short.length <= 200 ? short : imageUrl;
+        }
+      }
+
+      // 3. Init token bonding (sponsored if FEE_PAYER is set).
       const { tokenBondingKey, targetMint } = await sdk.initTokenBonding({
         curve: curveKey,
         decimals,
