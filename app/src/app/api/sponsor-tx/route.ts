@@ -18,8 +18,10 @@ const ALLOWED_PROGRAMS = new Set([
   "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
   // Compute Budget
   "ComputeBudget111111111111111111111111111111",
-  // System Program (for ATA init)
+  // System Program (for ATA init, createAccount)
   "11111111111111111111111111111111",
+  // Metaplex Token Metadata (for mint metadata creation)
+  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
 ]);
 
 /**

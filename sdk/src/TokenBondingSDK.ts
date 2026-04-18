@@ -138,6 +138,15 @@ export class TokenBondingSDK {
     curveAuthority?: PublicKey | null;
     ignoreExternalReserveChanges?: boolean;
     ignoreExternalSupplyChanges?: boolean;
+    /** Who pays SOL rent for new accounts (mint, PDAs, ATAs). Defaults to
+     *  the connected wallet. Pass the gas sponsor pubkey so the user
+     *  doesn't need SOL. */
+    rentPayer?: PublicKey;
+    /** Custom send function. When provided, the SDK builds + partially signs
+     *  the transactions but delegates sending to the caller (e.g. the gas
+     *  sponsor relay). Receives the serialized tx (may need one more
+     *  signature from the relay). Must return the tx signature string. */
+    sendFn?: (serializedTx: Buffer, extraSigners?: Keypair[]) => Promise<string>;
   }): Promise<{
     tokenBondingKey: PublicKey;
     targetMint: PublicKey;
@@ -156,6 +165,7 @@ export class TokenBondingSDK {
     const index = args.index ?? 0;
     const decimals = args.decimals ?? 9;
     const launcherFeeWallet = args.launcherFeeWallet ?? payer;
+    const rentPayer = args.rentPayer ?? payer;
 
     // ── TX A: create the mint + metadata + transfer authority ──────────
     let targetMint: PublicKey;
@@ -169,7 +179,7 @@ export class TokenBondingSDK {
       const lamports = await getMinimumBalanceForRentExemptMint(this.provider.connection);
       txA.add(
         SystemProgram.createAccount({
-          fromPubkey: payer,
+          fromPubkey: rentPayer,
           newAccountPubkey: targetMint,
           space: MINT_SIZE,
           lamports,
@@ -178,7 +188,6 @@ export class TokenBondingSDK {
         createInitializeMintInstruction(targetMint, decimals, payer, payer),
       );
 
-      // Metaplex metadata (optional but strongly recommended).
       if (args.tokenName) {
         const [metadataPda] = PublicKey.findProgramAddressSync(
           [
@@ -194,7 +203,7 @@ export class TokenBondingSDK {
               metadata: metadataPda,
               mint: targetMint,
               mintAuthority: payer,
-              payer,
+              payer: rentPayer,
               updateAuthority: payer,
             },
             {
@@ -217,13 +226,13 @@ export class TokenBondingSDK {
       }
 
       const [tokenBondingPk] = tokenBondingPda(this.programId, targetMint, index);
-      const [mintAuthority] = targetMintAuthorityPda(this.programId, tokenBondingPk);
+      const [mintAuthorityA] = targetMintAuthorityPda(this.programId, tokenBondingPk);
       txA.add(
         createSetAuthorityInstruction(
           targetMint,
           payer,
           AuthorityType.MintTokens,
-          mintAuthority,
+          mintAuthorityA,
         ),
       );
 
@@ -231,22 +240,28 @@ export class TokenBondingSDK {
         await this.provider.connection.getLatestBlockhash("confirmed");
       txA.recentBlockhash = blockhash;
       txA.lastValidBlockHeight = lastValidBlockHeight;
-      txA.feePayer = payer;
+      txA.feePayer = rentPayer;
       txA.partialSign(mintKp);
       const signedA = await this.provider.wallet.signTransaction(txA);
-      const sigA = await this.provider.connection.sendRawTransaction(
-        signedA.serialize(),
-        { skipPreflight: true },
-      );
-      const confA = await this.provider.connection.confirmTransaction(
-        { signature: sigA, blockhash, lastValidBlockHeight },
-        "confirmed",
-      );
-      if (confA.value.err) {
-        throw new Error(
-          `Mint creation failed: ${JSON.stringify(confA.value.err)}. ` +
-          `TX: ${sigA}`,
+
+      if (args.sendFn) {
+        await args.sendFn(
+          Buffer.from(signedA.serialize({ requireAllSignatures: false })),
         );
+      } else {
+        const sigA = await this.provider.connection.sendRawTransaction(
+          signedA.serialize(),
+          { skipPreflight: true },
+        );
+        const confA = await this.provider.connection.confirmTransaction(
+          { signature: sigA, blockhash, lastValidBlockHeight },
+          "confirmed",
+        );
+        if (confA.value.err) {
+          throw new Error(
+            `Mint creation failed: ${JSON.stringify(confA.value.err)}. TX: ${sigA}`,
+          );
+        }
       }
     }
 
@@ -269,7 +284,7 @@ export class TokenBondingSDK {
     } catch {
       tx.add(
         createAssociatedTokenAccountInstruction(
-          payer,
+          rentPayer,
           masterUsdc,
           MASTER_WALLET,
           USDC_MINT,
@@ -320,21 +335,28 @@ export class TokenBondingSDK {
       await this.provider.connection.getLatestBlockhash("confirmed");
     tx.recentBlockhash = bh;
     tx.lastValidBlockHeight = lvbh;
-    tx.feePayer = payer;
+    tx.feePayer = rentPayer;
     const signedB = await this.provider.wallet.signTransaction(tx);
-    const signature = await this.provider.connection.sendRawTransaction(
-      signedB.serialize(),
-      { skipPreflight: true },
-    );
-    const confB = await this.provider.connection.confirmTransaction(
-      { signature, blockhash: bh, lastValidBlockHeight: lvbh },
-      "confirmed",
-    );
-    if (confB.value.err) {
-      throw new Error(
-        `Token bonding init failed: ${JSON.stringify(confB.value.err)}. ` +
-        `TX: ${signature}`,
+
+    let signature: string;
+    if (args.sendFn) {
+      signature = await args.sendFn(
+        Buffer.from(signedB.serialize({ requireAllSignatures: false })),
       );
+    } else {
+      signature = await this.provider.connection.sendRawTransaction(
+        signedB.serialize(),
+        { skipPreflight: true },
+      );
+      const confB = await this.provider.connection.confirmTransaction(
+        { signature, blockhash: bh, lastValidBlockHeight: lvbh },
+        "confirmed",
+      );
+      if (confB.value.err) {
+        throw new Error(
+          `Token bonding init failed: ${JSON.stringify(confB.value.err)}. TX: ${signature}`,
+        );
+      }
     }
     return { tokenBondingKey: tokenBonding, targetMint, signature };
   }

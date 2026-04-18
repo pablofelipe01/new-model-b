@@ -11,9 +11,11 @@ import {
   type PiecewiseCurve,
 } from "@new-model-b/sdk";
 import BN from "bn.js";
+import { Transaction } from "@solana/web3.js";
 import { useMemo, useRef, useState } from "react";
 
 import { useSdk } from "@/components/providers/SdkProvider";
+import { FEE_PAYER } from "@/lib/sponsoredSend";
 
 import { BondingCurveChart } from "./BondingCurveChart";
 
@@ -164,14 +166,33 @@ export function LaunchForm() {
         }
       }
 
+      // When gas sponsorship is active, route through the relay so the
+      // user doesn't need SOL for rent or gas.
+      const sendFn = FEE_PAYER
+        ? async (serializedTx: Buffer): Promise<string> => {
+            const res = await fetch("/api/sponsor-tx", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                transaction: serializedTx.toString("base64"),
+              }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error ?? "Sponsor relay failed");
+            return data.signature;
+          }
+        : undefined;
+
       const { tokenBondingKey, targetMint } = await sdk.initTokenBonding({
         curve: curveKey,
         decimals,
-        goLiveDate: new Date(), // always live immediately
+        goLiveDate: new Date(),
         launcherFeeBasisPoints: Math.round(launcherFeePct * 100),
         tokenName: name,
         tokenSymbol: symbol,
         tokenUri,
+        rentPayer: FEE_PAYER ?? undefined,
+        sendFn,
       });
 
       setResult({ mint: targetMint.toBase58(), bonding: tokenBondingKey.toBase58() });
