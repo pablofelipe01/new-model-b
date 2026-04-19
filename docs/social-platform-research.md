@@ -1,344 +1,328 @@
-# Social Platform Research — Creator Token Model
+# Token Launch Platform — Project Brief & Design Handoff
 
-## Purpose of this document
+## What is this project?
 
-We are building a **creator tokenization platform** on Solana where fans can buy tokens that represent real, quantifiable support for their favorite content creators. The token price follows a bonding curve: the more fans buy, the higher the price — creating a provably fair, anti-fraud model of fandom.
+A **token launch platform** on Solana where anyone — with zero crypto knowledge — can create their own token with automatic liquidity guaranteed by a mathematical bonding curve. The token price rises as people buy and falls as they sell, with the reserve locked by the smart contract. No AMMs, no liquidity providers, no bots.
 
-The key differentiator: **zero crypto knowledge required**. Fans sign up with a social login, buy tokens with a credit card, and see their "investment" in their creator grow. No wallets, no seed phrases, no swaps.
-
-To make this work, we need to **integrate deeply with at least one social platform** for both creator identity verification ("claiming" a token) and fan discovery (finding creators to support). This document evaluates the major platforms to determine which one(s) to prioritize.
+**The core promise**: a person signs in with Google, pays $25, and gets a shareable link to their token that anyone in the world can buy with a credit card.
 
 ---
 
-## What we need from a social platform
+## What's built and working (as of April 2026)
 
-### 1. Creator identity verification (OAuth / API)
+### On-chain program (Solana / Anchor)
+- **Bonding curve math**: `P(S) = c · S^(pow/frac) + b` — supports sqrt, linear, quadratic, and fixed price curves
+- **Fee model** (hardcoded, immutable per token):
+  - Platform fee: **0.5%** on every buy and sell → `MASTER_WALLET`
+  - Launcher fee: **0-5%** configurable by the launcher → their wallet
+  - Launch fee: **$25 USDC** one-time on token creation → `MASTER_WALLET`
+- **Reserve is untouchable**: the only way USDC leaves `base_storage` is via `sell_v1` (which requires burning tokens). There is no `transfer_reserves` instruction — it was physically deleted from the codebase. This is the #1 trust argument.
+- **USDC only**: base mint is hardcoded to USDC. No SOL, no exotic tokens.
+- Deployed on devnet: `41nppqSazESeBmrgnud2j5Nz1MbsnPGeyAryPcKAefqa`
 
-The creator must prove they own their social account so we can link it to a bonding curve token. This requires:
+### Authentication (Privy)
+- **Google login and email login** — no wallet, no seed phrase, no crypto jargon
+- **Embedded Solana wallet** created automatically on signup
+- **Phantom / Solflare** supported as secondary option for crypto-native users
+- Privy ↔ Anchor bridge: the embedded wallet signs transactions transparently
 
-- **OAuth login**: creator signs in with their social account
-- **Profile data access**: we need at minimum the username, display name, profile picture, follower count, and account verification status
-- **Account age / legitimacy signals**: to prevent someone from creating a fake account and claiming a token
+### Gas sponsorship (fee payer relay)
+- Users **never need SOL** — not for gas, not for rent, not for anything
+- Backend relay (`/api/sponsor-tx`) validates, co-signs, and broadcasts transactions
+- Fee payer covers: transaction fees, ATA creation rent, PDA creation rent
+- Security: whitelist of allowed programs (only our bonding curve + SPL token + ATA + system)
 
-| Requirement | Why it matters |
+### SDK (TypeScript)
+- `createCurve()` — create a reusable curve definition
+- `initTokenBonding()` — launch a token (charges $25, creates mint + metadata + bonding)
+- `buy()` — buy tokens along the curve
+- `sell()` — sell tokens back along the curve
+- Off-chain quotes with fee breakdown (`quoteBuy`, `quoteSell`)
+- All methods support `rentPayer` + `sendFn` for gas sponsorship
+- Published as `@new-model-b/sdk` workspace package
+
+### Frontend (Next.js 14)
+- **Launch wizard** (3 steps):
+  1. Token info: name, symbol, description, logo upload (Pinata IPFS)
+  2. Pricing model: curve type selector with live preview chart, launcher fee slider (0-5%)
+  3. Confirm & pay: summary of all fees, one-click launch
+- **Token detail page** (`/token/[mint]`): bonding curve chart, current price, buy/sell panel with slippage control
+- **Dashboard** (`/dashboard`):
+  - USDC balance
+  - "My portfolio": tokens owned, current value, inline trade panel (expand to buy/sell without leaving)
+  - "Tokens I launched": tokens created, supply, price
+  - **Send button**: modal to send USDC or tokens to any Solana address
+- **Explore page** (`/`): grid of all tokens on the platform with price, name, logo
+- **Wallet address copy button**: click to copy embedded wallet address to clipboard
+- Token logo appears in wallets (Phantom, Backpack) via Metaplex metadata
+- Responsive, dark mode, Tailwind CSS
+
+### Infrastructure
+- Vercel deployment (frontend + API routes)
+- Pinata for IPFS image hosting
+- Helius RPC (devnet)
+
+---
+
+## User journeys (current state)
+
+### Journey 1: "I want to launch a token" (non-crypto user)
+1. Opens the app → clicks "Sign in" → Google login
+2. Privy creates an embedded Solana wallet (invisible to user)
+3. Goes to `/launch` → fills in name, symbol, uploads logo
+4. Picks curve type (sqrt recommended), sets their fee (e.g. 2%)
+5. Confirms → signs 3 transactions (all gas-sponsored, user just approves in Privy popup)
+6. Gets a shareable link → sends it to friends via WhatsApp, X, etc.
+
+**What the user needs**: 25 USDC in their embedded wallet (today: sent manually; future: Stripe card payment)
+
+### Journey 2: "I want to buy a token" (fan, non-crypto)
+1. Receives a link from a friend → opens `/token/[mint]`
+2. Clicks "Sign in" → Google login
+3. Types amount → clicks "Buy"
+4. Transaction is sponsored (no SOL needed), only USDC is spent
+5. Tokens appear in their dashboard
+
+**What the user needs**: USDC in their wallet (future: "Buy with card" button)
+
+### Journey 3: "I want to sell and cash out"
+1. Opens dashboard → sees portfolio
+2. Clicks "Trade" on a token → switches to "Sell" tab
+3. Enters amount → clicks "Sell" → USDC arrives in their wallet
+4. Can send USDC to any wallet (exchange, friend, etc.) via "Send" button
+
+### Journey 4: Crypto-native user with Phantom
+1. Clicks "Select Wallet" → connects Phantom
+2. Everything works the same but with their own wallet
+3. No Privy, no embedded wallet, direct signing
+
+---
+
+## What's NOT built yet
+
+### Stripe Crypto Onramp (next major feature)
+- **"Buy with card" button**: user enters credit card → Stripe buys USDC → auto-executes buy on bonding curve → user sees tokens
+- The user never knows USDC exists — they just "bought $50 of this token"
+- Requires Stripe account with Crypto Onramp enabled (beta, application required)
+- Webhook-driven: Stripe notifies when USDC arrives → backend auto-buys
+- **Prerequisite**: polished UI/UX (Stripe reviews the app before approving)
+
+### UX/UI redesign (working with Claude Design)
+- Current UI is functional but raw — needs professional design
+- Target: "feels like a consumer app, not a crypto app"
+- Language must be simple: "funds" not "USDC", "price" not "spot price", "$" not "lamports"
+- No visible wallet addresses unless the user explicitly looks for them
+- The bonding curve chart should be beautiful and intuitive, not a developer tool
+- Mobile-first responsive design
+
+### Token public page improvements
+- Open Graph tags for rich previews on WhatsApp, X, Telegram, iMessage
+- Fee transparency section (mandatory): shows platform fee, launcher fee, reserve address, all verifiable on Explorer
+- Last 20 transactions feed
+- Share buttons: WhatsApp, X, Telegram, copy link
+
+### Custom domain
+- Need own domain (not `.vercel.app`) for Stripe approval and brand credibility
+- SSL, proper SEO, sitemap
+
+### Tests
+- Anchor program tests (invariants: reserve untouchable, fee limits, correct splits)
+- End-to-end tests for the full launch → buy → sell → send flow
+
+### Mainnet deployment
+- Change `USDC_MINT` constant to mainnet USDC (`EPjFWdd5...`)
+- Change `MASTER_WALLET` if needed
+- Dedicated fee payer wallet (not the deploy keypair)
+- Rate limiting on the sponsor relay
+- Monitoring on fee payer SOL balance
+
+---
+
+## Technical architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│                    Frontend                      │
+│              Next.js 14 + Tailwind               │
+│                                                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
+│  │  Launch   │  │  Token   │  │Dashboard │       │
+│  │  Wizard   │  │  Page    │  │+Portfolio│       │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘       │
+│       │              │              │             │
+│  ┌────▼──────────────▼──────────────▼────┐       │
+│  │         SDK (@new-model-b/sdk)         │       │
+│  │  createCurve · initTokenBonding        │       │
+│  │  buy · sell · quoteBuy · quoteSell     │       │
+│  └────────────────┬──────────────────────┘       │
+│                   │                               │
+│  ┌────────────────▼──────────────────────┐       │
+│  │     SdkProvider (Anchor bridge)        │       │
+│  │  Privy wallet OR Phantom wallet        │       │
+│  └────────────────┬──────────────────────┘       │
+│                   │                               │
+│  ┌────────────────▼──────────────────────┐       │
+│  │     sponsoredSend (gas relay)          │       │
+│  │  Sets feePayer → user signs →          │       │
+│  │  POST /api/sponsor-tx                  │       │
+│  └────────────────┬──────────────────────┘       │
+└───────────────────┼──────────────────────────────┘
+                    │
+        ┌───────────▼───────────┐
+        │   /api/sponsor-tx     │
+        │   Validates tx        │
+        │   Signs with fee payer│
+        │   Broadcasts          │
+        └───────────┬───────────┘
+                    │
+        ┌───────────▼───────────┐
+        │   Solana (devnet)     │
+        │                       │
+        │  spl-token-bonding    │
+        │  ┌─────────────────┐  │
+        │  │ init_token_bond │  │
+        │  │ buy_v1          │  │
+        │  │ sell_v1         │  │
+        │  │ create_curve    │  │
+        │  │ update_bonding  │  │
+        │  └─────────────────┘  │
+        │                       │
+        │  Token accounts:      │
+        │  · base_storage (USDC)│ ← LOCKED, only sell can withdraw
+        │  · target_mint        │
+        │  · MASTER_WALLET ATA  │ ← receives platform fees
+        │  · launcher ATA       │ ← receives launcher fees
+        └───────────────────────┘
+```
+
+---
+
+## Fee flow diagram
+
+```
+          BUY $100 of tokens
+          ──────────────────
+          User pays: $100 USDC
+
+     ┌──────────────────────────────┐
+     │  Platform fee (0.5%): $0.50  │──→ MASTER_WALLET
+     ├──────────────────────────────┤
+     │  Launcher fee (e.g. 2%): $2  │──→ Launcher's wallet
+     ├──────────────────────────────┤
+     │  To reserve: $97.50          │──→ base_storage (LOCKED)
+     └──────────────────────────────┘
+                    │
+                    ▼
+          Mint tokens to buyer
+          (amount determined by curve integral)
+
+
+          SELL tokens
+          ──────────
+          User burns N tokens → curve computes $X gross
+
+     ┌──────────────────────────────┐
+     │  Gross from curve: $X        │
+     ├──────────────────────────────┤
+     │  Platform fee (0.5%)         │──→ MASTER_WALLET
+     │  Launcher fee (e.g. 2%)      │──→ Launcher's wallet
+     ├──────────────────────────────┤
+     │  Net to seller               │──→ Seller's wallet
+     └──────────────────────────────┘
+```
+
+---
+
+## Design principles for Claude Design
+
+1. **Zero crypto language visible to users**. Never show: "Solana", "blockchain", "mint", "lamports", "ATA", "PDA", "USDC" (show "$" instead). The word "token" is OK because it's the product.
+
+2. **The bonding curve is the product, not a feature**. The chart showing price vs. supply should be the hero element on every token page — beautiful, interactive, immediately understandable. "The earlier you buy, the lower the price."
+
+3. **Trust through transparency**. Every token page must show:
+   - The fee structure (platform + launcher, exact percentages)
+   - A link to the reserve on Solana Explorer ("verify the funds are locked")
+   - "The reserve cannot be withdrawn by anyone. Verified on-chain."
+
+4. **Three audiences, one interface**:
+   - **Launcher** (creates token): wizard must feel like creating a Shopify store, not deploying a smart contract
+   - **Fan/buyer** (buys token): must feel like buying a product on an e-commerce site
+   - **Crypto-native** (connects Phantom): must see enough detail to trust the smart contract
+
+5. **Mobile-first**. Most users will receive a token link via WhatsApp/Telegram on their phone. The buy flow must work perfectly on mobile Safari/Chrome.
+
+6. **The share moment is everything**. After launching a token, the success screen must make it irresistible to share. Big "Share on WhatsApp" button, copyable link, preview of how the link looks when shared (OG card preview).
+
+7. **The dashboard is "home"**. After sign-in, the dashboard should feel like a fintech app: your balance, your holdings, your earnings. Not a blockchain explorer.
+
+---
+
+## File structure (current)
+
+```
+new-model-b/
+├── programs/spl-token-bonding/    # Anchor program (Rust)
+│   └── src/
+│       ├── lib.rs                 # Constants (MASTER_WALLET, USDC_MINT, fees)
+│       ├── state.rs               # TokenBondingV0 account layout
+│       ├── errors.rs              # Custom errors
+│       ├── curve/                 # Bonding curve math (U192, Newton's method)
+│       └── instructions/          # buy_v1, sell_v1, init_token_bonding, etc.
+├── sdk/                           # TypeScript SDK
+│   └── src/
+│       ├── TokenBondingSDK.ts     # High-level helpers
+│       ├── types.ts               # Account types + constants
+│       ├── math.ts                # Off-chain curve math
+│       └── pdas.ts                # PDA derivation
+├── app/                           # Next.js frontend
+│   └── src/
+│       ├── app/
+│       │   ├── page.tsx           # Explore (all tokens)
+│       │   ├── launch/page.tsx    # Launch wizard
+│       │   ├── dashboard/page.tsx # User dashboard
+│       │   ├── token/[mint]/page.tsx  # Token detail + buy/sell
+│       │   └── api/
+│       │       ├── sponsor-tx/    # Gas sponsorship relay
+│       │       ├── upload/        # Pinata image upload
+│       │       └── m/             # Metadata JSON endpoint
+│       ├── components/
+│       │   ├── LaunchForm.tsx     # 3-step wizard
+│       │   ├── SwapPanel.tsx      # Buy/sell with slippage
+│       │   ├── Dashboard.tsx      # Portfolio + launched tokens
+│       │   ├── SendModal.tsx      # Send USDC/tokens modal
+│       │   ├── BondingCurveChart.tsx
+│       │   ├── TokenCard.tsx
+│       │   ├── Header.tsx
+│       │   ├── WalletButton.tsx   # Privy login + Phantom fallback
+│       │   └── providers/
+│       │       ├── PrivyAuthProvider.tsx  # Privy → Anchor bridge
+│       │       ├── SdkProvider.tsx        # SDK context
+│       │       └── WalletContextProvider.tsx
+│       ├── hooks/
+│       │   ├── useSwap.ts         # Buy/sell execution
+│       │   ├── usePortfolio.ts    # User holdings
+│       │   ├── useTokenBondings.ts
+│       │   ├── useTokenBonding.ts
+│       │   ├── useBondedPrice.ts
+│       │   └── usePrivyAuth.ts
+│       └── lib/
+│           ├── sponsoredSend.ts   # Gas relay helper
+│           ├── constants.ts
+│           └── utils.ts
+└── docs/
+    └── this file
+```
+
+---
+
+## Key URLs & accounts
+
+| Item | Value |
 |---|---|
-| OAuth 2.0 support | Standard auth flow, well-documented |
-| Profile picture access | Used as the token logo (stored via Metaplex metadata) |
-| Follower count | Displayed on the creator's token page as social proof |
-| Verified badge / blue check | Helps distinguish real creators from impersonators |
-| Bio / description | Used as token description |
-| Content category / niche | Helps with discovery and categorization |
-
-### 2. Fan discovery and sharing
-
-Fans need to find their creators on our platform. This can happen:
-
-- **Organically**: creator shares a link to their token page on their social feed ("Buy my token!")
-- **Via our platform**: we show a directory of creators that fans can browse
-- **Embeddable widgets**: creator embeds a "Buy my token" button on their profile or website
-
-| Requirement | Why it matters |
-|---|---|
-| Link sharing in posts/bio | Creator can share their token page URL |
-| Embeddable content (cards, buttons) | Rich previews when sharing links |
-| API for follower/engagement data | Power rankings, trending creators |
-| Direct messaging (optional) | Token holders could get access to DMs or exclusive content |
-
-### 3. Viral mechanics
-
-The platform should have built-in mechanics that help the model spread:
-
-- Can creators post about their token to their followers?
-- Do links get rich previews (Open Graph tags)?
-- Is there a culture of "supporting creators" on the platform?
-- Are there existing monetization tools we complement (not compete with)?
-
-### 4. Regulatory / policy considerations
-
-- Does the platform's Terms of Service allow promoting financial products?
-- Are there restrictions on crypto-related content?
-- Has the platform banned or restricted crypto projects before?
-- What are the rules around OAuth app approval?
-
----
-
-## Platform-by-platform analysis
-
-### Instagram
-
-**Audience**: 2B+ monthly active users. Skews visual: photos, Reels, Stories.
-
-**Creator ecosystem**: Massive. Influencers, artists, photographers, fitness, lifestyle, food. Instagram IS the influencer economy.
-
-**OAuth / API**:
-- Instagram Basic Display API was **deprecated in December 2024**
-- Replaced by **Instagram Graph API** (requires Facebook Business account)
-- OAuth via Facebook Login → permissions for `instagram_basic`, `instagram_manage_insights`
-- Available data: username, bio, profile picture, follower count, media
-- **Limitation**: requires a Facebook Page linked to the Instagram account (friction for creators)
-- **Limitation**: API approval process can take weeks and requires business verification
-
-**Link sharing**:
-- Links in posts: ❌ (not clickable in captions)
-- Link in bio: ✅ (standard, via Linktree-style tools)
-- Link in Stories: ✅ (swipe up / link sticker, requires 10K+ followers)
-- Open Graph previews: ❌ (Instagram doesn't render OG cards in-app)
-
-**Viral mechanics**:
-- Strong culture of "support this creator"
-- Reels have massive organic reach
-- BUT Instagram actively suppresses posts with external links
-
-**Crypto policy**:
-- Meta has historically been restrictive on crypto ads
-- Organic crypto content is allowed but can get shadow-banned
-- No explicit ban on tokenization projects
-
-**Verdict**: Huge audience, perfect creator ecosystem, but **API access is painful** (Facebook Business requirement) and **link sharing is limited** (no clickable links in posts).
-
----
-
-### X (Twitter)
-
-**Audience**: 600M+ monthly active users. Text-first, real-time conversation.
-
-**Creator ecosystem**: Strong in tech, crypto, politics, media, comedy. Many creators have large followings. "Crypto Twitter" (CT) is one of the most active communities.
-
-**OAuth / API**:
-- **OAuth 2.0 with PKCE**: well-documented, standard flow
-- Scopes: `tweet.read`, `users.read`, `follows.read`
-- Available data: username, display name, bio, profile image, follower count, verified status, account creation date
-- **Free tier** (Basic): 1 app, read-only, limited to tweet posting
-- **Pro tier** ($5,000/month): full API access, higher rate limits
-- **Limitation**: API pricing is extremely high for production use
-- **Alternative**: Basic tier might be enough for just OAuth + profile read
-
-**Link sharing**:
-- Links in tweets: ✅ (clickable, with preview card)
-- Link in bio: ✅
-- Open Graph cards: ✅ (renders image + title + description from your meta tags)
-- Twitter Cards: ✅ (rich embeds for your URLs)
-
-**Viral mechanics**:
-- Retweets / quote tweets = native virality
-- "Crypto Twitter" culture already understands tokens
-- Threads can explain the model in detail
-- Community Notes could flag misleading claims (good for trust)
-
-**Crypto policy**:
-- X is **crypto-friendly** under current ownership
-- No restrictions on crypto content
-- Many crypto projects use X as primary marketing channel
-- Grok AI integration could surface tokenized creators
-
-**Verdict**: **Best API for identity verification**, great link sharing with rich cards, crypto-native audience. BUT the broader consumer audience (non-crypto fans) is smaller than Instagram/TikTok.
-
----
-
-### TikTok
-
-**Audience**: 1.5B+ monthly active users. Video-first, Gen Z/Millennial.
-
-**Creator ecosystem**: Explosive. Music, dance, comedy, education, lifestyle. Creators can go from 0 to millions overnight.
-
-**OAuth / API**:
-- **TikTok Login Kit**: OAuth 2.0, returns user profile (display name, avatar, open_id)
-- **TikTok API for Developers**: access to video data, user info
-- Available data: display name, avatar URL, follower count (via API v2)
-- **Limitation**: video-focused API — less profile metadata than X
-- **Limitation**: API approval requires app review (~1-2 weeks)
-- **Limitation**: geographic restrictions (banned in some countries, uncertain US status)
-
-**Link sharing**:
-- Links in videos: ❌ (not clickable in captions)
-- Link in bio: ✅ (requires 1K+ followers)
-- Open Graph previews: ❌ (TikTok doesn't render OG cards)
-- TikTok Shop integration: possible but complex
-
-**Viral mechanics**:
-- Algorithm-driven discovery (For You Page) = massive organic reach
-- Duets / Stitches = built-in collaboration/sharing
-- BUT content is video-only — hard to explain financial products in 60 seconds
-- Trend-driven culture — tokens could become a trend, or get ignored
-
-**Crypto policy**:
-- TikTok has **banned crypto advertising** in many regions
-- Organic crypto content exists but is often flagged or suppressed
-- Regulatory uncertainty (especially in the US)
-
-**Verdict**: Biggest viral potential and youngest audience, but **crypto-hostile policies**, limited link sharing, and API is video-centric. High risk of platform policy changes.
-
----
-
-### YouTube
-
-**Audience**: 2.5B+ monthly active users. Video-first, long and short form.
-
-**Creator ecosystem**: The OG creator platform. Music, education, gaming, vlogs, podcasts. Creators have deep, loyal audiences.
-
-**OAuth / API**:
-- **Google OAuth 2.0**: the gold standard. Well-documented, fast approval
-- **YouTube Data API v3**: channels, playlists, videos, subscribers
-- Available data: channel name, description, profile picture, subscriber count, video count, country
-- **Free tier**: 10,000 units/day (enough for auth + profile reads)
-- **Limitation**: subscriber count is public but some creators hide it
-
-**Link sharing**:
-- Links in video descriptions: ✅ (clickable)
-- Links in Community tab: ✅ (clickable)
-- Channel banner / About section: ✅
-- End screens / cards: ✅ (link to external URL)
-- Open Graph previews: N/A (YouTube is the destination, not the referrer)
-
-**Viral mechanics**:
-- Shorts have TikTok-like discovery potential
-- Community tab for text/image posts
-- Super Chat / Super Thanks = existing "support creator" culture
-- BUT YouTube's algorithm favors watch time, not external links
-
-**Crypto policy**:
-- Google Ads restricts crypto advertising
-- Organic crypto content is **allowed and thriving** (crypto YouTubers are massive)
-- No restrictions on linking to crypto projects
-- YouTube has explored Web3 features (NFT integration was announced then shelved)
-
-**Verdict**: Best OAuth flow (Google), massive creator ecosystem, existing "pay to support" culture (Super Chat). BUT video-centric and less "real-time" than X.
-
----
-
-### Farcaster (Web3 native)
-
-**Audience**: ~500K users. Crypto-native, decentralized social network on Ethereum/Base.
-
-**Creator ecosystem**: Small but highly engaged. Many crypto builders, investors, artists. Growing via Frames (interactive embeds).
-
-**OAuth / API**:
-- **Sign In With Farcaster (SIWF)**: native Web3 auth
-- Available data: FID (Farcaster ID), username, bio, pfp, follower count, connected wallets
-- **Free, open, permissionless**: no API approval needed
-- **Connected wallets**: users already have Ethereum/Base wallets linked
-
-**Link sharing**:
-- Frames: ✅ (interactive mini-apps embedded in posts — could embed a "Buy token" button directly)
-- Links in casts: ✅ (clickable, with OG previews)
-
-**Viral mechanics**:
-- Frames = the killer feature. Users can buy a token without leaving their Farcaster feed
-- Channels = topic-based communities
-- Small but very engaged audience
-- Direct integration with crypto wallets
-
-**Crypto policy**:
-- **Built for crypto**. No restrictions whatsoever.
-- Users already understand tokens, wallets, DeFi
-
-**Verdict**: **Perfect product-market fit** for a tokenization product. Tiny audience, but 100% of them understand and want what we're building. Best for MVP/early adopter validation. BUT too small for a consumer product targeting non-crypto fans.
-
----
-
-## Comparison matrix
-
-| Factor | Instagram | X (Twitter) | TikTok | YouTube | Farcaster |
-|---|---|---|---|---|---|
-| **Audience size** | ★★★★★ | ★★★★ | ★★★★★ | ★★★★★ | ★ |
-| **Creator ecosystem** | ★★★★★ | ★★★★ | ★★★★★ | ★★★★★ | ★★ |
-| **OAuth ease** | ★★ | ★★★★ | ★★★ | ★★★★★ | ★★★★★ |
-| **Profile data richness** | ★★★ | ★★★★★ | ★★★ | ★★★★ | ★★★★ |
-| **Link sharing** | ★★ | ★★★★★ | ★★ | ★★★★ | ★★★★★ |
-| **Rich previews (OG)** | ★ | ★★★★★ | ★ | ★★ | ★★★★ |
-| **Crypto friendliness** | ★★ | ★★★★★ | ★ | ★★★ | ★★★★★ |
-| **Viral mechanics** | ★★★★ | ★★★★ | ★★★★★ | ★★★ | ★★★ |
-| **API cost** | Free | Free–$5K/mo | Free | Free | Free |
-| **Regulatory risk** | ★★★ | ★★★★★ | ★★ | ★★★★ | ★★★★★ |
-| **Non-crypto user base** | ★★★★★ | ★★★ | ★★★★★ | ★★★★★ | ★ |
-
-(★ = worst, ★★★★★ = best for our use case)
-
----
-
-## Strategic options
-
-### Option 1: Start with X → expand to Instagram
-
-**Rationale**: X has the best combination of OAuth, link sharing, crypto friendliness, and rich preview cards. "Crypto Twitter" provides early adopters who validate the model. Then expand to Instagram to reach mainstream audiences.
-
-**Pros**: Fastest to market, lowest API friction, built-in crypto community
-**Cons**: X's broader audience is smaller and skews older/male. Instagram reach is much bigger for lifestyle/entertainment creators.
-
-### Option 2: Start with YouTube → expand to Instagram
-
-**Rationale**: YouTube has the best OAuth (Google), existing "support creator" culture (Super Chat), and massive reach. Creators already monetize directly from fans.
-
-**Pros**: Huge creator base, established monetization norms, Google OAuth is bulletproof
-**Cons**: Video-centric platform — our product is about tokens, not video. Less "real-time" engagement.
-
-### Option 3: Start with Farcaster → expand to X → then Instagram
-
-**Rationale**: Farcaster users are the perfect early adopters — they already have wallets, understand tokens, and Frames let us embed "Buy token" directly in the feed. Validate the model with 500K crypto-native users, then expand to X (crypto-friendly mainstream), then Instagram (full mainstream).
-
-**Pros**: Fastest product-market fit, cheapest to build (no on-ramp needed for Farcaster users), Frames are magical for UX
-**Cons**: Tiny audience. Not a consumer product until you expand.
-
-### Option 4: Platform-agnostic (email + any social)
-
-**Rationale**: Don't pick one platform. Let creators claim their token by verifying any social account (X, Instagram, YouTube, TikTok). Fans discover creators through our own explore page, not through the social platform.
-
-**Pros**: No platform dependency, broadest creator pool
-**Cons**: No viral loop through any specific platform, harder to bootstrap discovery, need to build OAuth for all platforms
-
----
-
-## Recommendation framework
-
-Answer these questions to determine the right starting platform:
-
-### Who is the first creator?
-
-If you have specific creators in mind who would launch first, go where they are:
-- Musicians / visual artists → **Instagram**
-- Tech / crypto / politics → **X**
-- Gamers / educators / vloggers → **YouTube**
-- Gen Z / dance / comedy → **TikTok**
-- Crypto builders / web3 → **Farcaster**
-
-### Who is the first fan?
-
-If the first fans are:
-- Already in crypto → **Farcaster** or **X** (no on-ramp needed)
-- Non-crypto, credit-card buyers → **Instagram** or **YouTube** (need full on-ramp)
-
-### What's the MVP timeline?
-
-- **2 weeks**: Farcaster (no on-ramp, crypto-native users, Frames)
-- **1 month**: X (OAuth + MoonPay + Privy)
-- **2 months**: Instagram or YouTube (more complex OAuth + full on-ramp + mobile UX)
-
-### What's the geographic focus?
-
-- **US/Europe**: MoonPay, Stripe, all platforms work
-- **Latin America**: Transak or Mercuryo for on-ramp, Instagram is dominant, TikTok is risky (regulation)
-- **Global**: X + YouTube have the most uniform global access
-
----
-
-## Questions to answer before deciding
-
-1. Do you have specific creators who would be first adopters? What platform are they biggest on?
-2. Is the initial audience crypto-savvy or completely non-crypto?
-3. What's the launch geography? (affects on-ramp/off-ramp provider choice)
-4. How important is virality vs. controlled growth?
-5. Is this a B2C play (fans find creators on our app) or B2B2C (creators bring their own fans via their social channels)?
-6. What's the acceptable timeline for MVP with real users?
-7. Are there legal/regulatory constraints in your target market around tokenized social engagement?
-
----
-
-## Appendix: Technical integration complexity
-
-| Platform | OAuth setup time | API data quality | Maintenance burden |
-|---|---|---|---|
-| **X** | 1-2 days | Excellent (username, pfp, followers, verified, bio) | Low (stable API, standard OAuth) |
-| **YouTube** | 1 day | Excellent (Google OAuth, channel data) | Very low (Google APIs are rock solid) |
-| **Instagram** | 3-5 days | Good (requires Facebook Business setup) | Medium (Meta changes APIs frequently) |
-| **TikTok** | 2-3 days | Moderate (less profile metadata) | Medium (API evolving, regulatory risk) |
-| **Farcaster** | 0.5 days | Good (FID, pfp, followers, connected wallets) | Very low (open protocol, no approval needed) |
+| Program ID | `41nppqSazESeBmrgnud2j5Nz1MbsnPGeyAryPcKAefqa` |
+| MASTER_WALLET | `CQ4n8D3ThynAdKyqiQifo9k79sumBWtNRHZH1TCk2BZ1` |
+| Fee payer (devnet) | `XrMiSyRsttChRumZiEsTUiBa2Vgt2tJxbia93PsFYW6` |
+| USDC mint (devnet) | `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU` |
+| Privy App ID | `cmo35d8aa00n50bl1pkst91n7` |
+| Network | devnet (Helius RPC) |
+| GitHub | `github.com/pablofelipe01/new-model-b` |
