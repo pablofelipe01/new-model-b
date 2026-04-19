@@ -1,30 +1,55 @@
-import Link from "next/link";
+"use client";
 
-import { PROJECT_NAME } from "@/lib/constants";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { useLanguage } from "@/components/providers/LanguageProvider";
+import { MLogo } from "@/components/matiz/MLogo";
 
 import { WalletButton } from "./WalletButton";
 
 export function Header() {
+  const pathname = usePathname();
+  const { lang, setLang, t } = useLanguage();
+
   return (
-    <header className="border-b border-zinc-200 dark:border-zinc-800">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-          <span className="inline-block h-6 w-6 rounded-full bg-brand-500" />
-          <span>{PROJECT_NAME}</span>
+    <nav className="top-nav">
+      <Link href="/" className="nav-logo">
+        <MLogo size={28} />
+        <span className="nav-logo-word">matiz</span>
+      </Link>
+
+      <div className="nav-links">
+        <Link
+          href="/"
+          className={`nav-link ${pathname === "/" ? "active" : ""}`}
+        >
+          {t.explore}
         </Link>
-        <nav className="flex items-center gap-6 text-sm">
-          <Link href="/" className="hover:text-brand-500">
-            Explore
-          </Link>
-          <Link href="/launch" className="hover:text-brand-500">
-            Launch
-          </Link>
-          <Link href="/dashboard" className="hover:text-brand-500">
-            Dashboard
-          </Link>
-          <WalletButton />
-        </nav>
+        <Link
+          href="/launch"
+          className={`nav-link ${pathname === "/launch" ? "active" : ""}`}
+        >
+          {t.launch}
+        </Link>
+        <Link
+          href="/dashboard"
+          className={`nav-link ${pathname === "/dashboard" ? "active" : ""}`}
+        >
+          {t.dashboard}
+        </Link>
       </div>
-    </header>
+
+      <div className="nav-right">
+        <button
+          type="button"
+          className="lang-toggle"
+          onClick={() => setLang(lang === "es" ? "en" : "es")}
+        >
+          {t.langSwitch}
+        </button>
+        <WalletButton />
+      </div>
+    </nav>
   );
 }

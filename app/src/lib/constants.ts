@@ -1,9 +1,9 @@
 import { PublicKey } from "@solana/web3.js";
 
 // PERSONALIZAR cuando haya nombre real.
-export const PROJECT_NAME = "new-model-b";
-export const PROJECT_DESCRIPTION = "Configurable bonding curves on Solana";
-export const PROJECT_URL = "https://example.com";
+export const PROJECT_NAME = "Matiz";
+export const PROJECT_DESCRIPTION = "Launch your token. Let the people who believe in you grow with you.";
+export const PROJECT_URL = "https://matiz.community";
 
 export const MAINNET_RPC =
   process.env.NEXT_PUBLIC_MAINNET_RPC ?? "https://api.mainnet-beta.solana.com";

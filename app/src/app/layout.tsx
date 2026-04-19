@@ -1,36 +1,36 @@
 import type { Metadata } from "next";
-import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
 
 import { Header } from "@/components/Header";
+import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { PrivyAuthProvider } from "@/components/providers/PrivyAuthProvider";
 import { SdkProvider } from "@/components/providers/SdkProvider";
 import { WalletContextProvider } from "@/components/providers/WalletContextProvider";
-import { PROJECT_DESCRIPTION, PROJECT_NAME } from "@/lib/constants";
+import { fontVariables } from "@/lib/fonts";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: PROJECT_NAME,
-  description: PROJECT_DESCRIPTION,
+  title: "Matiz",
+  description: "Launch your token. Let the people who believe in you grow with you.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <html lang="es" className={fontVariables}>
+      <body>
+        <LanguageProvider>
           <PrivyAuthProvider>
             <WalletContextProvider>
               <SdkProvider>
-              <div className="flex min-h-screen flex-col">
-                <Header />
-                <main className="flex-1">{children}</main>
-              </div>
+                <div className="app">
+                  <Header />
+                  <main className="screen">{children}</main>
+                </div>
               </SdkProvider>
             </WalletContextProvider>
           </PrivyAuthProvider>
-        </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
   );
