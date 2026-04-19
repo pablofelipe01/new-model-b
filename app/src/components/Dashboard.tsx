@@ -1,98 +1,131 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
+import { Sparkline } from "@/components/matiz/Sparkline";
 import { SendModal } from "@/components/SendModal";
 import { SwapPanel } from "@/components/SwapPanel";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
 import { usePortfolio, type PortfolioRow } from "@/hooks/usePortfolio";
 import { formatNumber } from "@/lib/utils";
 
-/**
- * The connected wallet's home base: USDC balance, tokens held on the
- * platform, and tokens launched by this wallet. Buy/sell happens inline
- * via an expanding swap panel per row so the user never leaves the page.
- */
 export function Dashboard() {
   const { ready } = useSdk();
   const { held, launched, usdcBalance, loading, error, refresh } =
     usePortfolio();
   const [sendOpen, setSendOpen] = useState(false);
+  const { t, lang } = useLanguage();
 
   if (!ready) {
     return (
-      <Empty
-        title="Connect your wallet"
-        subtitle="Your holdings and launched tokens will show up here once you connect."
-      />
+      <div className="dashboard" style={{ textAlign: "center", paddingTop: 120 }}>
+        <h1 className="display-m fraunces-italic">{t.signIn}</h1>
+        <p className="muted" style={{ marginTop: 12 }}>
+          {lang === "es"
+            ? "Conecta tu billetera para ver tus posiciones."
+            : "Connect your wallet to see your holdings."}
+        </p>
+      </div>
     );
   }
 
+  const totalValue = held.reduce((a, r) => a + r.valueUsdc, 0) + usdcBalance;
+
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
-      <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-zinc-500">
-              USDC balance
-            </p>
-            <p className="text-3xl font-semibold">
-              ${formatNumber(usdcBalance, 2)}
-            </p>
+    <div className="dashboard">
+      <div className="page-head">
+        <div>
+          <div className="label">{t.dashboard}</div>
+          <h1 className="page-title fraunces-italic">
+            {lang === "es" ? "Buenas" : "Hey there"}
+          </h1>
+        </div>
+        <Link href="/launch" className="btn btn-primary">
+          + {t.launch}
+        </Link>
+      </div>
+
+      <div className="stat-grid">
+        <div className="stat-card hero">
+          <div className="label">{t.totalValue}</div>
+          <div className="numeric-l">${formatNumber(totalValue, 2)}</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">{t.yourBalance}</div>
+          <div className="numeric-m">${formatNumber(usdcBalance, 2)}</div>
+          <div className="stat-sub">
+            {lang === "es" ? "disponible" : "available"}
           </div>
-          <div className="flex gap-2">
+        </div>
+        <div className="stat-card">
+          <div style={{ display: "flex", gap: 8 }}>
             <button
               type="button"
               onClick={() => setSendOpen(true)}
-              className="rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-600"
+              className="btn btn-primary"
+              style={{ flex: 1, padding: "10px 16px", fontSize: 14 }}
             >
-              Send
+              {t.send}
             </button>
             <button
               type="button"
               onClick={refresh}
-              aria-label="Refresh dashboard"
-              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm hover:border-brand-500 dark:border-zinc-700"
+              className="btn btn-secondary"
+              style={{ padding: "10px 16px", fontSize: 14 }}
             >
-              Refresh
+              {t.refresh}
             </button>
           </div>
         </div>
-      </section>
+      </div>
 
       {error && (
-        <p className="text-sm text-red-500">
-          Failed to load portfolio: {error.message}
+        <p className="muted-small" style={{ color: "var(--state-danger)", marginBottom: 16 }}>
+          {error.message}
         </p>
       )}
 
-      <Section
-        title="My portfolio"
-        subtitle="Tokens you own on the platform"
-        empty={
-          !loading && held.length === 0
-            ? "You don't own any platform tokens yet. Explore to buy your first."
-            : undefined
-        }
-      >
-        {held.map((row) => (
-          <PortfolioCard key={row.publicKey.toBase58()} row={row} />
-        ))}
-      </Section>
+      <div className="dash-grid">
+        {/* Holdings */}
+        <section>
+          <div className="section-sub-head">
+            <h2 className="h2">{t.holdings}</h2>
+            <span className="muted-small">
+              {held.length} {lang === "es" ? "posiciones" : "holdings"}
+            </span>
+          </div>
+          <div className="holdings-list">
+            {held.map((row) => (
+              <HoldingRow key={row.publicKey.toBase58()} row={row} />
+            ))}
+            {launched.map((row) => (
+              <HoldingRow key={`l-${row.publicKey.toBase58()}`} row={row} launcher />
+            ))}
+            {!loading && held.length === 0 && launched.length === 0 && (
+              <Link href="/" className="empty-add">
+                + {lang === "es" ? "Cree en alguien nuevo" : "Believe in someone new"}
+              </Link>
+            )}
+          </div>
+        </section>
 
-      <Section
-        title="Tokens I launched"
-        subtitle="Tokens where you are the general authority"
-        empty={
-          !loading && launched.length === 0
-            ? "You haven't launched any tokens yet."
-            : undefined
-        }
-      >
-        {launched.map((row) => (
-          <PortfolioCard key={row.publicKey.toBase58()} row={row} launcher />
-        ))}
-      </Section>
+        {/* Activity placeholder */}
+        <section>
+          <div className="section-sub-head">
+            <h2 className="h2">{t.recentActivity}</h2>
+          </div>
+          <div
+            className="stat-card"
+            style={{ textAlign: "center", padding: 32 }}
+          >
+            <p className="muted-small">
+              {lang === "es" ? "Próximamente" : "Coming soon"}
+            </p>
+          </div>
+        </section>
+      </div>
 
       <SendModal
         open={sendOpen}
@@ -103,35 +136,7 @@ export function Dashboard() {
   );
 }
 
-function Section({
-  title,
-  subtitle,
-  empty,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  empty?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section>
-      <div className="mb-3">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <p className="text-xs text-zinc-500">{subtitle}</p>
-      </div>
-      {empty ? (
-        <p className="rounded-xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700">
-          {empty}
-        </p>
-      ) : (
-        <div className="space-y-3">{children}</div>
-      )}
-    </section>
-  );
-}
-
-function PortfolioCard({
+function HoldingRow({
   row,
   launcher = false,
 }: {
@@ -139,67 +144,60 @@ function PortfolioCard({
   launcher?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const { t } = useLanguage();
   const symbol = row.tokenSymbol ?? "TOKEN";
-  const name = row.tokenName ?? "Unnamed token";
+  const name = row.tokenName ?? "Unnamed";
   const price = row.price ?? 0;
 
   return (
-    <article className="rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-      <header className="flex items-center gap-4 p-4">
+    <div>
+      <button
+        type="button"
+        className="holding-row"
+        onClick={() => setExpanded((e) => !e)}
+        style={{ width: "100%" }}
+      >
         {row.tokenImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={row.tokenImage}
-            alt={`${name} logo`}
-            className="h-12 w-12 rounded-full object-cover"
+            alt={name}
+            className="hr-avatar"
+            style={{ objectFit: "cover", borderRadius: "50%" }}
           />
         ) : (
-          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-brand-500 to-purple-500" />
+          <div className="hr-avatar" style={{ background: "var(--color-surface-high)" }} />
         )}
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold">
-            {name}{" "}
-            <span className="text-sm font-normal text-zinc-500">({symbol})</span>
-          </p>
-          <p className="text-xs text-zinc-500">
-            Price ${formatNumber(price, 6)}
-          </p>
+        <div>
+          <div className="hr-name">{name}</div>
+          <div className="hr-meta">
+            {launcher
+              ? `${t.supply}: ${formatNumber(row.supplyRaw / Math.pow(10, row.targetDecimals), 2)}`
+              : `${t.youOwn} ${formatNumber(row.userBalanceHuman, 4)} ${symbol}`}
+          </div>
         </div>
-        <div className="text-right">
-          {launcher ? (
-            <>
-              <p className="text-xs text-zinc-500">Supply</p>
-              <p className="font-medium">
-                {formatNumber(
-                  row.supplyRaw / Math.pow(10, row.targetDecimals),
-                  2,
-                )}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-xs text-zinc-500">Your balance</p>
-              <p className="font-medium">
-                {formatNumber(row.userBalanceHuman, 4)} {symbol}
-              </p>
-              <p className="text-xs text-zinc-500">
-                ≈ ${formatNumber(row.valueUsdc, 2)}
-              </p>
-            </>
-          )}
+        <Sparkline
+          supply={row.supplyRaw / Math.pow(10, row.targetDecimals)}
+          maxSupply={Math.max(row.supplyRaw / Math.pow(10, row.targetDecimals) * 3, 1000)}
+          width={90}
+          height={36}
+        />
+        <div className="hr-value">
+          <div className="numeric-m">
+            ${formatNumber(launcher ? price : row.valueUsdc, 2)}
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setExpanded((e) => !e)}
-          aria-label={expanded ? "Hide trade panel" : "Trade this token"}
-          className="ml-2 rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-600"
-        >
-          {expanded ? "Close" : "Trade"}
-        </button>
-      </header>
+      </button>
 
       {expanded && row.curveParams && (
-        <div className="border-t border-zinc-200 p-4 dark:border-zinc-800">
+        <div
+          style={{
+            background: "var(--color-surface)",
+            borderRadius: "var(--radius-lg)",
+            padding: 16,
+            marginTop: 4,
+          }}
+        >
           <SwapPanel
             tokenBonding={row.publicKey.toBase58()}
             curve={row.curveParams}
@@ -211,20 +209,6 @@ function PortfolioCard({
           />
         </div>
       )}
-      {expanded && !row.curveParams && (
-        <p className="border-t border-zinc-200 p-4 text-sm text-zinc-500 dark:border-zinc-800">
-          Curve data unavailable — cannot trade from here.
-        </p>
-      )}
-    </article>
-  );
-}
-
-function Empty({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="mx-auto max-w-md px-6 py-16 text-center">
-      <h1 className="mb-2 text-xl font-semibold">{title}</h1>
-      <p className="text-sm text-zinc-500">{subtitle}</p>
     </div>
   );
 }
