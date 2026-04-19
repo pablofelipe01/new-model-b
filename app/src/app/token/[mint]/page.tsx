@@ -5,24 +5,23 @@ import {
   tokenBondingPda,
   type CurveParams,
 } from "@new-model-b/sdk";
+import Link from "next/link";
 import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
 
 import { BondingCurveChart } from "@/components/BondingCurveChart";
 import { SwapPanel } from "@/components/SwapPanel";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
 import { useBondedPrice } from "@/hooks/useBondedPrice";
 import { useTokenBonding } from "@/hooks/useTokenBonding";
 import { TOKEN_BONDING_PROGRAM_ID } from "@/lib/constants";
 import { formatNumber, shortenAddress } from "@/lib/utils";
 
-/**
- * Token detail page. Resolves the bonding from the mint in the URL,
- * fetches the curve, and renders chart + swap panel side-by-side.
- */
 export default function TokenPage({ params }: { params: { mint: string } }) {
   const mintPk = useMemo(() => safePk(params.mint), [params.mint]);
   const [bondingPk, setBondingPk] = useState<PublicKey | null>(null);
+  const { t, lang } = useLanguage();
 
   useEffect(() => {
     if (!mintPk) return;
@@ -38,14 +37,14 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
   const [supplyRaw, setSupplyRaw] = useState<number>(0);
   const [targetDecimals, setTargetDecimals] = useState<number>(9);
   const [baseDecimals, setBaseDecimals] = useState<number>(9);
+  const [tokenName, setTokenName] = useState<string | null>(null);
+  const [tokenSymbol, setTokenSymbol] = useState<string | null>(null);
+  const [tokenImage, setTokenImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!sdk || !tokenBonding) return;
     let cancelled = false;
     (async () => {
-      // Fetch the curve definition + decimals for both mints in parallel
-      // — we need the decimals before we can convert the on-chain
-      // coefficients back into the human-units the UI expects.
       const [curve, supplyInfo, targetMintInfo, baseMintInfo] = await Promise.all([
         sdk.getCurve(tokenBonding.curve),
         sdk.provider.connection.getTokenSupply(tokenBonding.targetMint),
@@ -69,93 +68,146 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
       setTargetDecimals(tDec);
       setBaseDecimals(bDec);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [sdk, tokenBonding]);
 
-  if (!mintPk) return <Empty title="Invalid mint" />;
-  if (loading) return <Empty title="Loading…" />;
+  // Fetch metadata
+  useEffect(() => {
+    if (!sdk || !tokenBonding) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const bondings = await sdk.listTokenBondings();
+        const found = bondings.find(
+          (b) => b.account.targetMint.toBase58() === tokenBonding.targetMint.toBase58(),
+        );
+        if (cancelled || !found) return;
+        // Metadata comes from the enriched listing
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [sdk, tokenBonding]);
+
+  if (!mintPk) return <Empty text="Invalid mint" />;
+  if (loading) return <Empty text={lang === "es" ? "Cargando…" : "Loading…"} />;
   if (!tokenBonding || !bondingPk) {
-    return <Empty title="No bonding found for this mint" />;
+    return <Empty text={lang === "es" ? "No se encontró este token" : "No bonding found for this mint"} />;
   }
 
-  return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold">{shortenAddress(params.mint, 6)}</h1>
-        <p className="text-sm text-zinc-500">
-          Bonding {shortenAddress(bondingPk.toBase58(), 6)} ·
-          {price !== undefined ? ` price ${formatNumber(price, 8)}` : " price —"}
-        </p>
-      </header>
+  const displayName = tokenName ?? shortenAddress(params.mint, 6);
+  const displaySymbol = (tokenSymbol ?? params.mint.slice(0, 4)).toUpperCase();
+  const supplyHuman = supplyRaw / Math.pow(10, targetDecimals);
+  const reserveHuman =
+    tokenBonding.reserveBalanceFromBonding.toNumber() / Math.pow(10, baseDecimals);
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-4 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="h-72">
-            {curveParams && (
-              <BondingCurveChart
-                curve={curveParams}
-                // Curve is now in human units, so the chart's "current
-                // supply" line has to be too.
-                currentSupply={supplyRaw / Math.pow(10, targetDecimals)}
-                baseMintSymbol="base"
-              />
-            )}
+  return (
+    <div className="token-screen">
+      <Link href="/" className="back-link">
+        ← {t.explore}
+      </Link>
+
+      {/* Header */}
+      <div className="token-header">
+        {tokenImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={tokenImage} alt={displayName} className="th-portrait" style={{ objectFit: "cover" }} />
+        ) : (
+          <div className="th-portrait" />
+        )}
+        <div>
+          <div className="label">{displaySymbol}</div>
+          <h1 className="th-name">{displayName}</h1>
+          <div className="th-handle">{shortenAddress(params.mint)}</div>
+        </div>
+      </div>
+
+      {/* Price strip */}
+      <div className="price-strip">
+        <div className="ps-item">
+          <div className="label">{t.price}</div>
+          <div className="numeric-l">
+            ${price !== undefined ? formatNumber(price, 4) : "—"}
+          </div>
+        </div>
+        <div className="ps-item">
+          <div className="label">{t.supply}</div>
+          <div className="numeric-m">{formatNumber(supplyHuman, 2)}</div>
+        </div>
+        <div className="ps-item">
+          <div className="label">{t.reservePool}</div>
+          <div className="numeric-m">${formatNumber(reserveHuman, 2)}</div>
+        </div>
+      </div>
+
+      {/* Layout: chart + trade panel */}
+      <div className="token-layout">
+        <div className="token-main">
+          {/* Curve chart */}
+          <div className="curve-card">
+            <div className="curve-head">
+              <div>
+                <div className="label">{t.curve_caption.split(".")[0]}</div>
+              </div>
+            </div>
+            <div style={{ height: 280 }}>
+              {curveParams && (
+                <BondingCurveChart
+                  curve={curveParams}
+                  currentSupply={supplyHuman}
+                  baseMintSymbol="USDC"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Trust card */}
+          <div className="trust-card">
+            <div className="trust-row">
+              <div className="trust-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M10 2L12.5 7.5L18 8.5L14 12.5L15 18L10 15.5L5 18L6 12.5L2 8.5L7.5 7.5L10 2Z" fill="var(--state-success)" />
+                </svg>
+              </div>
+              <div className="trust-copy">
+                <div className="trust-line">{t.reserveNote}</div>
+                <a
+                  href={`https://explorer.solana.com/address/${tokenBonding.baseStorage.toBase58()}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link"
+                >
+                  {t.seeOnChain} →
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* Trade panel */}
         <div>
           {curveParams && (
             <SwapPanel
               tokenBonding={bondingPk.toBase58()}
               curve={curveParams}
-              currentSupply={supplyRaw / Math.pow(10, targetDecimals)}
-              baseSymbol="base"
-              targetSymbol="token"
+              currentSupply={supplyHuman}
+              baseSymbol="USDC"
+              targetSymbol={displaySymbol}
               targetDecimals={targetDecimals}
               baseDecimals={baseDecimals}
             />
           )}
         </div>
       </div>
-
-      <section className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat
-          label="Price"
-          value={price !== undefined ? formatNumber(price, 6) : "—"}
-        />
-        <Stat
-          label="Supply"
-          value={formatNumber(supplyRaw / Math.pow(10, targetDecimals), 4)}
-        />
-        <Stat
-          label="Reserve"
-          value={formatNumber(
-            tokenBonding.reserveBalanceFromBonding.toNumber() /
-              Math.pow(10, baseDecimals),
-            6,
-          )}
-        />
-        <Stat label="Index" value={tokenBonding.index.toString()} />
-      </section>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Empty({ text }: { text: string }) {
   return (
-    <div className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
-      <p className="text-xs text-zinc-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function Empty({ title }: { title: string }) {
-  return (
-    <div className="mx-auto max-w-2xl px-6 py-20 text-center text-zinc-500">
-      <p>{title}</p>
+    <div className="token-screen" style={{ textAlign: "center", paddingTop: 120 }}>
+      <p className="muted">{text}</p>
     </div>
   );
 }

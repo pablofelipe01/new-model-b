@@ -5,62 +5,31 @@ import {
   LAUNCHER_FEE_BPS_MAX,
   PLATFORM_FEE_BPS,
   USDC_DECIMALS,
-  USDC_MINT,
   scaleCurveHumanToOnChain,
   type CurveParams,
   type PiecewiseCurve,
 } from "@new-model-b/sdk";
 import BN from "bn.js";
-import { Transaction } from "@solana/web3.js";
+import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
+import { BondingCurveChart } from "@/components/BondingCurveChart";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
 import { FEE_PAYER } from "@/lib/sponsoredSend";
 
-import { BondingCurveChart } from "./BondingCurveChart";
-
 type Step = 1 | 2 | 3;
 
-const PRESETS: {
-  label: string;
-  key: keyof typeof CURVES;
-  description: string;
-}[] = [
-  {
-    label: "Square root",
-    key: "sqrt",
-    description:
-      "Price grows slowly at first, then faster. Most popular for community tokens — early buyers get a better deal.",
-  },
-  {
-    label: "Linear",
-    key: "linear",
-    description:
-      "Price grows at a constant rate. Each new token costs the same amount more than the last one.",
-  },
-  {
-    label: "Quadratic",
-    key: "quadratic",
-    description:
-      "Price grows very fast. Heavily rewards the earliest buyers. Best for scarce, high-demand tokens.",
-  },
-  {
-    label: "Fixed price",
-    key: "fixed",
-    description:
-      "Every token costs the same, regardless of how many exist. No bonding curve — just a fixed rate.",
-  },
+const PRESETS = [
+  { key: "sqrt" as const, pow: 1, frac: 2 },
+  { key: "linear" as const, pow: 1, frac: 1 },
+  { key: "quadratic" as const, pow: 2, frac: 1 },
 ];
 
-/**
- * Three-step launch flow. The form keeps all state in React (no zod / RHF
- * to avoid dependency churn) and on submit calls
- * `sdk.createCurve` followed by `sdk.initTokenBonding` in two transactions.
- */
 export function LaunchForm() {
   const { sdk, ready } = useSdk();
+  const { t, lang } = useLanguage();
   const [step, setStep] = useState<Step>(1);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Step 1
@@ -69,55 +38,38 @@ export function LaunchForm() {
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [decimals, setDecimals] = useState(9);
+  const [decimals] = useState(9);
 
   // Step 2
   const [selectedPreset, setSelectedPreset] = useState(PRESETS[0]);
   const [startingPrice, setStartingPrice] = useState(0);
   const [growthRate, setGrowthRate] = useState(1);
-  // Launcher fee in PERCENT (UI). The on-chain field is basis points.
   const [launcherFeePct, setLauncherFeePct] = useState(0);
 
-  // Build the curve params from the user-friendly inputs. Exponent always
-  // comes from the selected preset — exposing pow/frac directly in the UI
-  // lets users shoot themselves in the foot with exotic curves that the
-  // presets already cover.
   const curveParams = useMemo<CurveParams>(() => {
     const base = CURVES[selectedPreset.key];
     return {
-      c: selectedPreset.key === "fixed" ? 0 : growthRate,
-      b: selectedPreset.key === "fixed" ? growthRate : startingPrice,
+      c: selectedPreset.key === "quadratic" ? growthRate : selectedPreset.key === "sqrt" ? growthRate : growthRate,
+      b: startingPrice,
       pow: base.pow,
       frac: base.frac,
     };
   }, [selectedPreset, growthRate, startingPrice]);
 
-  // Submission state
+  // Submission
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ mint: string; bonding: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const previewMaxSupply = useMemo(() => 1_000, []);
-  // Base mint is hardcoded to USDC by the program — no UI selection.
-  const baseSymbol = "USDC";
-
   async function onLaunch() {
     if (!sdk || !ready) {
-      setError("Connect a wallet first");
+      setError(lang === "es" ? "Conecta tu billetera primero" : "Connect a wallet first");
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
-      // 1. Create the curve account. Base is USDC (6 decimals), forced by
-      //    the program. The user enters HUMAN coefficients (e.g. linear c=1
-      //    means "1 USDC per 1 token at supply=1 token"); we scale to raw
-      //    units before serializing.
-      const onChainCurve = scaleCurveHumanToOnChain(
-        curveParams,
-        USDC_DECIMALS,
-        decimals,
-      );
+      const onChainCurve = scaleCurveHumanToOnChain(curveParams, USDC_DECIMALS, decimals);
       const definition: PiecewiseCurve = {
         timeV0: {
           curves: [
@@ -137,16 +89,13 @@ export function LaunchForm() {
           ],
         },
       };
-      // Relay function for gas sponsorship: sends partially-signed tx to
-      // backend which adds fee payer signature and broadcasts.
+
       const sendFn = FEE_PAYER
         ? async (serializedTx: Buffer): Promise<string> => {
             const res = await fetch("/api/sponsor-tx", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                transaction: serializedTx.toString("base64"),
-              }),
+              body: JSON.stringify({ transaction: serializedTx.toString("base64") }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error ?? "Sponsor relay failed");
@@ -154,14 +103,12 @@ export function LaunchForm() {
           }
         : undefined;
 
-      // 1. Create the curve account (sponsored if FEE_PAYER is set).
       const { curveKey } = await sdk.createCurve({
         definition,
         rentPayer: FEE_PAYER ?? undefined,
         sendFn,
       });
 
-      // 2. Build metadata URI.
       let tokenUri = "";
       if (imageUrl) {
         const isLocalhost =
@@ -175,7 +122,6 @@ export function LaunchForm() {
         }
       }
 
-      // 3. Init token bonding (sponsored if FEE_PAYER is set).
       const { tokenBondingKey, targetMint } = await sdk.initTokenBonding({
         curve: curveKey,
         decimals,
@@ -196,384 +142,328 @@ export function LaunchForm() {
     }
   }
 
-  return (
-    <div className="mx-auto max-w-3xl px-6 py-8">
-      <Stepper step={step} />
+  // ─── Success screen ───
+  if (result) {
+    const tokenUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/token/${result.mint}`;
+    return (
+      <div className="success-screen">
+        <div className="success-inner">
+          <h1 className="display-l fraunces-italic">{t.shareMoment}</h1>
+          <p className="muted" style={{ marginTop: 12 }}>{t.shareCopy}</p>
 
-      {step === 1 && (
-        <Card title="1. Token metadata">
-          <Field label="Name">
-            <input
-              title="Token name"
-              aria-label="Token name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="input"
-              placeholder="My Token"
-            />
-          </Field>
-          <Field label="Symbol">
-            <input
-              title="Token symbol"
-              aria-label="Token symbol"
-              value={symbol}
-              maxLength={10}
-              onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-              className="input"
-              placeholder="MYT"
-            />
-          </Field>
-          <Field label="Description">
-            <textarea
-              title="Token description"
-              aria-label="Token description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="input min-h-[80px]"
-              placeholder="What is this token for?"
-            />
-          </Field>
-          <Field label="Token logo">
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  title="Upload token logo"
-                  aria-label="Upload token logo"
-                  disabled={uploading}
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setUploading(true);
-                    try {
-                      const fd = new FormData();
-                      fd.append("file", file);
-                      const res = await fetch("/api/upload", {
-                        method: "POST",
-                        body: fd,
-                      });
-                      const data = await res.json();
-                      if (data.url) setImageUrl(data.url);
-                      else setError(data.error ?? "Upload failed");
-                    } catch (err) {
-                      setError((err as Error).message);
-                    } finally {
-                      setUploading(false);
-                    }
-                  }}
-                />
+          <div className="share-actions">
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(tokenUrl)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary btn-full"
+            >
+              {t.shareWA}
+            </a>
+            <button
+              type="button"
+              className="btn btn-secondary btn-full"
+              onClick={() => navigator.clipboard.writeText(tokenUrl)}
+            >
+              {t.copyLink}
+            </button>
+            <Link href={`/token/${result.mint}`} className="btn btn-ghost btn-full">
+              {t.viewToken} →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Wizard ───
+  const stepLabels = [t.step1, t.step2, t.step3];
+  const stepSubs = [t.step1Sub, t.step2Sub, t.step3Sub];
+
+  return (
+    <div className="launch-screen">
+      <div className="page-head">
+        <div>
+          <div className="label">{t.launch}</div>
+          <h1 className="page-title fraunces-italic">{t.launchYourToken}</h1>
+        </div>
+      </div>
+
+      <div className="wizard">
+        {/* Rail */}
+        <div className="wizard-rail">
+          <p className="muted">{stepSubs[step - 1]}</p>
+          <div className="steps">
+            {stepLabels.map((label, i) => {
+              const n = i + 1;
+              const cls =
+                n === step ? "step active" : n < step ? "step done" : "step";
+              return (
+                <div key={n} className={cls}>
+                  <div className="step-num">{n < step ? "✓" : n}</div>
+                  <div className="step-label">{label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="wizard-body">
+          {step === 1 && (
+            <div className="form">
+              <label className="input-label">{t.launchName}</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="input"
+                placeholder={lang === "es" ? "Mi Token" : "My Token"}
+              />
+
+              <label className="input-label" style={{ marginTop: 12 }}>{t.launchSymbol}</label>
+              <input
+                value={symbol}
+                maxLength={10}
+                onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                className="input"
+                placeholder="MYT"
+              />
+
+              <label className="input-label" style={{ marginTop: 12 }}>{t.launchBio}</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="input textarea"
+                placeholder={lang === "es" ? "¿De qué se trata?" : "What is this token for?"}
+              />
+
+              <label className="input-label" style={{ marginTop: 12 }}>Logo</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                disabled={uploading}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setUploading(true);
+                  try {
+                    const fd = new FormData();
+                    fd.append("file", file);
+                    const res = await fetch("/api/upload", { method: "POST", body: fd });
+                    const data = await res.json();
+                    if (data.url) setImageUrl(data.url);
+                    else setError(data.error ?? "Upload failed");
+                  } catch (err) {
+                    setError((err as Error).message);
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+              />
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-zinc-300 p-4 transition hover:border-brand-500 dark:border-zinc-600"
+                  className="btn btn-secondary"
+                  style={{ padding: "10px 16px", fontSize: 14 }}
                 >
-                  {uploading ? (
-                    <span className="text-sm text-zinc-500">Uploading...</span>
-                  ) : (
-                    <>
-                      <span className="text-sm font-medium text-brand-500">
-                        Click to upload
-                      </span>
-                      <span className="mt-1 text-xs text-zinc-500">
-                        PNG, JPG, SVG or GIF
-                      </span>
-                    </>
-                  )}
+                  {uploading
+                    ? lang === "es" ? "Subiendo…" : "Uploading…"
+                    : lang === "es" ? "Subir imagen" : "Upload image"}
                 </button>
-                <p className="mt-1 text-xs text-zinc-500">
-                  Or paste a URL:
-                </p>
-                <input
-                  title="Token logo URL"
-                  aria-label="Token logo URL"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="input mt-1"
-                  placeholder="https://example.com/logo.png"
-                />
-              </div>
-              {imageUrl && (
-                <div className="flex flex-col items-center gap-1">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                {imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={imageUrl}
-                    alt="Token logo preview"
-                    className="h-16 w-16 rounded-full object-cover border-2 border-brand-500"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
+                    alt="preview"
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: "var(--radius-md)",
+                      objectFit: "cover",
                     }}
                   />
-                  <span className="text-xs text-zinc-500">Preview</span>
-                </div>
-              )}
-            </div>
-          </Field>
-          <Field label="Decimals">
-            <input
-              title="Token decimals"
-              aria-label="Token decimals"
-              type="number"
-              min={0}
-              max={18}
-              value={decimals}
-              onChange={(e) => setDecimals(Number(e.target.value))}
-              className="input"
-              placeholder="9"
-            />
-          </Field>
-          <NavButtons onNext={() => setStep(2)} disableNext={!name || !symbol} />
-        </Card>
-      )}
+                )}
+              </div>
 
-      {step === 2 && (
-        <Card title="2. Pricing model">
-          <p className="text-xs text-zinc-500">
-            Buyers pay with USDC. Reserves are held in USDC and locked by the
-            program — only sellers can withdraw them by burning their tokens.
-          </p>
-
-          <Field label="How should the price change?">
-            <div className="flex flex-wrap gap-2">
-              {PRESETS.map((p) => (
+              <div className="wizard-actions">
                 <button
-                  key={p.key}
                   type="button"
-                  aria-label={`Use ${p.label} pricing`}
-                  onClick={() => setSelectedPreset(p)}
-                  className={`rounded-lg border px-3 py-1.5 text-sm transition ${
-                    selectedPreset.key === p.key
-                      ? "border-brand-500 bg-brand-500/10 text-brand-400"
-                      : "border-zinc-200 hover:border-brand-500 dark:border-zinc-700"
-                  }`}
+                  onClick={() => setStep(2)}
+                  disabled={!name || !symbol}
+                  className="btn btn-primary"
                 >
-                  {p.label}
+                  {t.next} →
                 </button>
-              ))}
+              </div>
             </div>
-            <p className="mt-2 text-xs text-zinc-500">{selectedPreset.description}</p>
-          </Field>
+          )}
 
-          {selectedPreset.key !== "fixed" ? (
-            <>
-              <Field label={`Starting price (${baseSymbol} per token when supply is 0)`}>
-                <input
-                  title="Starting price"
-                  aria-label="Starting price"
-                  type="number"
-                  step="0.001"
-                  min={0}
-                  value={startingPrice}
-                  onChange={(e) => setStartingPrice(Number(e.target.value))}
-                  className="input"
-                  placeholder="0"
-                />
-              </Field>
-              <Field label="Growth rate (how fast the price rises with demand)">
-                <input
-                  title="Growth rate"
-                  aria-label="Growth rate"
-                  type="number"
-                  step="0.1"
-                  min={0}
-                  value={growthRate}
-                  onChange={(e) => setGrowthRate(Number(e.target.value))}
-                  className="input"
-                  placeholder="1"
-                />
-                <p className="mt-1 text-xs text-zinc-500">
-                  Higher = price increases faster as people buy. Try 0.1 for gentle, 1 for moderate, 10 for aggressive.
-                </p>
-              </Field>
-            </>
-          ) : (
-            <Field label={`Fixed price (${baseSymbol} per token)`}>
+          {step === 2 && (
+            <div className="form">
+              <label className="input-label">{lang === "es" ? "Tipo de curva" : "Curve type"}</label>
+              <div className="slope-row">
+                {PRESETS.map((p) => (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => setSelectedPreset(p)}
+                    className={`slope-opt ${selectedPreset.key === p.key ? "on" : ""}`}
+                  >
+                    <div className="slope-label" style={{ textTransform: "capitalize" }}>
+                      {p.key === "sqrt"
+                        ? lang === "es" ? "Raíz cuadrada" : "Square root"
+                        : p.key === "linear"
+                          ? "Linear"
+                          : lang === "es" ? "Cuadrática" : "Quadratic"}
+                    </div>
+                    <div className="slope-sub">
+                      {p.key === "sqrt"
+                        ? lang === "es" ? "Crece despacio, luego rápido" : "Grows slowly, then faster"
+                        : p.key === "linear"
+                          ? lang === "es" ? "Crece a ritmo constante" : "Grows at constant rate"
+                          : lang === "es" ? "Crece muy rápido" : "Grows very fast"}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <label className="input-label">{t.launchStartPrice} ($)</label>
               <input
-                title="Fixed price per token"
-                aria-label="Fixed price per token"
                 type="number"
                 step="0.001"
+                min={0}
+                value={startingPrice}
+                onChange={(e) => setStartingPrice(Number(e.target.value))}
+                className="input"
+                placeholder="0"
+              />
+
+              <label className="input-label" style={{ marginTop: 12 }}>
+                {lang === "es" ? "Tasa de crecimiento" : "Growth rate"}
+              </label>
+              <input
+                type="number"
+                step="0.1"
                 min={0}
                 value={growthRate}
                 onChange={(e) => setGrowthRate(Number(e.target.value))}
                 className="input"
                 placeholder="1"
               />
-            </Field>
-          )}
+              <p className="help">
+                {lang === "es"
+                  ? "Mayor = el precio sube más rápido con la demanda."
+                  : "Higher = price rises faster with demand."}
+              </p>
 
-          <Field label="Price preview">
-            <div className="h-48 rounded-xl border border-zinc-200 p-2 dark:border-zinc-800">
-              <BondingCurveChart
-                curve={curveParams}
-                currentSupply={0}
-                maxSupply={previewMaxSupply}
-                baseMintSymbol={baseSymbol}
+              <label className="input-label" style={{ marginTop: 12 }}>
+                {lang === "es" ? "Tu comisión %" : "Your fee %"} (0–{LAUNCHER_FEE_BPS_MAX / 100})
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={LAUNCHER_FEE_BPS_MAX / 100}
+                step="0.1"
+                value={launcherFeePct}
+                onChange={(e) => setLauncherFeePct(Number(e.target.value))}
+                className="input"
+                placeholder="0"
               />
-            </div>
-          </Field>
+              <p className="help">
+                {lang === "es"
+                  ? `Plataforma cobra ${PLATFORM_FEE_BPS / 100}% adicional. Total por operación: ${(launcherFeePct + PLATFORM_FEE_BPS / 100).toFixed(2)}%`
+                  : `Platform charges ${PLATFORM_FEE_BPS / 100}% additionally. Total per trade: ${(launcherFeePct + PLATFORM_FEE_BPS / 100).toFixed(2)}%`}
+              </p>
 
-          <Field label={`Your fee % (0 to ${LAUNCHER_FEE_BPS_MAX / 100}, charged on every buy AND sell)`}>
-            <input
-              title="Launcher fee percentage"
-              aria-label="Launcher fee percentage"
-              type="number"
-              min={0}
-              max={LAUNCHER_FEE_BPS_MAX / 100}
-              step="0.1"
-              value={launcherFeePct}
-              onChange={(e) => setLauncherFeePct(Number(e.target.value))}
-              className="input"
-              placeholder="0"
-            />
-            <p className="mt-1 text-xs text-zinc-500">
-              You earn this on every trade. Platform fee is fixed at{" "}
-              {PLATFORM_FEE_BPS / 100}%, so total fee per trade ={" "}
-              {(launcherFeePct + PLATFORM_FEE_BPS / 100).toFixed(2)}%.
-            </p>
-          </Field>
+              <div className="curve-preview">
+                <div className="label">{lang === "es" ? "Vista previa" : "Preview"}</div>
+                <div style={{ height: 180 }}>
+                  <BondingCurveChart
+                    curve={curveParams}
+                    currentSupply={0}
+                    maxSupply={1000}
+                    baseMintSymbol="USDC"
+                  />
+                </div>
+              </div>
 
-          <NavButtons onBack={() => setStep(1)} onNext={() => setStep(3)} />
-        </Card>
-      )}
-
-      {step === 3 && (
-        <Card title="3. Confirm and launch">
-          <ul className="mb-4 space-y-1 text-sm">
-            <li><strong>Name:</strong> {name} ({symbol})</li>
-            <li><strong>Decimals:</strong> {decimals}</li>
-            <li><strong>Pricing:</strong> {selectedPreset.label}</li>
-            <li><strong>Starting price:</strong> {selectedPreset.key === "fixed" ? growthRate : startingPrice} {baseSymbol}</li>
-            {selectedPreset.key !== "fixed" && (
-              <li><strong>Growth rate:</strong> {growthRate}</li>
-            )}
-            <li><strong>Buyers pay with:</strong> USDC</li>
-            <li>
-              <strong>Fee per trade:</strong> {launcherFeePct}% to you +{" "}
-              {PLATFORM_FEE_BPS / 100}% platform
-            </li>
-            <li><strong>Launch fee:</strong> 25 USDC (one-time)</li>
-            <li><strong>Go-live:</strong> immediately</li>
-          </ul>
-
-          <button
-            type="button"
-            aria-label="Launch token"
-            onClick={onLaunch}
-            disabled={submitting || !ready}
-            className="w-full rounded-xl bg-brand-500 py-3 font-semibold text-white hover:bg-brand-600 disabled:opacity-50"
-          >
-            {submitting ? "Launching…" : ready ? "Launch token" : "Connect wallet first"}
-          </button>
-          {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
-          {result && (
-            <div className="mt-4 rounded-lg bg-emerald-100 p-3 text-sm dark:bg-emerald-950">
-              <p className="font-medium text-emerald-700 dark:text-emerald-300">Launched!</p>
-              <p className="mt-1 break-all">Mint: {result.mint}</p>
-              <p className="break-all">Bonding: {result.bonding}</p>
+              <div className="wizard-actions" style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setStep(1)} className="btn btn-secondary">
+                  {t.back}
+                </button>
+                <button type="button" onClick={() => setStep(3)} className="btn btn-primary">
+                  {t.next} →
+                </button>
+              </div>
             </div>
           )}
-          <NavButtons onBack={() => setStep(2)} hideNext />
-        </Card>
-      )}
 
-      <style jsx>{`
-        :global(.input) {
-          width: 100%;
-          padding: 0.5rem 0.75rem;
-          border-radius: 0.5rem;
-          border: 1px solid rgb(228 228 231);
-          background: transparent;
-          font-size: 0.875rem;
-        }
-        :global(.dark .input) {
-          border-color: rgb(63 63 70);
-        }
-        :global(.input:focus) {
-          outline: none;
-          border-color: rgb(139 92 246);
-        }
-      `}</style>
-    </div>
-  );
-}
+          {step === 3 && (
+            <div className="form">
+              <div className="review-card">
+                <div className="rc-head">
+                  {imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={imageUrl} alt={name} className="rc-avatar" style={{ objectFit: "cover" }} />
+                  ) : (
+                    <div className="rc-avatar" style={{ background: "var(--color-surface-high)" }} />
+                  )}
+                  <div>
+                    <div className="rc-name">{name}</div>
+                    <div className="rc-handle">${symbol}</div>
+                  </div>
+                </div>
+                <div className="rc-divider" />
+                <div className="rc-grid">
+                  <div>
+                    <div className="label">{lang === "es" ? "Curva" : "Curve"}</div>
+                    <div style={{ fontWeight: 500, textTransform: "capitalize" }}>{selectedPreset.key}</div>
+                  </div>
+                  <div>
+                    <div className="label">{lang === "es" ? "Precio inicial" : "Start price"}</div>
+                    <div style={{ fontWeight: 500 }}>${startingPrice}</div>
+                  </div>
+                  <div>
+                    <div className="label">{lang === "es" ? "Tu comisión" : "Your fee"}</div>
+                    <div style={{ fontWeight: 500 }}>{launcherFeePct}%</div>
+                  </div>
+                  <div>
+                    <div className="label">{lang === "es" ? "Costo de lanzamiento" : "Launch cost"}</div>
+                    <div style={{ fontWeight: 500 }}>$25</div>
+                  </div>
+                </div>
+              </div>
 
-function Stepper({ step }: { step: Step }) {
-  return (
-    <ol className="mb-6 flex items-center gap-2 text-sm">
-      {[1, 2, 3].map((i) => (
-        <li
-          key={i}
-          className={`flex h-7 w-7 items-center justify-center rounded-full font-medium ${
-            i <= step ? "bg-brand-500 text-white" : "bg-zinc-200 text-zinc-500"
-          }`}
-        >
-          {i}
-        </li>
-      ))}
-    </ol>
-  );
-}
+              {error && (
+                <p className="muted-small" style={{ color: "var(--state-danger)", marginTop: 12 }}>
+                  {error}
+                </p>
+              )}
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-      <h2 className="mb-4 text-lg font-semibold">{title}</h2>
-      <div className="space-y-4">{children}</div>
-    </section>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-        {label}
-      </span>
-      {children}
-    </label>
-  );
-}
-
-function NavButtons({
-  onBack,
-  onNext,
-  disableNext,
-  hideNext,
-}: {
-  onBack?: () => void;
-  onNext?: () => void;
-  disableNext?: boolean;
-  hideNext?: boolean;
-}) {
-  return (
-    <div className="mt-2 flex justify-between gap-2">
-      {onBack ? (
-        <button
-          type="button"
-          aria-label="Go back to previous step"
-          onClick={onBack}
-          className="rounded-lg border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700"
-        >
-          Back
-        </button>
-      ) : (
-        <span />
-      )}
-      {!hideNext && onNext && (
-        <button
-          type="button"
-          aria-label="Continue to next step"
-          onClick={onNext}
-          disabled={disableNext}
-          className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
-        >
-          Next
-        </button>
-      )}
+              <div className="wizard-actions" style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setStep(2)} className="btn btn-secondary">
+                  {t.back}
+                </button>
+                <button
+                  type="button"
+                  onClick={onLaunch}
+                  disabled={submitting || !ready}
+                  className="btn btn-primary"
+                  style={{ flex: 1 }}
+                >
+                  {submitting
+                    ? lang === "es" ? "Lanzando…" : "Launching…"
+                    : t.launchMine}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
