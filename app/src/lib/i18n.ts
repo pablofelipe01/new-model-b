@@ -2,6 +2,7 @@ export type Lang = "es" | "en";
 
 export const translations: Record<Lang, Record<string, string>> = {
   es: {
+    // Nav
     signIn: "Entrar",
     signInGoogle: "Entrar con Google",
     explore: "Explorar",
@@ -9,11 +10,110 @@ export const translations: Record<Lang, Record<string, string>> = {
     launch: "Lanzar",
     portfolio: "Cartera",
     home: "Inicio",
-    heroTag: "Tu matiz tiene una comunidad.",
-    heroThesis:
-      "Tu marca personal ya es una economía. Deja que quienes creen en ti crezcan contigo.",
-    launchYours: "Lanza el tuyo",
-    seeExamples: "Ver ejemplos",
+    langSwitch: "EN",
+
+    // Hero
+    eyebrow: "Tu matiz tiene una comunidad",
+    heroH1: "Tu audiencia en Instagram es prestada.",
+    heroH2: "Tu economía en Matiz es ",
+    heroH2Accent: "tuya.",
+    heroSub: "Tokeniza tu marca personal. Deja que quienes crean en ti temprano crezcan contigo. Tu comunidad, on-chain, portable, y tuya para siempre.",
+    launchYourEconomy: "Lanza tu economía",
+    seeWhoAlready: "Explora quiénes ya lo hicieron",
+    heroMeta1: "3 pasos para lanzar",
+    heroMeta2: "Sin cripto",
+    heroMeta3: "Entras con Google",
+
+    // Promises
+    promisesHeader: "Lo que te prometemos",
+    promise1Title: "Cuando tú creces, ellos crecen.",
+    promise1Body: "Tus fans no te regalan dinero. Invierten en ti. Los que creyeron primero pagaron menos. Si tu carrera despega, su apoyo vale más. Esto no es una suscripción — es una economía compartida donde el éxito es mutuo.",
+    promise2Title: "Tu comunidad es tuya.",
+    promise2Body: "Si mañana Instagram cierra tu cuenta, TikTok te desmonetiza, o Twitter cambia las reglas — tus fans tokenizados siguen contigo. Viven on-chain, no en un servidor ajeno. Son tuyos, no de una plataforma.",
+    promise3Title: "La reserva no la puede tocar nadie.",
+    promise3Body: "Cada peso que entra queda bloqueado en un contrato público. Ni nosotros, ni tú, ni un hacker pueden sacarlo. La única forma de que salga es que un fan venda su token. Matemáticamente. Verificable en dos clics.",
+
+    // How it works
+    howHeader: "Cómo funciona, en tres pasos",
+    step1Title: "1. Lanza tu token.",
+    step1Body: "Entra con Google. Pon un nombre, un símbolo, una foto. Elige cuánto ganas por transacción: entre 0% y 5%, tú decides. Paga $25 una vez. Listo — tienes un link para compartir.",
+    step2Title: "2. Tus fans compran.",
+    step2Body: "Cada persona que cree en ti compra una parte de tu economía. El precio sube con cada compra. Los primeros pagan menos. Todo queda en una reserva pública que nadie puede vaciar.",
+    step3Title: "3. Crecen contigo.",
+    step3Body: "Mientras más fans se unen, más sube el valor. Si alguien quiere salir, vende su parte a precio de mercado. La reserva siempre está ahí para respaldarlo. Tú ganas un porcentaje de cada transacción, para siempre.",
+    plusOneTitle: "+1. Tú también puedes entrar.",
+    plusOneBody: "Nada te impide comprar tu propio token. Puedes comprar temprano, respaldar a tu comunidad cuando haga falta, o regalarle una parte a quienes te apoyaron desde el día uno. Eres creator y también puedes ser fan.",
+    curveCaptionShort: "Cuanto antes crees, más bajo pagas.",
+
+    // Guarantee
+    guaranteeTitle: "La promesa está en el código.",
+    guaranteeBody1: "En otras plataformas tienes que confiar en la compañía. En Matiz confías en matemáticas públicas.",
+    guaranteeBody2: "La función que permitiría retirar la reserva fue **físicamente borrada del código antes del lanzamiento**. No existe. Ni un hacker, ni un empleado deshonesto, ni nosotros mismos podemos tocarla. La única forma de que los fondos salgan es que un fan venda su token — y recibe lo que la curva dice.",
+    guaranteeBody3: "Todo es público. Verificable. Auditable.",
+    guaranteeCta: "Ver el contrato en Solana Explorer →",
+
+    // Mosseri
+    mosseriTitle: "El Head of Instagram ya lo dijo.",
+    mosseriIntro: "En 2022, Adam Mosseri subió al escenario de TED. Describió un futuro donde los creators son dueños de su comunidad. Donde sus fans invierten en ellos como en startups. Donde si una plataforma desaparece, la relación con la audiencia sobrevive.",
+    mosseriQuote: '"Ninguna compañía puede quitarle a Lisa su comunidad. Instagram podría desaparecer mañana, y ella mantendría su relación con sus suscriptores, y mantendría sus ingresos."',
+    mosseriAttrib: "— Adam Mosseri, Head of Instagram",
+    mosseriPunch: 'Después admitió: "Meta no puede construir esto. Ninguna compañía sola puede."',
+    mosseriWeDid: "Nosotros sí.",
+    mosseriCta: "Ver el TED completo →",
+
+    // For whom
+    forWhomHeader: "Matiz es para ti si…",
+    forWhom1Title: "Eres artista y tu carrera es tu obra.",
+    forWhom1Body: "Músicos, ilustradores, escritores, diseñadores, muralistas. Personas cuyo trabajo tiene fans reales, no solo seguidores. Matiz te deja abrir tu carrera como una economía: quien creyó cuando eras emergente, gana algo si te vuelves masivo.",
+    forWhom2Title: "Construiste una comunidad y quieres que dure.",
+    forWhom2Body: "Si levantaste un club, un fandom, un movimiento — Matiz le da permanencia. Tus miembros más activos pueden tener una parte real del proyecto, no solo un \"gracias\" cada tanto. Y si alguien se va, el valor queda en la comunidad.",
+    forWhom3Title: "Crees en alguien y quieres apoyarlo de verdad.",
+    forWhom3Body: "No como donación. No como suscripción que nunca recuperas. Como una inversión chica en una persona que admiras. Si su carrera crece, tu apoyo vale más. Si decides salir, puedes. Siempre.",
+
+    // Stories placeholder
+    storiesTitle: "Historias, pronto.",
+    storiesBody: "Estamos trabajando con los primeros artistas que van a lanzar su economía en Matiz. Cuando sus historias estén listas, aquí las contaremos.",
+    storiesCta: "¿Eres artista y quieres ser de los primeros? Escríbenos →",
+
+    // Featured
+    featuredLabel: "En movimiento",
+    featuredTitle: "Gente en la que creer",
+
+    // FAQ
+    faqHeader: "Preguntas frecuentes",
+    faq1q: "¿Necesito saber de cripto?",
+    faq1a: "No. Entras con Google, pagas con tarjeta (próximamente), y todo pasa debajo del capó. Si nunca quieres ver una wallet, no la ves.",
+    faq2q: "¿Es un Ponzi o una pirámide?",
+    faq2a: "No. En una pirámide el dinero nuevo paga al viejo y cuando nadie entra, colapsa. Aquí cada token está respaldado por una reserva real. Si nadie compra más, el precio queda quieto — no se cae. Y siempre puedes vender al precio de la curva.",
+    faq3q: "¿Y si quiero recuperar mi dinero?",
+    faq3a: "Vendes cuando quieras. La reserva siempre puede pagar las ventas porque está matemáticamente respaldada. Nunca tienes que \"esperar a que haya liquidez\".",
+    faq4q: "¿Y si pierdo? ¿Qué riesgo tengo?",
+    faq4a: "El precio del token puede bajar si muchos fans venden. Podrías salir con menos de lo que pusiste. Esto no es una inversión garantizada — es un voto de confianza en alguien. Invierte solo lo que puedes permitirte perder.",
+    faq5q: "¿Qué fees cobra Matiz?",
+    faq5a: "Plataforma: 0.5% por transacción. Creator: lo que el creator decida entre 0% y 5%. Una vez, al lanzar: $25. Todo transparente, on-chain.",
+
+    // CTA final
+    ctaH1: "Tu marca ya es una economía.",
+    ctaH2: "Solo falta abrirla.",
+
+    // Footer
+    footProduct: "Producto",
+    footCompany: "Empresa",
+    footLegal: "Legal",
+    footCommunity: "Comunidad",
+    footExplore: "Explora",
+    footHowItWorks: "Cómo funciona",
+    footFaq: "FAQ",
+    footPricing: "Precios",
+    footAbout: "Nosotros",
+    footBlog: "Blog",
+    footContact: "Contacto",
+    footTerms: "Términos",
+    footPrivacy: "Privacidad",
+    footAccessibility: "Accesibilidad",
+    footSolanaNote: "Matiz corre sobre la red Solana. El contrato es público y auditable.",
+
+    // Trading
     buy: "Comprar",
     sell: "Vender",
     price: "Precio",
@@ -24,8 +124,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     holdings: "Tus posiciones",
     earnings: "Ingresos",
     totalValue: "Valor total",
-    reserveNote:
-      "La reserva no puede ser retirada por nadie. Verificado on-chain.",
+    reserveNote: "La reserva no puede ser retirada por nadie. Verificado on-chain.",
     seeOnChain: "Ver on-chain",
     youPay: "Pagas",
     youGet: "Recibes",
@@ -35,6 +134,19 @@ export const translations: Record<Lang, Record<string, string>> = {
     confirmBuy: "Confirmar compra",
     confirmSell: "Confirmar venta",
     quantity: "Cantidad",
+    believersWord: "creyentes",
+    reservePool: "Fondo de reserva",
+    contract: "Contrato",
+    youOwn: "Tienes",
+    tokensShort: "tokens",
+    recentActivity: "Actividad reciente",
+    bought: "compró",
+    sold: "vendió",
+    launchedWord: "lanzó",
+    viewToken: "Ver token",
+    searchPh: "Busca artistas, creadores, clubes…",
+
+    // Launch wizard
     step1: "Tu historia",
     step2: "La curva",
     step3: "Lanzar",
@@ -52,29 +164,11 @@ export const translations: Record<Lang, Record<string, string>> = {
     launchStartPrice: "Precio inicial",
     next: "Siguiente",
     back: "Atrás",
-    trending: "En movimiento",
-    new: "Nuevos",
-    following: "Sigues",
-    nav_explore_sub: "Descubre personas para creer",
-    curve_caption: "Cuanto antes crees, más bajo pagas.",
-    youOwn: "Tienes",
-    tokensShort: "tokens",
-    recentActivity: "Actividad reciente",
-    bought: "compró",
-    sold: "vendió",
-    launchedWord: "lanzó",
-    viewToken: "Ver token",
-    searchPh: "Busca artistas, creadores, clubes…",
-    langSwitch: "EN",
-    believersWord: "creyentes",
-    reservePool: "Fondo de reserva",
-    contract: "Contrato",
-    aboutMatiz: "Qué es Matiz",
-    aboutBody:
-      "Matiz deja que cualquiera — artistas, creadores, clubes — lance un token que sus fans pueden comprar y vender. El precio sube cuando compran y baja cuando venden, siguiendo una curva garantizada por un contrato. No hay exchanges, no hace falta saber de cripto. Entras con Google y lanzas en tres pasos.",
     step1Sub: "Cuéntanos quién eres. Lo verán tus primeros creyentes.",
     step2Sub: "Elige cómo se mueve el precio cuando tu gente entra.",
     step3Sub: "Revisa y lanza. Se firma contigo en segundos.",
+
+    // Dashboard
     send: "Enviar",
     refresh: "Actualizar",
     sendTitle: "Enviar",
@@ -82,7 +176,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     amount: "Cantidad",
     sendSuccess: "Enviado con éxito",
   },
+
   en: {
+    // Nav
     signIn: "Sign in",
     signInGoogle: "Sign in with Google",
     explore: "Explore",
@@ -90,11 +186,110 @@ export const translations: Record<Lang, Record<string, string>> = {
     launch: "Launch",
     portfolio: "Portfolio",
     home: "Home",
-    heroTag: "Your hue has a community.",
-    heroThesis:
-      "Your personal brand is already an economy. Let the people who believe in you grow with you.",
-    launchYours: "Launch yours",
-    seeExamples: "See examples",
+    langSwitch: "ES",
+
+    // Hero
+    eyebrow: "Your hue has a community",
+    heroH1: "Your audience on Instagram is borrowed.",
+    heroH2: "Your economy on Matiz is ",
+    heroH2Accent: "yours.",
+    heroSub: "Tokenize your personal brand. Let the people who believed in you early grow with you. Your community, on-chain, portable, and yours forever.",
+    launchYourEconomy: "Launch your economy",
+    seeWhoAlready: "See who already did",
+    heroMeta1: "3 steps to launch",
+    heroMeta2: "No crypto required",
+    heroMeta3: "Sign in with Google",
+
+    // Promises
+    promisesHeader: "What we promise you",
+    promise1Title: "When you grow, they grow.",
+    promise1Body: "Your fans don't tip you. They invest in you. The ones who believed first paid less. If your career takes off, their support is worth more. This isn't a subscription — it's a shared economy where success is mutual.",
+    promise2Title: "Your community belongs to you.",
+    promise2Body: "If Instagram shuts down your account tomorrow, TikTok demonetizes you, or Twitter changes the rules — your tokenized fans stay with you. They live on-chain, not on someone else's server. They're yours, not the platform's.",
+    promise3Title: "No one can touch the reserve.",
+    promise3Body: "Every dollar that comes in is locked inside a public contract. Not us, not you, not a hacker can withdraw it. The only way it leaves is when a fan sells their token. Mathematically. Verifiable in two clicks.",
+
+    // How it works
+    howHeader: "How it works, in three steps",
+    step1Title: "1. Launch your token.",
+    step1Body: "Sign in with Google. Add a name, a symbol, a photo. Choose how much you earn per transaction: between 0% and 5%, you decide. Pay $25 once. Done — you have a link to share.",
+    step2Title: "2. Your fans buy in.",
+    step2Body: "Every person who believes in you buys a piece of your economy. The price rises with each purchase. The first ones pay less. Everything goes into a public reserve that no one can empty.",
+    step3Title: "3. They grow with you.",
+    step3Body: "The more fans join, the higher the value goes. If anyone wants to exit, they sell their share at market price. The reserve is always there to back it. You earn a percentage of every transaction, forever.",
+    plusOneTitle: "+1. You can buy in too.",
+    plusOneBody: "Nothing stops you from buying your own token. Buy early, back your community when it needs it, or gift a share to the people who supported you from day one. You're the creator, and you can also be a fan.",
+    curveCaptionShort: "The earlier you believe, the lower you pay.",
+
+    // Guarantee
+    guaranteeTitle: "The promise lives in the code.",
+    guaranteeBody1: "On other platforms, you have to trust the company. On Matiz, you trust public math.",
+    guaranteeBody2: "The function that would allow withdrawing the reserve was **physically deleted from the code before launch**. It doesn't exist. Not a hacker, not a rogue employee, not us — no one can touch it. The only way funds leave is when a fan sells their token, and they receive exactly what the curve says.",
+    guaranteeBody3: "All of it is public. Verifiable. Auditable.",
+    guaranteeCta: "See the contract on Solana Explorer →",
+
+    // Mosseri
+    mosseriTitle: "The Head of Instagram already said it.",
+    mosseriIntro: "In 2022, Adam Mosseri took the TED stage. He described a future where creators own their community. Where fans invest in them like startups. Where if a platform disappears, the relationship with the audience survives.",
+    mosseriQuote: '"No company can ever take Lisa\'s community away from her. Instagram could disappear tomorrow, and she would maintain her relationship with her subscribers, and she would maintain her income."',
+    mosseriAttrib: "— Adam Mosseri, Head of Instagram",
+    mosseriPunch: 'Then he admitted: "Meta can\'t build this. No single company can."',
+    mosseriWeDid: "We did.",
+    mosseriCta: "Watch the TED →",
+
+    // For whom
+    forWhomHeader: "Matiz is for you if…",
+    forWhom1Title: "You're an artist and your career is your work.",
+    forWhom1Body: "Musicians, illustrators, writers, designers, muralists. People whose work has real fans, not just followers. Matiz lets you open your career as an economy: whoever believed when you were emerging gains something if you go big.",
+    forWhom2Title: "You built a community and you want it to last.",
+    forWhom2Body: "If you've built a club, a fandom, a movement — Matiz gives it permanence. Your most active members can own a real piece of the project, not just get the occasional \"thank you.\" And if someone leaves, the value stays in the community.",
+    forWhom3Title: "You believe in someone and want to truly support them.",
+    forWhom3Body: "Not as a donation. Not as a subscription you never recover. As a small investment in a person you admire. If their career grows, your support is worth more. If you decide to exit, you can. Always.",
+
+    // Stories placeholder
+    storiesTitle: "Stories, coming soon.",
+    storiesBody: "We're working with the first artists who will launch their economy on Matiz. When their stories are ready, we'll tell them here.",
+    storiesCta: "Are you an artist and want to be one of the first? Write to us →",
+
+    // Featured
+    featuredLabel: "Moving now",
+    featuredTitle: "People to believe in",
+
+    // FAQ
+    faqHeader: "Frequent questions",
+    faq1q: "Do I need to know crypto?",
+    faq1a: "No. You sign in with Google, pay with a card (coming soon), and everything happens under the hood. If you never want to see a wallet, you don't.",
+    faq2q: "Is this a Ponzi scheme?",
+    faq2a: "No. In a pyramid, new money pays old money, and when no one joins, it collapses. Here every token is backed by a real reserve. If no one else buys, the price stays flat — it doesn't crash. And you can always sell at the curve's price.",
+    faq3q: "What if I want my money back?",
+    faq3a: "You sell whenever you want. The reserve can always pay out sales because it's mathematically backed. You never have to \"wait for liquidity.\"",
+    faq4q: "What if I lose money? What's the risk?",
+    faq4a: "The token price can go down if many fans sell. You could exit with less than you put in. This isn't a guaranteed investment — it's a vote of confidence in someone. Invest only what you can afford to lose.",
+    faq5q: "What fees does Matiz charge?",
+    faq5a: "Platform: 0.5% per transaction. Creator: whatever the creator chooses between 0% and 5%. One-time launch fee: $25. All transparent, on-chain.",
+
+    // CTA final
+    ctaH1: "Your brand is already an economy.",
+    ctaH2: "It just needs to open.",
+
+    // Footer
+    footProduct: "Product",
+    footCompany: "Company",
+    footLegal: "Legal",
+    footCommunity: "Community",
+    footExplore: "Explore",
+    footHowItWorks: "How it works",
+    footFaq: "FAQ",
+    footPricing: "Pricing",
+    footAbout: "About",
+    footBlog: "Blog",
+    footContact: "Contact",
+    footTerms: "Terms",
+    footPrivacy: "Privacy",
+    footAccessibility: "Accessibility",
+    footSolanaNote: "Matiz runs on the Solana network. The contract is public and auditable.",
+
+    // Trading
     buy: "Buy",
     sell: "Sell",
     price: "Price",
@@ -105,8 +300,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     holdings: "Your holdings",
     earnings: "Earnings",
     totalValue: "Total value",
-    reserveNote:
-      "The reserve cannot be withdrawn by anyone. Verified on-chain.",
+    reserveNote: "The reserve cannot be withdrawn by anyone. Verified on-chain.",
     seeOnChain: "See on-chain",
     youPay: "You pay",
     youGet: "You get",
@@ -116,6 +310,19 @@ export const translations: Record<Lang, Record<string, string>> = {
     confirmBuy: "Confirm buy",
     confirmSell: "Confirm sell",
     quantity: "Quantity",
+    believersWord: "believers",
+    reservePool: "Reserve pool",
+    contract: "Contract",
+    youOwn: "You own",
+    tokensShort: "tokens",
+    recentActivity: "Recent activity",
+    bought: "bought",
+    sold: "sold",
+    launchedWord: "launched",
+    viewToken: "View token",
+    searchPh: "Search artists, creators, clubs…",
+
+    // Launch wizard
     step1: "Your story",
     step2: "The curve",
     step3: "Launch",
@@ -133,29 +340,11 @@ export const translations: Record<Lang, Record<string, string>> = {
     launchStartPrice: "Starting price",
     next: "Next",
     back: "Back",
-    trending: "Moving",
-    new: "New",
-    following: "Following",
-    nav_explore_sub: "Find people to believe in",
-    curve_caption: "The earlier you believe, the lower you pay.",
-    youOwn: "You own",
-    tokensShort: "tokens",
-    recentActivity: "Recent activity",
-    bought: "bought",
-    sold: "sold",
-    launchedWord: "launched",
-    viewToken: "View token",
-    searchPh: "Search artists, creators, clubs…",
-    langSwitch: "ES",
-    believersWord: "believers",
-    reservePool: "Reserve pool",
-    contract: "Contract",
-    aboutMatiz: "What Matiz is",
-    aboutBody:
-      "Matiz lets anyone — artists, creators, clubs — launch a token their fans can buy and sell. The price rises when they buy and falls when they sell, along a curve guaranteed by a smart contract. No exchanges, no crypto knowledge. Sign in with Google, launch in three steps.",
     step1Sub: "Tell us who you are. Your first believers will see this.",
     step2Sub: "Pick how the price moves when your people arrive.",
     step3Sub: "Review and launch. Signed with you in seconds.",
+
+    // Dashboard
     send: "Send",
     refresh: "Refresh",
     sendTitle: "Send",
