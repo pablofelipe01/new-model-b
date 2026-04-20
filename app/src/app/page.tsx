@@ -50,26 +50,6 @@ export default function HomePage() {
               <span>{t.heroMeta3}</span>
             </div>
           </div>
-          <div className="hero-art">
-            <div className="hero-art-frame">
-              <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 40% 40%, var(--color-indigo) 0%, transparent 70%)", opacity: 0.3 }} />
-              <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 70% 70%, var(--spec-magenta) 0%, transparent 60%)", opacity: 0.2 }} />
-              <div className="float-card" style={{ position: "absolute", bottom: "8%", right: "-8%", zIndex: 2 }}>
-                <div className="fc-row">
-                  <div className="fc-avatar" style={{ background: "var(--color-surface-high)" }} />
-                  <div>
-                    <div className="fc-name">matiz</div>
-                    <div className="fc-handle">@matiz</div>
-                  </div>
-                  <div className="fc-price">$1.00</div>
-                </div>
-                <Sparkline supply={420} maxSupply={2600} width={180} height={44} />
-                <div className="fc-foot">
-                  <span>12 {t.believersWord}</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
