@@ -287,8 +287,8 @@ pub mod update_bonding;
           <div>
             <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", marginBottom: 12 }}>{t.footLegal}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footTerms}</a>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footPrivacy}</a>
+              <Link href="/terms" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footTerms}</Link>
+              <Link href="/privacy" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footPrivacy}</Link>
               <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footAccessibility}</a>
             </div>
           </div>
