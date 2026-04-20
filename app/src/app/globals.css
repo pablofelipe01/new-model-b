@@ -260,11 +260,14 @@ em { font-style: italic; font-family: var(--font-serif, 'Fraunces', serif); font
 /* ========== RESPONSIVE ========== */
 @media (max-width: 960px) {
   .top-nav { padding: 14px 20px; gap: 12px; }
-  .nav-link { padding: 6px 10px; font-size: 14px; }
+  .nav-link { padding: 6px 10px; font-size: 14px; min-height: 44px; display: flex; align-items: center; }
   .nav-links { gap: 2px; }
   .hero { padding: 32px 20px 48px; }
   .hero-inner { grid-template-columns: 1fr; gap: 32px; }
-  .display-xl { font-size: 44px; }
+  .hero-art { max-width: 100%; aspect-ratio: 1.1; }
+  .display-xl { font-size: 36px; }
+  .display-l { font-size: 32px; }
+  .display-m { font-size: 26px; }
   .how, .featured, .about, .explore, .dashboard, .token-screen, .launch-screen { padding: 24px 20px; }
   .how-grid { grid-template-columns: 1fr; }
   .curve-banner { grid-template-columns: 1fr; padding: 24px; }
@@ -274,13 +277,28 @@ em { font-style: italic; font-family: var(--font-serif, 'Fraunces', serif); font
   .stat-grid { grid-template-columns: 1fr; }
   .wizard { grid-template-columns: 1fr; gap: 24px; }
   .wizard-rail { position: static; }
-  .page-title { font-size: 32px; }
-  .th-name { font-size: 32px; }
+  .page-title { font-size: 28px; }
+  .th-name { font-size: 28px; }
   .token-header { flex-direction: column; align-items: flex-start; }
   .th-portrait { width: 100px; height: 100px; }
   .price-strip { grid-template-columns: 1fr 1fr; }
   .rc-grid { grid-template-columns: 1fr 1fr; }
   .slope-row { grid-template-columns: 1fr; }
+  .hero-ctas .btn { width: 100%; justify-content: center; }
+  .token-grid { grid-template-columns: repeat(2, 1fr); }
+  .landing-foot { padding: 32px 20px; }
+
+  /* Mobile touch */
+  .btn { min-height: 48px; touch-action: manipulation; }
+  .input { min-height: 48px; font-size: 16px; }
+  .lang-toggle { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; }
+}
+
+@media (max-width: 640px) {
+  .token-grid { grid-template-columns: 1fr; }
+  .hero-art { display: none; }
+  .display-xl { font-size: 32px; }
+  .nav-links { display: none; }
 }
 
 /* Wallet adapter overrides */
