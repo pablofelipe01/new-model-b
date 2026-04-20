@@ -123,28 +123,26 @@ export async function POST(request: NextRequest) {
     });
     console.log("[sponsor-tx] Sent, signature:", signature);
 
-    // Wait for confirmation before responding so the frontend knows the tx
-    // actually landed.
-    const blockhash = tx.recentBlockhash;
-    const lastValidBlockHeight = tx.lastValidBlockHeight;
-    if (blockhash && lastValidBlockHeight) {
-      const conf = await connection.confirmTransaction(
+    // Always confirm — get a fresh blockhash since lastValidBlockHeight
+    // is lost during Transaction.from() deserialization.
+    const { blockhash: confirmBh, lastValidBlockHeight: confirmLvbh } =
+      await connection.getLatestBlockhash("confirmed");
+    const conf = await connection.confirmTransaction(
+      {
+        signature,
+        blockhash: confirmBh,
+        lastValidBlockHeight: confirmLvbh,
+      },
+      "confirmed",
+    );
+    if (conf.value.err) {
+      return NextResponse.json(
         {
+          error: `Transaction failed on-chain: ${JSON.stringify(conf.value.err)}`,
           signature,
-          blockhash,
-          lastValidBlockHeight,
         },
-        "confirmed",
+        { status: 422 },
       );
-      if (conf.value.err) {
-        return NextResponse.json(
-          {
-            error: `Transaction failed on-chain: ${JSON.stringify(conf.value.err)}`,
-            signature,
-          },
-          { status: 422 },
-        );
-      }
     }
 
     return NextResponse.json({ signature });
