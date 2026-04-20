@@ -195,26 +195,21 @@ pub mod update_bonding;
           { n: 2, img: "/images/community.jpg" },
           { n: 3, img: "/images/fan.jpg" },
         ].map(({ n, img }) => (
-          <div key={n} style={{ marginBottom: 64 }}>
+          <div key={n} className="for-whom-block" data-reverse={n % 2 === 0 ? "true" : undefined}>
+            <div className="for-whom-text">
+              <h3 style={{ fontSize: 24, fontWeight: 500, marginBottom: 12 }}>
+                {t[`forWhom${n}Title`]}
+              </h3>
+              <p style={{ color: "var(--text-secondary)", fontSize: 17, lineHeight: 1.6 }}>
+                {t[`forWhom${n}Body`]}
+              </p>
+            </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={img}
-              alt={t[`forWhom${n}Title`]}
-              style={{
-                width: "100%",
-                maxHeight: 360,
-                borderRadius: "var(--radius-lg)",
-                objectFit: "contain",
-                objectPosition: "center",
-                marginBottom: 24,
-              }}
+              alt={t[`forWhom${n}Title`] || ""}
+              className="for-whom-img"
             />
-            <h3 style={{ fontSize: 24, fontWeight: 500, marginBottom: 12 }}>
-              {t[`forWhom${n}Title`]}
-            </h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: 17, lineHeight: 1.6, maxWidth: 640 }}>
-              {t[`forWhom${n}Body`]}
-            </p>
           </div>
         ))}
       </section>

@@ -328,6 +328,34 @@ em { font-style: italic; font-family: var(--font-serif, 'Fraunces', serif); font
   }
 }
 
+/* ========== FOR WHOM SECTION ========== */
+.for-whom-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+  margin-bottom: 64px;
+}
+.for-whom-block[data-reverse="true"] { direction: rtl; }
+.for-whom-block[data-reverse="true"] > * { direction: ltr; }
+.for-whom-text { min-width: 0; }
+.for-whom-img {
+  width: 100%;
+  max-height: 320px;
+  border-radius: var(--radius-lg);
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (max-width: 960px) {
+  .for-whom-block {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .for-whom-block[data-reverse="true"] { direction: ltr; }
+  .for-whom-img { order: -1; }
+}
+
 /* Wallet adapter overrides */
 .wallet-adapter-button { background-color: var(--color-indigo) !important; border-radius: var(--radius-md) !important; font-weight: 500 !important; }
 .wallet-adapter-button:not([disabled]):hover { background-color: var(--color-indigo-hi) !important; }
