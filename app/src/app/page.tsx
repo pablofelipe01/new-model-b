@@ -210,9 +210,10 @@ pub mod update_bonding;`}
               style={{
                 direction: "ltr",
                 width: "100%",
+                maxHeight: 320,
                 borderRadius: "var(--radius-lg)",
-                aspectRatio: "4/3",
-                objectFit: "cover",
+                objectFit: "contain",
+                objectPosition: "center",
               }}
             />
           </div>
