@@ -108,49 +108,57 @@ export default function HomePage() {
         </div>
 
         {/* Curve banner */}
-        <div className="curve-banner" style={{ marginTop: 48 }}>
-          <div>
-            <div className="label">{t.curveCaptionShort.split(".")[0]}</div>
-            <h3 className="fraunces-italic" style={{ fontSize: 28, margin: "6px 0 0" }}>
-              {t.curveCaptionShort}
-            </h3>
-          </div>
-          <div>
-            <Sparkline supply={420} maxSupply={2600} width={480} height={180} />
+        <div style={{
+          background: "var(--color-surface)",
+          border: "0.5px solid var(--border-subtle)",
+          borderRadius: "var(--radius-xl)",
+          padding: "32px 24px",
+          marginTop: 48,
+          textAlign: "center",
+        }}>
+          <div className="label" style={{ marginBottom: 8 }}>{t.curveCaptionShort.split(".")[0]}</div>
+          <h3 className="fraunces-italic" style={{ fontSize: 24, margin: "0 0 16px" }}>
+            {t.curveCaptionShort}
+          </h3>
+          <div style={{ maxWidth: 400, margin: "0 auto" }}>
+            <Sparkline supply={420} maxSupply={2600} width={400} height={140} />
           </div>
         </div>
       </section>
 
       {/* ═══════ 4. LA GARANTÍA MATEMÁTICA ═══════ */}
-      <section style={{ background: "var(--color-surface)", padding: "64px 48px" }}>
-        <div style={{ maxWidth: 1240, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
-          <div>
-            <h2 className="display-m fraunces-italic">{t.guaranteeTitle}</h2>
-            <p className="muted" style={{ marginTop: 16 }}>{t.guaranteeBody1}</p>
-            <p style={{ color: "var(--text-primary)", fontSize: 15, lineHeight: 1.6, marginTop: 16 }}>
-              {t.guaranteeBody2.replace(/\*\*/g, "")}
-            </p>
-            <p style={{ color: "var(--text-primary)", fontSize: 15, fontWeight: 500, marginTop: 16 }}>
-              {t.guaranteeBody3}
-            </p>
-            <a href={EXPLORER_URL} target="_blank" rel="noopener noreferrer" className="link" style={{ marginTop: 16, display: "inline-block" }}>
-              {t.guaranteeCta}
-            </a>
-          </div>
-          <div style={{ background: "var(--color-surface-high)", borderRadius: "var(--radius-md)", padding: 24 }}>
-            <pre className="mono" style={{ fontSize: 13, lineHeight: 1.8, margin: 0, color: "var(--text-primary)", whiteSpace: "pre-wrap" }}>
+      <section style={{ background: "var(--color-surface)", padding: "64px 20px" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <h2 className="display-m fraunces-italic">{t.guaranteeTitle}</h2>
+          <p className="muted" style={{ marginTop: 16 }}>{t.guaranteeBody1}</p>
+          <p style={{ color: "var(--text-primary)", fontSize: 15, lineHeight: 1.6, marginTop: 16 }}>
+            {t.guaranteeBody2.replace(/\*\*/g, "")}
+          </p>
+
+          <div style={{
+            background: "var(--color-surface-high)",
+            borderRadius: "var(--radius-md)",
+            padding: "16px 20px",
+            marginTop: 24,
+            overflowX: "auto",
+          }}>
+            <pre className="mono" style={{ fontSize: 12, lineHeight: 1.8, margin: 0, color: "var(--text-primary)", whiteSpace: "pre" }}>
 {`// instructions/
 pub mod buy_v1;
 pub mod sell_v1;
 pub mod init_token_bonding;
 pub mod create_curve;
-pub mod update_bonding;`}
-              {"\n"}
-              <span style={{ textDecoration: "line-through", color: "var(--state-danger)" }}>
-                {"// pub mod transfer_reserves;  ← DELETED"}
-              </span>
+pub mod update_bonding;
+`}<span style={{ textDecoration: "line-through", color: "var(--state-danger)" }}>{"// pub mod transfer_reserves;"}</span>{" ← DELETED"}
             </pre>
           </div>
+
+          <p style={{ color: "var(--text-primary)", fontSize: 15, fontWeight: 500, marginTop: 24 }}>
+            {t.guaranteeBody3}
+          </p>
+          <a href={EXPLORER_URL} target="_blank" rel="noopener noreferrer" className="link" style={{ marginTop: 12, display: "inline-block" }}>
+            {t.guaranteeCta}
+          </a>
         </div>
       </section>
 
