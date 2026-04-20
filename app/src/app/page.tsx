@@ -96,10 +96,10 @@ export default function HomePage() {
         <div style={{ borderTop: "0.5px solid var(--border-subtle)", paddingTop: 48, marginTop: 16 }}>
           <div style={{ maxWidth: 720 }}>
             <span className="fraunces-italic" style={{ fontSize: 40, color: "var(--color-ember)" }}>
-              {t.plusOneTitle.split(".")[0]}.
+              {(t.plusOneTitle || "").split(".")[0]}.
             </span>
             <span className="fraunces-italic" style={{ fontSize: 40 }}>
-              {" "}{t.plusOneTitle.split(". ").slice(1).join(". ")}
+              {" "}{(t.plusOneTitle || "").split(". ").slice(1).join(". ")}
             </span>
             <p style={{ color: "var(--text-secondary)", fontSize: 17, lineHeight: 1.6, marginTop: 16 }}>
               {t.plusOneBody}
@@ -116,7 +116,7 @@ export default function HomePage() {
           marginTop: 48,
           textAlign: "center",
         }}>
-          <div className="label" style={{ marginBottom: 8 }}>{t.curveCaptionShort.split(".")[0]}</div>
+          <div className="label" style={{ marginBottom: 8 }}>{(t.curveCaptionShort || "").split(".")[0]}</div>
           <h3 className="fraunces-italic" style={{ fontSize: 24, margin: "0 0 16px" }}>
             {t.curveCaptionShort}
           </h3>

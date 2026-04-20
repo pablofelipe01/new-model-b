@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { translations, type Lang } from "@/lib/i18n";
 
 interface LanguageContextValue {
@@ -16,12 +16,15 @@ const LanguageContext = createContext<LanguageContextValue>({
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("matiz-lang") as Lang) || "es";
+  // Always start with "es" for SSR consistency — sync from localStorage after mount.
+  const [lang, setLangState] = useState<Lang>("es");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("matiz-lang") as Lang | null;
+    if (saved && saved !== lang) {
+      setLangState(saved);
     }
-    return "es";
-  });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);

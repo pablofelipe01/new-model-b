@@ -100,15 +100,29 @@ export function Dashboard() {
             {held.map((row) => (
               <HoldingRow key={row.publicKey.toBase58()} row={row} />
             ))}
-            {launched.map((row) => (
-              <HoldingRow key={`l-${row.publicKey.toBase58()}`} row={row} launcher />
-            ))}
-            {!loading && held.length === 0 && launched.length === 0 && (
+            {!loading && held.length === 0 && (
               <Link href="/" className="empty-add">
                 + {lang === "es" ? "Cree en alguien nuevo" : "Believe in someone new"}
               </Link>
             )}
           </div>
+
+          {/* Launched tokens */}
+          {launched.length > 0 && (
+            <>
+              <div className="section-sub-head" style={{ marginTop: 32 }}>
+                <h2 className="h2">
+                  {lang === "es" ? "Tokens que lancé" : "Tokens I launched"}
+                </h2>
+                <span className="muted-small">{launched.length}</span>
+              </div>
+              <div className="holdings-list">
+                {launched.map((row) => (
+                  <HoldingRow key={`l-${row.publicKey.toBase58()}`} row={row} launcher />
+                ))}
+              </div>
+            </>
+          )}
         </section>
 
         {/* Activity placeholder */}

@@ -148,7 +148,7 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
           <div className="curve-card">
             <div className="curve-head">
               <div>
-                <div className="label">{t.curve_caption.split(".")[0]}</div>
+                <div className="label">{t.curveCaptionShort.split(".")[0]}</div>
               </div>
             </div>
             <div style={{ height: 280 }}>
