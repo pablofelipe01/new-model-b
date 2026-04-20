@@ -4,33 +4,25 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useState } from "react";
 import { useSdk } from "@/components/providers/SdkProvider";
 import { usePrivyAuth } from "@/hooks/usePrivyAuth";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { shortenAddress } from "@/lib/utils";
 
-/**
- * Auth button with two paths:
- *
- *  1. **Privy** (primary) — "Sign in with Google / Email". Privy creates
- *     an embedded Solana wallet; SdkProvider bridges it to Anchor.
- *
- *  2. **Wallet adapter** (secondary) — "Select Wallet". For crypto-native
- *     users who want to use Phantom / Solflare.
- */
 export default function WalletButtonInner() {
   const privy = usePrivyAuth();
   const { sdk, ready } = useSdk();
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
 
-  // Privy authenticated.
+  // Privy authenticated
   if (privy?.authenticated && privy.user) {
     const label =
       privy.user.email?.address ??
       privy.user.google?.email ??
-      "Signed in";
-
+      t.signIn;
     const walletAddr = sdk?.provider.wallet.publicKey.toBase58();
 
     return (
-      <div className="flex items-center gap-3">
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         {ready && walletAddr && (
           <button
             type="button"
@@ -40,52 +32,64 @@ export default function WalletButtonInner() {
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}
-            className="flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+            className="user-chip"
+            style={{ cursor: "pointer", minHeight: 32 }}
           >
-            {shortenAddress(walletAddr)}
-            <span className="text-[10px]">{copied ? "Copied!" : "Copy"}</span>
+            {shortenAddress(walletAddr)}{" "}
+            <span style={{ fontSize: 10, opacity: 0.7 }}>{copied ? "✓" : "⎘"}</span>
           </button>
         )}
-        <span className="text-sm text-zinc-400 max-w-[140px] truncate">
+        <span style={{ fontSize: 13, color: "var(--text-secondary)", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {label}
         </span>
         {ready && (
-          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" title="Wallet connected" />
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--state-success)", flexShrink: 0 }} />
         )}
-        <button
-          type="button"
-          onClick={privy.logout}
-          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm hover:border-brand-500 dark:border-zinc-700"
-        >
-          Sign out
+        <button type="button" onClick={privy.logout} className="btn btn-secondary" style={{ padding: "8px 14px", fontSize: 13 }}>
+          {t.signIn === "Entrar" ? "Salir" : "Sign out"}
         </button>
       </div>
     );
   }
 
-  // Not authenticated — show both options.
+  // Not authenticated — both options, same size
   if (privy && !privy.authenticated) {
     return (
-      <div className="flex items-center gap-2">
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <button
           type="button"
           onClick={privy.login}
-          className="rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-600"
+          className="btn btn-primary"
+          style={{ padding: "10px 20px", fontSize: 14 }}
         >
-          Sign in
+          {t.signIn}
         </button>
         <WalletMultiButton
           style={{
-            fontSize: "0.875rem",
+            fontSize: "14px",
             height: "auto",
-            padding: "6px 12px",
-            borderRadius: "0.5rem",
+            padding: "10px 20px",
+            borderRadius: "var(--radius-md)",
+            background: "transparent",
+            border: "0.5px solid var(--border-strong)",
+            color: "var(--text-primary)",
+            fontFamily: "inherit",
+            fontWeight: 500,
           }}
         />
       </div>
     );
   }
 
-  // Fallback: no Privy.
-  return <WalletMultiButton />;
+  // Fallback: no Privy
+  return (
+    <WalletMultiButton
+      style={{
+        fontSize: "14px",
+        height: "auto",
+        padding: "10px 20px",
+        borderRadius: "var(--radius-md)",
+      }}
+    />
+  );
 }

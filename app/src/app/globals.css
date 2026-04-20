@@ -73,6 +73,9 @@ em { font-style: italic; font-family: var(--font-serif, 'Fraunces', serif); font
 .lang-toggle { border: 0.5px solid var(--border-strong); background: transparent; color: var(--text-primary); padding: 6px 12px; border-radius: var(--radius-full); font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; }
 .lang-toggle:hover { background: var(--color-surface); }
 .user-chip { font-size: 13px; color: var(--text-secondary); background: var(--color-surface); padding: 4px 10px; border-radius: var(--radius-full); border: 0.5px solid var(--border-subtle); font-family: monospace; }
+.nav-hamburger { display: none; background: none; border: none; cursor: pointer; padding: 8px; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+.nav-mobile-drawer { display: none; }
+.nav-desktop-only { display: flex; }
 
 /* ========== BUTTONS ========== */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; font-family: inherit; font-size: 15px; font-weight: 500; padding: 14px 24px; border-radius: var(--radius-md); cursor: pointer; transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease; color: var(--text-primary); }
@@ -298,7 +301,31 @@ em { font-style: italic; font-family: var(--font-serif, 'Fraunces', serif); font
   .token-grid { grid-template-columns: 1fr; }
   .hero-art { display: none; }
   .display-xl { font-size: 32px; }
-  .nav-links { display: none; }
+  .nav-desktop-only { display: none !important; }
+  .nav-hamburger { display: flex; }
+  .nav-mobile-drawer {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 20px 24px;
+    background: var(--color-surface);
+    border-bottom: 0.5px solid var(--border-subtle);
+  }
+  .nav-mobile-link {
+    display: block;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    min-height: 48px;
+    line-height: 20px;
+  }
+  .nav-mobile-link:hover, .nav-mobile-link.active {
+    color: var(--text-primary);
+    background: var(--color-surface-high);
+  }
 }
 
 /* Wallet adapter overrides */
