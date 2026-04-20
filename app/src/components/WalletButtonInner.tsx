@@ -2,6 +2,7 @@
 
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useSdk } from "@/components/providers/SdkProvider";
 import { usePrivyAuth } from "@/hooks/usePrivyAuth";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -68,7 +69,7 @@ export default function WalletButtonInner() {
         {lang === "es" ? "Conectarse" : "Connect"}
       </button>
 
-      {showModal && (
+      {showModal && createPortal(
         <div className="modal-backdrop" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
             <button type="button" className="modal-close" onClick={() => setShowModal(false)}>
@@ -148,7 +149,8 @@ export default function WalletButtonInner() {
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
