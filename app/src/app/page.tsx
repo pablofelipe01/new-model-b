@@ -182,10 +182,14 @@ pub mod update_bonding;`}
         <div className="section-head">
           <div className="label">{t.forWhomHeader}</div>
         </div>
-        {[1, 2, 3].map((n) => (
+        {[
+          { n: 1, img: "/images/artist.jpg" },
+          { n: 2, img: "/images/community.jpg" },
+          { n: 3, img: "/images/fan.jpg" },
+        ].map(({ n, img }) => (
           <div key={n} style={{
             display: "grid",
-            gridTemplateColumns: n % 2 === 1 ? "1fr 1fr" : "1fr 1fr",
+            gridTemplateColumns: "1fr 1fr",
             gap: 48,
             alignItems: "center",
             marginBottom: 64,
@@ -199,19 +203,18 @@ pub mod update_bonding;`}
                 {t[`forWhom${n}Body`]}
               </p>
             </div>
-            <div style={{
-              direction: "ltr",
-              background: "var(--color-surface)",
-              borderRadius: "var(--radius-lg)",
-              aspectRatio: "4/3",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <span style={{ color: "var(--text-tertiary)", fontSize: 14 }}>
-                Illustration
-              </span>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={img}
+              alt={t[`forWhom${n}Title`]}
+              style={{
+                direction: "ltr",
+                width: "100%",
+                borderRadius: "var(--radius-lg)",
+                aspectRatio: "4/3",
+                objectFit: "cover",
+              }}
+            />
           </div>
         ))}
       </section>
