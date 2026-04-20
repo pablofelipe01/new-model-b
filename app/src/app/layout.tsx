@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
 import { Header } from "@/components/Header";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { PrivyAuthProvider } from "@/components/providers/PrivyAuthProvider";
 import { SdkProvider } from "@/components/providers/SdkProvider";
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <div className="app">
                   <Header />
                   <main className="screen">{children}</main>
+                  <InstallPrompt />
                 </div>
               </SdkProvider>
             </WalletContextProvider>
