@@ -137,7 +137,34 @@ export function LaunchForm() {
 
       setResult({ mint: targetMint.toBase58(), bonding: tokenBondingKey.toBase58() });
     } catch (e) {
-      setError((e as Error).message);
+      const raw = (e as Error).message || "";
+      // Translate common on-chain errors to human-friendly messages
+      if (raw.includes("Custom\":1") || raw.includes("insufficient funds") || raw.includes("custom program error: 0x1")) {
+        setError(
+          lang === "es"
+            ? "No tienes fondos suficientes. Necesitas al menos $25 para lanzar."
+            : "Insufficient funds. You need at least $25 to launch."
+        );
+      } else if (raw.includes("already in use") || raw.includes("already been processed")) {
+        setError(
+          lang === "es"
+            ? "Este token ya existe. Intenta con otro nombre o símbolo."
+            : "This token already exists. Try a different name or symbol."
+        );
+      } else if (raw.includes("timeout") || raw.includes("not confirmed")) {
+        setError(
+          lang === "es"
+            ? "La red está lenta. Intenta de nuevo en unos segundos."
+            : "The network is slow. Try again in a few seconds."
+        );
+      } else {
+        setError(
+          lang === "es"
+            ? "Algo salió mal. Intenta de nuevo."
+            : "Something went wrong. Please try again."
+        );
+      }
+      console.error("[Launch error]", raw);
     } finally {
       setSubmitting(false);
     }
