@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@farcaster/mini-app-solana": "^2.0.0",
     "@new-model-b/sdk": "workspace:*",
     "@privy-io/react-auth": "^3.22.1",
@@ -27,7 +28,6 @@
     "clsx": "^2.1.0",
     "lucide-react": "^0.358.0",
     "next": "14.2.0",
-    "next-pwa": "^5.6.0",
     "next-themes": "^0.3.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
