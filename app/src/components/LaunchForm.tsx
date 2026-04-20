@@ -67,27 +67,6 @@ export function LaunchForm() {
       return;
     }
 
-    // Check USDC balance before attempting launch
-    try {
-      const { getAssociatedTokenAddressSync } = await import("@solana/spl-token");
-      const { USDC_MINT: usdcMint } = await import("@new-model-b/sdk");
-      const userAta = getAssociatedTokenAddressSync(usdcMint, sdk.provider.wallet.publicKey);
-      const balance = await sdk.provider.connection
-        .getTokenAccountBalance(userAta)
-        .then((r) => Number(r.value.uiAmount))
-        .catch(() => 0);
-      if (balance < 25) {
-        setError(
-          lang === "es"
-            ? `Necesitas al menos $25 para lanzar. Tu saldo actual es $${balance.toFixed(2)}.`
-            : `You need at least $25 to launch. Your current balance is $${balance.toFixed(2)}.`
-        );
-        return;
-      }
-    } catch {
-      // If balance check fails, proceed anyway — the on-chain tx will fail with a clear error
-    }
-
     setSubmitting(true);
     setError(null);
     try {
