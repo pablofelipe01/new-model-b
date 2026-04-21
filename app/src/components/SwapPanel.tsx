@@ -4,6 +4,7 @@ import { buyBaseAmount, buyTargetAmount, type CurveParams } from "@new-model-b/s
 import BN from "bn.js";
 import { useMemo, useState } from "react";
 
+import { BuyWithCard } from "@/components/BuyWithCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSwap } from "@/hooks/useSwap";
 import { formatNumber } from "@/lib/utils";
@@ -33,7 +34,7 @@ export function SwapPanel({
   const [amount, setAmount] = useState<string>("0");
   const [slippage, setSlippage] = useState<number>(0.01);
   const swap = useSwap(tokenBonding);
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const targetFactor = Math.pow(10, targetDecimals);
   void baseDecimals;
@@ -161,6 +162,16 @@ export function SwapPanel({
         <p className="muted-small" style={{ color: "var(--state-danger)", marginTop: 8 }}>
           {swap.error.message}
         </p>
+      )}
+
+      {/* Buy with card — frictionless for non-crypto users */}
+      {mode === "buy" && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "0.5px solid var(--border-subtle)" }}>
+          <p className="muted-small" style={{ marginBottom: 8, textAlign: "center" }}>
+            {lang === "es" ? "¿No tienes saldo?" : "No balance?"}
+          </p>
+          <BuyWithCard />
+        </div>
       )}
     </div>
   );
