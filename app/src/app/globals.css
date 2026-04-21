@@ -42,6 +42,7 @@
   --radius-full: 9999px;
 }
 
+html { scroll-behavior: smooth; }
 html, body { margin: 0; padding: 0; background: var(--color-ink); color: var(--text-primary); font-family: var(--font-sans, 'Inter', system-ui, sans-serif); font-weight: 400; -webkit-font-smoothing: antialiased; min-height: 100vh; }
 
 /* Typography helpers */

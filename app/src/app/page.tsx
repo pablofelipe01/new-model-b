@@ -54,7 +54,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════ 2. LAS TRES PROMESAS ═══════ */}
-      <section className="how">
+      <section id="promises" className="how">
         <div className="section-head">
           <div className="label">{t.promisesHeader}</div>
         </div>
@@ -74,7 +74,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════ 3. CÓMO FUNCIONA ═══════ */}
-      <section className="how">
+      <section id="how-it-works" className="how">
         <div className="section-head">
           <div className="label">{t.howHeader}</div>
         </div>
@@ -245,7 +245,7 @@ pub mod update_bonding;
       </section>
 
       {/* ═══════ 8. FAQ ═══════ */}
-      <section style={{ padding: "64px 48px", maxWidth: 860, margin: "0 auto" }}>
+      <section id="faq" style={{ padding: "64px 48px", maxWidth: 860, margin: "0 auto" }}>
         <div className="section-head">
           <div className="label">{t.faqHeader}</div>
         </div>
@@ -270,18 +270,18 @@ pub mod update_bonding;
           <div>
             <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", marginBottom: 12 }}>{t.footProduct}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footExplore}</a>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footHowItWorks}</a>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footFaq}</a>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footPricing}</a>
+              <a href="#featured" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footExplore}</a>
+              <a href="#how-it-works" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footHowItWorks}</a>
+              <a href="#faq" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footFaq}</a>
+              <a href="#promises" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footPricing}</a>
             </div>
           </div>
           <div>
             <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", marginBottom: 12 }}>{t.footCompany}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footAbout}</a>
+              <a href="#promises" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footAbout}</a>
               <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footBlog}</a>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footContact}</a>
+              <a href="mailto:legal@matiz.community" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footContact}</a>
             </div>
           </div>
           <div>
