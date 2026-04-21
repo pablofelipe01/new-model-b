@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Sparkline } from "@/components/matiz/Sparkline";
+import { BuyWithCard } from "@/components/BuyWithCard";
 import { SendModal } from "@/components/SendModal";
 import { SwapPanel } from "@/components/SwapPanel";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -60,23 +61,26 @@ export function Dashboard() {
           </div>
         </div>
         <div className="stat-card">
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              type="button"
-              onClick={() => setSendOpen(true)}
-              className="btn btn-primary"
-              style={{ flex: 1, padding: "10px 16px", fontSize: 14 }}
-            >
-              {t.send}
-            </button>
-            <button
-              type="button"
-              onClick={refresh}
-              className="btn btn-secondary"
-              style={{ padding: "10px 16px", fontSize: 14 }}
-            >
-              {t.refresh}
-            </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <BuyWithCard onSuccess={refresh} />
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setSendOpen(true)}
+                className="btn btn-primary"
+                style={{ flex: 1, padding: "10px 16px", fontSize: 14 }}
+              >
+                {t.send}
+              </button>
+              <button
+                type="button"
+                onClick={refresh}
+                className="btn btn-secondary"
+                style={{ padding: "10px 16px", fontSize: 14 }}
+              >
+                {t.refresh}
+              </button>
+            </div>
           </div>
         </div>
       </div>

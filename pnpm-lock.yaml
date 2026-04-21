@@ -65,6 +65,12 @@ importers:
       '@solana/web3.js':
         specifier: ^1.91.0
         version: 1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      '@stripe/crypto':
+        specifier: ^1.0.0
+        version: 1.0.0(@stripe/stripe-js@9.2.0)
+      '@stripe/stripe-js':
+        specifier: ^9.2.0
+        version: 9.2.0
       '@vercel/analytics':
         specifier: ^2.0.1
         version: 2.0.1(next@14.2.0(@babel/core@7.29.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
@@ -92,6 +98,9 @@ importers:
       recharts:
         specifier: ^2.12.0
         version: 2.15.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      stripe:
+        specifier: ^22.0.2
+        version: 22.0.2(@types/node@20.19.39)
       tailwind-merge:
         specifier: ^2.2.0
         version: 2.6.1
@@ -3401,6 +3410,15 @@ packages:
   '@stellar/stellar-sdk@14.2.0':
     resolution: {integrity: sha512-7nh2ogzLRMhfkIC0fGjn1LHUzk3jqVw8tjAuTt5ADWfL9CSGBL18ILucE9igz2L/RU2AZgeAvhujAnW91Ut/oQ==}
     engines: {node: '>=20.0.0'}
+
+  '@stripe/crypto@1.0.0':
+    resolution: {integrity: sha512-BGicJ64r9+dS+B5HNpeeB/BGFhi7oJH/t4VEG2gnaydxJv2S1LZkeUVQ8IwPu86vCMmpAE+arvdMbZhLXjFgig==}
+    peerDependencies:
+      '@stripe/stripe-js': ^1.46.0
+
+  '@stripe/stripe-js@9.2.0':
+    resolution: {integrity: sha512-YSzLC0t6VS9MDdPTynSMqU8IxrItFUjkDORALFT6sSMR/XZ5Vgm3RDp/Gk7z727MC4A9s4MFVel0gF0c7+kdrg==}
+    engines: {node: '>=12.16'}
 
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     resolution: {integrity: sha512-lR8q/9W7hZpMWweNiAKU7NQerBnzQQLvi8qnTDU/fxItPhtZVMbPV3lbCwjhIlNBe9Bbr5V+KHshvWmVSG9cxQ==}
@@ -7068,6 +7086,15 @@ packages:
 
   strip-literal@2.1.1:
     resolution: {integrity: sha512-631UJ6O00eNGfMiWG78ck80dfBab8X6IVFB51jZK5Icd7XAs60Z5y7QdSd/wGIklnWvRbUNloVzhOKKmutxQ6Q==}
+
+  stripe@22.0.2:
+    resolution: {integrity: sha512-2/BLrQ3oB1zlNfeL/LfHFjTGx6EQn0j+ztrrTJHuDjV5VVIpk92oSDaxyKLUr3pG3dnee2LZqhFUv2Bf0G1/3g==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   styled-components@6.4.0:
     resolution: {integrity: sha512-BL1EDFpt+q10eAeZB0q9ps6pSlPejaBQWBkiuM16pyoVTG4NhZrPrZK0cqNbrozxSsYwUsJ9SQYN6NyeKJYX9A==}
@@ -12789,6 +12816,12 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  '@stripe/crypto@1.0.0(@stripe/stripe-js@9.2.0)':
+    dependencies:
+      '@stripe/stripe-js': 9.2.0
+
+  '@stripe/stripe-js@9.2.0': {}
+
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     dependencies:
       ejs: 3.1.10
@@ -18417,6 +18450,10 @@ snapshots:
   strip-literal@2.1.1:
     dependencies:
       js-tokens: 9.0.1
+
+  stripe@22.0.2(@types/node@20.19.39):
+    optionalDependencies:
+      '@types/node': 20.19.39
 
   styled-components@6.4.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1):
     dependencies:
