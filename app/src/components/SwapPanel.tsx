@@ -170,7 +170,7 @@ export function SwapPanel({
           <p className="muted-small" style={{ marginBottom: 8, textAlign: "center" }}>
             {lang === "es" ? "¿No tienes saldo?" : "No balance?"}
           </p>
-          <BuyWithCard />
+          <BuyWithCard tokenBonding={tokenBonding} targetDecimals={targetDecimals} />
         </div>
       )}
     </div>
