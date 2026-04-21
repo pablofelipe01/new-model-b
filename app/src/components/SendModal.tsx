@@ -32,7 +32,7 @@ export function SendModal({
   onSuccess,
 }: Props) {
   const { sdk, ready } = useSdk();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [sending, setSending] = useState(false);
@@ -103,7 +103,21 @@ export function SendModal({
       setRecipient("");
       onSuccess?.();
     } catch (err) {
-      setError((err as Error).message);
+      const raw = (err as Error).message || "";
+      if (raw.includes("Custom\":1") || raw.includes("custom program error: 0x1") || raw.includes("insufficient")) {
+        setError(
+          lang === "es"
+            ? "Fondos insuficientes. Verifica tu saldo y el monto."
+            : "Insufficient funds. Check your balance and the amount."
+        );
+      } else {
+        setError(
+          lang === "es"
+            ? "Algo salió mal. Intenta de nuevo."
+            : "Something went wrong. Please try again."
+        );
+      }
+      console.error("[Send error]", raw);
     } finally {
       setSending(false);
     }
