@@ -145,7 +145,7 @@ export function BuyWithCard({
         <MoonPayBuyWidget
           variant="overlay"
           baseCurrencyCode="usd"
-          currencyCode="usdc_sol"
+          defaultCurrencyCode="usdc_sol"
           walletAddress={walletAddress}
           theme="dark"
           colorCode="#6062E8"
