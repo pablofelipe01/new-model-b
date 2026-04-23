@@ -173,7 +173,7 @@ function rawToHumanNumber(s: string): number {
  * simple Borsh layout. We parse manually to avoid pulling in the full
  * `@metaplex-foundation/mpl-token-metadata` client in the frontend bundle.
  */
-async function fetchTokenMetadata(
+export async function fetchTokenMetadata(
   connection: import("@solana/web3.js").Connection,
   mint: PublicKey,
 ): Promise<{ name: string; symbol: string; image: string | undefined } | null> {

@@ -15,6 +15,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
 import { useBondedPrice } from "@/hooks/useBondedPrice";
 import { useTokenBonding } from "@/hooks/useTokenBonding";
+import { fetchTokenMetadata } from "@/hooks/useTokenBondings";
 import { TOKEN_BONDING_PROGRAM_ID } from "@/lib/constants";
 import { formatNumber, shortenAddress } from "@/lib/utils";
 
@@ -71,18 +72,20 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
     return () => { cancelled = true; };
   }, [sdk, tokenBonding]);
 
-  // Fetch metadata
+  // Fetch Metaplex metadata (name, symbol, image)
   useEffect(() => {
     if (!sdk || !tokenBonding) return;
     let cancelled = false;
     (async () => {
       try {
-        const bondings = await sdk.listTokenBondings();
-        const found = bondings.find(
-          (b) => b.account.targetMint.toBase58() === tokenBonding.targetMint.toBase58(),
+        const meta = await fetchTokenMetadata(
+          sdk.provider.connection,
+          tokenBonding.targetMint,
         );
-        if (cancelled || !found) return;
-        // Metadata comes from the enriched listing
+        if (cancelled || !meta) return;
+        setTokenName(meta.name);
+        setTokenSymbol(meta.symbol);
+        setTokenImage(meta.image ?? null);
       } catch {
         // ignore
       }
