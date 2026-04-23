@@ -12,7 +12,6 @@
     "@coral-xyz/anchor": "^0.31.1",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@farcaster/mini-app-solana": "^2.0.0",
-    "@moonpay/moonpay-react": "^1.10.6",
     "@new-model-b/sdk": "workspace:*",
     "@privy-io/react-auth": "^3.22.1",
     "@solana-program/memo": "^0.11.0",

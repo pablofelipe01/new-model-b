@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 
 import { Header } from "@/components/Header";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { MoonPayWrapper } from "@/components/providers/MoonPayWrapper";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { PrivyAuthProvider } from "@/components/providers/PrivyAuthProvider";
 import { SdkProvider } from "@/components/providers/SdkProvider";
@@ -67,13 +66,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <PrivyAuthProvider>
             <WalletContextProvider>
               <SdkProvider>
-                <MoonPayWrapper>
-                  <div className="app">
-                    <Header />
-                    <main className="screen">{children}</main>
-                    <InstallPrompt />
-                  </div>
-                </MoonPayWrapper>
+                <div className="app">
+                  <Header />
+                  <main className="screen">{children}</main>
+                  <InstallPrompt />
+                </div>
                 <Analytics />
               </SdkProvider>
             </WalletContextProvider>

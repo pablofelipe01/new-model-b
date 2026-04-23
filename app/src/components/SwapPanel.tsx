@@ -4,7 +4,6 @@ import { buyBaseAmount, buyTargetAmount, type CurveParams } from "@new-model-b/s
 import BN from "bn.js";
 import { useMemo, useState } from "react";
 
-import { BuyWithCard } from "@/components/BuyWithCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSwap } from "@/hooks/useSwap";
 import { formatNumber } from "@/lib/utils";
@@ -164,15 +163,6 @@ export function SwapPanel({
         </p>
       )}
 
-      {/* Buy with card — frictionless for non-crypto users */}
-      {mode === "buy" && (
-        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "0.5px solid var(--border-subtle)" }}>
-          <p className="muted-small" style={{ marginBottom: 8, textAlign: "center" }}>
-            {lang === "es" ? "¿No tienes saldo?" : "No balance?"}
-          </p>
-          <BuyWithCard tokenBonding={tokenBonding} targetDecimals={targetDecimals} />
-        </div>
-      )}
     </div>
   );
 }

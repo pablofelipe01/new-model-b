@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Sparkline } from "@/components/matiz/Sparkline";
-import { BuyWithCard } from "@/components/BuyWithCard";
 import { SendModal } from "@/components/SendModal";
 import { SwapPanel } from "@/components/SwapPanel";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -62,7 +61,6 @@ export function Dashboard() {
         </div>
         <div className="stat-card">
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <BuyWithCard onSuccess={refresh} />
             <div style={{ display: "flex", gap: 8 }}>
               <button
                 type="button"
