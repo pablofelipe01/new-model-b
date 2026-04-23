@@ -33,10 +33,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // MoonPay signing: HMAC-SHA256 of the query string using the secret key
+    // MoonPay signing: HMAC-SHA256 of the query string (everything from '?')
+    // The SDK may pass a full URL or just the query string — handle both.
+    let queryString = urlForSignature;
+    if (urlForSignature.includes("?")) {
+      queryString = "?" + urlForSignature.split("?")[1];
+    } else if (!urlForSignature.startsWith("?")) {
+      queryString = "?" + urlForSignature;
+    }
+
+    console.log("[moonpay-sign] Signing query string:", queryString.substring(0, 100) + "...");
+
     const signature = crypto
       .createHmac("sha256", MOONPAY_SK)
-      .update(urlForSignature)
+      .update(queryString)
       .digest("base64");
 
     return NextResponse.json({ signature });
