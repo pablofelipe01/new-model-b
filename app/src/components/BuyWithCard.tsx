@@ -152,9 +152,18 @@ export function BuyWithCard({
           language={lang}
           baseCurrencyAmount={amount?.toString()}
           visible={showWidget}
+          onUrlSignatureRequested={async (url: string) => {
+            // Server-side signing required for walletAddress
+            const res = await fetch("/api/moonpay-sign", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ urlForSignature: url }),
+            });
+            const data = await res.json();
+            return data.signature;
+          }}
           onCloseOverlay={() => {
             setShowWidget(false);
-            // If we were still in paying status, trigger the auto-buy
             if (status === "paying") {
               setStatus("buying");
             }
