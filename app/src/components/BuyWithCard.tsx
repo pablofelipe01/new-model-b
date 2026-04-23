@@ -1,23 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useState } from "react";
 import BN from "bn.js";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
 import { useSwap } from "@/hooks/useSwap";
-import { PublicKey } from "@solana/web3.js";
+
+// Dynamic import to avoid SSR issues with MoonPay
+const MoonPayBuyWidget = dynamic(
+  () => import("@moonpay/moonpay-react").then((mod) => mod.MoonPayBuyWidget),
+  { ssr: false },
+);
+
+const MOONPAY_PK = process.env.NEXT_PUBLIC_MOONPAY_PK || "";
 
 /**
- * "Buy with card" — one-click flow:
+ * "Buy with card" — frictionless flow:
  *
  *  1. User clicks "Buy with card" on a token page
- *  2. Stripe Onramp opens → user pays with card
- *  3. USDC arrives in embedded wallet
- *  4. Auto-triggers token buy → Privy sign popup
- *  5. User approves → has tokens
- *
- * Two interactions total: card + approve. No confusion.
+ *  2. MoonPay widget opens (overlay) → user pays with card
+ *  3. MoonPay deposits USDC in user's embedded wallet
+ *  4. Widget closes → auto-triggers token buy
+ *  5. Privy sign popup → user approves → has tokens
  */
 export function BuyWithCard({
   onSuccess,
@@ -27,142 +32,81 @@ export function BuyWithCard({
 }: {
   onSuccess?: () => void;
   amount?: number;
-  /** If provided, auto-buy this token after USDC arrives */
   tokenBonding?: string;
-  /** Decimals of the target token (for computing raw amount) */
   targetDecimals?: number;
 }) {
   const { lang } = useLanguage();
   const { sdk, ready } = useSdk();
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [showWidget, setShowWidget] = useState(false);
   const [status, setStatus] = useState<"idle" | "paying" | "buying" | "done">("idle");
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState<string | null>(null);
   const swap = useSwap(tokenBonding);
 
-  const createSession = useCallback(async () => {
-    if (!sdk || !ready) return;
-    setLoading(true);
-    setError(null);
-    setStatus("idle");
+  const walletAddress = sdk?.provider.wallet.publicKey.toBase58() ?? "";
 
-    try {
-      const walletAddress = sdk.provider.wallet.publicKey.toBase58();
-      const res = await fetch("/api/create-onramp-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ walletAddress, amount }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to create session");
-      setClientSecret(data.clientSecret);
-      setOpen(true);
-      setStatus("paying");
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
+  const handleOpen = useCallback(() => {
+    if (!ready || !walletAddress) {
+      setError(lang === "es" ? "Conecta tu billetera primero" : "Connect your wallet first");
+      return;
     }
-  }, [sdk, ready, amount]);
+    setError(null);
+    setShowWidget(true);
+    setStatus("paying");
+  }, [ready, walletAddress, lang]);
 
-  // Mount Stripe onramp widget
-  useEffect(() => {
-    if (!open || !clientSecret || !containerRef.current) return;
-    let mounted = true;
-
-    (async () => {
-      try {
-        const { loadStripeOnramp } = await import("@stripe/crypto");
-        const stripeOnramp = await loadStripeOnramp(
-          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-        );
-        if (!stripeOnramp || !mounted || !containerRef.current) return;
-
-        containerRef.current.innerHTML = "";
-        const session = stripeOnramp.createSession({
-          clientSecret,
-          appearance: { theme: "dark" },
-        });
-
-        session.addEventListener("onramp_session_updated", (e: unknown) => {
-          const evt = e as { payload?: { session?: { status?: string } } };
-          const sessionStatus = evt?.payload?.session?.status;
-
-          if (sessionStatus === "fulfillment_complete" && mounted) {
-            // USDC arrived — close Stripe widget and auto-buy
-            setStatus("buying");
-            setOpen(false);
-            setClientSecret(null);
-          }
-        });
-
-        session.mount(containerRef.current);
-      } catch (err) {
-        console.error("Failed to load Stripe onramp:", err);
-        if (mounted) setError("Failed to load payment widget");
-      }
-    })();
-
-    return () => { mounted = false; };
-  }, [open, clientSecret]);
-
-  // Auto-buy after USDC arrives
+  // Auto-buy after MoonPay completes
   useEffect(() => {
     if (status !== "buying" || !tokenBonding || !sdk) return;
 
+    let cancelled = false;
+
     (async () => {
       try {
-        // Wait a moment for USDC to be confirmed on-chain
-        await new Promise((r) => setTimeout(r, 2000));
+        // Wait for USDC to settle on-chain
+        await new Promise((r) => setTimeout(r, 3000));
 
-        // Check how much USDC arrived
         const { getAssociatedTokenAddressSync } = await import("@solana/spl-token");
         const { USDC_MINT } = await import("@new-model-b/sdk");
-        const userAta = getAssociatedTokenAddressSync(
-          USDC_MINT,
-          sdk.provider.wallet.publicKey,
-        );
+        const userAta = getAssociatedTokenAddressSync(USDC_MINT, sdk.provider.wallet.publicKey);
         const balance = await sdk.provider.connection
           .getTokenAccountBalance(userAta)
           .then((r) => Number(r.value.uiAmount))
           .catch(() => 0);
 
+        if (cancelled) return;
         if (balance <= 0) {
-          setError(lang === "es" ? "No se detectaron fondos. Intenta de nuevo." : "No funds detected. Try again.");
+          setError(lang === "es" ? "No se detectaron fondos aún. Espera un momento y compra manualmente." : "Funds not detected yet. Wait a moment and buy manually.");
           setStatus("idle");
           return;
         }
 
-        // Use the USDC balance to buy tokens via the bonding curve.
-        // The swap hook handles the full flow including gas sponsorship.
-        // We buy by base amount (USDC), not by token amount.
         const decimals = targetDecimals ?? 9;
         const factor = Math.pow(10, decimals);
-
-        // Estimate how many tokens we can get for this USDC
-        // (rough — the on-chain program will compute exact)
         const usdcToSpend = Math.min(balance, amount ?? balance);
-        // We pass baseAmount mode — SDK will compute tokens off-chain
         const rawAmount = Math.floor(usdcToSpend * factor);
 
         await swap.buy(new BN(rawAmount), "base", 0.05);
 
-        setStatus("done");
-        onSuccess?.();
+        if (!cancelled) {
+          setStatus("done");
+          onSuccess?.();
+        }
       } catch (err) {
+        if (cancelled) return;
         const raw = (err as Error).message || "";
         console.error("[BuyWithCard auto-buy]", raw);
-        if (raw.includes("Custom\":1") || raw.includes("insufficient")) {
-          setError(lang === "es" ? "Fondos insuficientes para la compra." : "Insufficient funds for purchase.");
-        } else {
-          setError(lang === "es" ? "La compra falló. Tu USDC está en tu billetera — puedes comprar manualmente." : "Purchase failed. Your USDC is in your wallet — you can buy manually.");
-        }
+        setError(
+          lang === "es"
+            ? "La compra automática falló. Tu USDC está en tu billetera — puedes comprar manualmente."
+            : "Auto-buy failed. Your USDC is in your wallet — you can buy manually."
+        );
         setStatus("idle");
       }
     })();
-  }, [status, tokenBonding, sdk, swap, amount, targetDecimals, lang, onSuccess]);
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, tokenBonding]);
 
   const statusLabel = {
     idle: lang === "es" ? "Comprar con tarjeta" : "Buy with card",
@@ -171,16 +115,18 @@ export function BuyWithCard({
     done: lang === "es" ? "Compra exitosa" : "Purchase complete",
   };
 
+  if (!MOONPAY_PK) return null;
+
   return (
     <>
       <button
         type="button"
-        onClick={createSession}
-        disabled={loading || !ready || status === "buying" || status === "paying"}
+        onClick={handleOpen}
+        disabled={!ready || status === "buying" || status === "paying"}
         className="btn btn-secondary btn-full"
         style={{ fontSize: 14, padding: "12px 20px" }}
       >
-        {loading ? "..." : statusLabel[status]}
+        {statusLabel[status]}
       </button>
 
       {error && (
@@ -195,41 +141,26 @@ export function BuyWithCard({
         </p>
       )}
 
-      {open &&
-        createPortal(
-          <div
-            className="modal-backdrop"
-            onClick={() => {
-              setOpen(false);
-              setClientSecret(null);
-              setStatus("idle");
-            }}
-          >
-            <div
-              className="modal"
-              style={{ maxWidth: 480, padding: 0, overflow: "hidden" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                className="modal-close"
-                style={{ zIndex: 10, top: 12, right: 12 }}
-                onClick={() => {
-                  setOpen(false);
-                  setClientSecret(null);
-                  setStatus("idle");
-                }}
-              >
-                ✕
-              </button>
-              <div
-                ref={containerRef}
-                style={{ minHeight: 400, background: "var(--color-ink)" }}
-              />
-            </div>
-          </div>,
-          document.body,
-        )}
+      {showWidget && walletAddress && (
+        <MoonPayBuyWidget
+          variant="overlay"
+          baseCurrencyCode="usd"
+          currencyCode="usdc_sol"
+          walletAddress={walletAddress}
+          theme="dark"
+          colorCode="#6062E8"
+          language={lang}
+          baseCurrencyAmount={amount?.toString()}
+          visible={showWidget}
+          onCloseOverlay={() => {
+            setShowWidget(false);
+            // If we were still in paying status, trigger the auto-buy
+            if (status === "paying") {
+              setStatus("buying");
+            }
+          }}
+        />
+      )}
     </>
   );
 }

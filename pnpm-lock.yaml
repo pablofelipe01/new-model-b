@@ -29,6 +29,9 @@ importers:
       '@farcaster/mini-app-solana':
         specifier: ^2.0.0
         version: 2.0.0(@farcaster/miniapp-sdk@0.3.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@4.3.6))(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)))(@solana/wallet-adapter-react@0.15.39(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(typescript@5.9.3))(bufferutil@4.1.0)(react@18.3.1)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      '@moonpay/moonpay-react':
+        specifier: ^1.10.6
+        version: 1.10.6(react@18.3.1)
       '@new-model-b/sdk':
         specifier: workspace:*
         version: link:../sdk
@@ -65,12 +68,6 @@ importers:
       '@solana/web3.js':
         specifier: ^1.91.0
         version: 1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
-      '@stripe/crypto':
-        specifier: ^1.0.0
-        version: 1.0.0(@stripe/stripe-js@9.2.0)
-      '@stripe/stripe-js':
-        specifier: ^9.2.0
-        version: 9.2.0
       '@vercel/analytics':
         specifier: ^2.0.1
         version: 2.0.1(next@14.2.0(@babel/core@7.29.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
@@ -98,9 +95,6 @@ importers:
       recharts:
         specifier: ^2.12.0
         version: 2.15.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      stripe:
-        specifier: ^22.0.2
-        version: 22.0.2(@types/node@20.19.39)
       tailwind-merge:
         specifier: ^2.2.0
         version: 2.6.1
@@ -1336,6 +1330,11 @@ packages:
   '@mobily/ts-belt@3.13.1':
     resolution: {integrity: sha512-K5KqIhPI/EoCTbA6CGbrenM9s41OouyK8A03fGJJcla/zKucsgLbz8HNbeseoLarRPgyWJsUyCYqFhI7t3Ra9Q==}
     engines: {node: '>= 10.*'}
+
+  '@moonpay/moonpay-react@1.10.6':
+    resolution: {integrity: sha512-o+fa3FDKITbOTlkKToT49865ZGKkoGT1/eI0XJnYh9KSNMz3oo2PuwDKJHqLLZ5qE642ZAebksWdEElRySD43Q==}
+    peerDependencies:
+      react: '>=16'
 
   '@msgpack/msgpack@3.1.2':
     resolution: {integrity: sha512-JEW4DEtBzfe8HvUYecLU9e6+XJnKDlUAIve8FvPzF3Kzs6Xo/KuZkZJsDH0wJXl/qEZbeeE7edxDNY3kMs39hQ==}
@@ -3410,15 +3409,6 @@ packages:
   '@stellar/stellar-sdk@14.2.0':
     resolution: {integrity: sha512-7nh2ogzLRMhfkIC0fGjn1LHUzk3jqVw8tjAuTt5ADWfL9CSGBL18ILucE9igz2L/RU2AZgeAvhujAnW91Ut/oQ==}
     engines: {node: '>=20.0.0'}
-
-  '@stripe/crypto@1.0.0':
-    resolution: {integrity: sha512-BGicJ64r9+dS+B5HNpeeB/BGFhi7oJH/t4VEG2gnaydxJv2S1LZkeUVQ8IwPu86vCMmpAE+arvdMbZhLXjFgig==}
-    peerDependencies:
-      '@stripe/stripe-js': ^1.46.0
-
-  '@stripe/stripe-js@9.2.0':
-    resolution: {integrity: sha512-YSzLC0t6VS9MDdPTynSMqU8IxrItFUjkDORALFT6sSMR/XZ5Vgm3RDp/Gk7z727MC4A9s4MFVel0gF0c7+kdrg==}
-    engines: {node: '>=12.16'}
 
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     resolution: {integrity: sha512-lR8q/9W7hZpMWweNiAKU7NQerBnzQQLvi8qnTDU/fxItPhtZVMbPV3lbCwjhIlNBe9Bbr5V+KHshvWmVSG9cxQ==}
@@ -7087,15 +7077,6 @@ packages:
   strip-literal@2.1.1:
     resolution: {integrity: sha512-631UJ6O00eNGfMiWG78ck80dfBab8X6IVFB51jZK5Icd7XAs60Z5y7QdSd/wGIklnWvRbUNloVzhOKKmutxQ6Q==}
 
-  stripe@22.0.2:
-    resolution: {integrity: sha512-2/BLrQ3oB1zlNfeL/LfHFjTGx6EQn0j+ztrrTJHuDjV5VVIpk92oSDaxyKLUr3pG3dnee2LZqhFUv2Bf0G1/3g==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@types/node': '>=18'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-
   styled-components@6.4.0:
     resolution: {integrity: sha512-BL1EDFpt+q10eAeZB0q9ps6pSlPejaBQWBkiuM16pyoVTG4NhZrPrZK0cqNbrozxSsYwUsJ9SQYN6NyeKJYX9A==}
     engines: {node: '>= 16'}
@@ -9508,6 +9489,10 @@ snapshots:
       - utf-8-validate
 
   '@mobily/ts-belt@3.13.1': {}
+
+  '@moonpay/moonpay-react@1.10.6(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
 
   '@msgpack/msgpack@3.1.2': {}
 
@@ -12815,12 +12800,6 @@ snapshots:
       urijs: 1.19.11
     transitivePeerDependencies:
       - debug
-
-  '@stripe/crypto@1.0.0(@stripe/stripe-js@9.2.0)':
-    dependencies:
-      '@stripe/stripe-js': 9.2.0
-
-  '@stripe/stripe-js@9.2.0': {}
 
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     dependencies:
@@ -18450,10 +18429,6 @@ snapshots:
   strip-literal@2.1.1:
     dependencies:
       js-tokens: 9.0.1
-
-  stripe@22.0.2(@types/node@20.19.39):
-    optionalDependencies:
-      '@types/node': 20.19.39
 
   styled-components@6.4.0(react-dom@18.3.1(react@18.3.1))(react-native@0.85.0(@babel/core@7.29.0)(@types/react@18.3.28)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1):
     dependencies:
