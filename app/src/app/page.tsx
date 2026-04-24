@@ -50,6 +50,17 @@ export default function HomePage() {
               <span>{t.heroMeta3}</span>
             </div>
           </div>
+          <div className="hero-video-wrap">
+            <video
+              className="hero-video"
+              src="/Matiz__Own_Your_Community.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+            />
+          </div>
         </div>
       </section>
 

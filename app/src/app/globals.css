@@ -124,6 +124,8 @@ em { font-style: italic; font-family: var(--font-serif, 'Fraunces', serif); font
 .hero-meta { margin-top: 32px; display: flex; gap: 10px; align-items: center; color: var(--text-tertiary); font-size: 13px; flex-wrap: wrap; }
 .hero-meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--state-success); display: inline-block; }
 .hero-meta .sep { opacity: 0.4; }
+.hero-video-wrap { position: relative; z-index: 1; width: 100%; border-radius: var(--radius-xl); overflow: hidden; background: var(--color-surface); border: 0.5px solid var(--border-subtle); }
+.hero-video { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: cover; }
 .how { padding: 64px 48px; max-width: 1240px; margin: 0 auto; }
 .section-head { margin-bottom: 32px; }
 .section-head .label { margin-bottom: 12px; display: block; }
