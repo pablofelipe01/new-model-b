@@ -54,9 +54,7 @@ export default function HomePage() {
             <video
               className="hero-video"
               src="/Matiz__Own_Your_Community.mp4"
-              autoPlay
-              muted
-              loop
+              controls
               playsInline
               preload="metadata"
             />
