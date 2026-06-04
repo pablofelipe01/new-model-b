@@ -12,11 +12,70 @@ import { usePortfolio, type PortfolioRow } from "@/hooks/usePortfolio";
 import { formatNumber } from "@/lib/utils";
 
 export function Dashboard() {
-  const { ready } = useSdk();
+  const { ready, sdk } = useSdk();
   const { held, launched, usdcBalance, loading, error, refresh } =
     usePortfolio();
   const [sendOpen, setSendOpen] = useState(false);
+  const [funding, setFunding] = useState(false);
+  const [fundMsg, setFundMsg] = useState<{
+    kind: "ok" | "err";
+    text: string;
+  } | null>(null);
   const { t, lang } = useLanguage();
+
+  async function onFundWallet() {
+    const wallet = sdk?.provider.wallet.publicKey;
+    if (!wallet) return;
+    setFunding(true);
+    setFundMsg(null);
+    try {
+      const res = await fetch("/api/fund-wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet: wallet.toBase58() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const limitReached = res.status === 409;
+        setFundMsg({
+          kind: "err",
+          text: limitReached
+            ? lang === "es"
+              ? "Ya usaste tus cargas de prueba en esta billetera."
+              : "You've used up the test top-ups for this wallet."
+            : data.error ??
+              (lang === "es" ? "No se pudo cargar." : "Funding failed."),
+        });
+        return;
+      }
+      setFundMsg({
+        kind: "ok",
+        text:
+          lang === "es"
+            ? `Se cargaron $${data.amount} USDC. ${
+                data.fundingsLeft > 0
+                  ? "Te queda 1 carga."
+                  : "Última carga usada."
+              }`
+            : `Loaded $${data.amount} USDC. ${
+                data.fundingsLeft > 0
+                  ? "1 top-up left."
+                  : "Last top-up used."
+              }`,
+      });
+      refresh();
+    } catch {
+      setFundMsg({
+        kind: "err",
+        text:
+          lang === "es"
+            ? "Error de red. Intenta de nuevo."
+            : "Network error. Try again.",
+      });
+    } finally {
+      setFunding(false);
+    }
+  }
 
   if (!ready) {
     return (
@@ -79,6 +138,35 @@ export function Dashboard() {
                 {t.refresh}
               </button>
             </div>
+            <button
+              type="button"
+              onClick={onFundWallet}
+              disabled={funding}
+              className="btn btn-secondary"
+              style={{ padding: "10px 16px", fontSize: 14 }}
+            >
+              {funding
+                ? lang === "es"
+                  ? "Cargando…"
+                  : "Loading…"
+                : lang === "es"
+                  ? "Cargar billetera"
+                  : "Fund wallet"}
+            </button>
+            {fundMsg && (
+              <p
+                className="muted-small"
+                style={{
+                  margin: 0,
+                  color:
+                    fundMsg.kind === "ok"
+                      ? "var(--state-success, var(--color-accent))"
+                      : "var(--state-danger)",
+                }}
+              >
+                {fundMsg.text}
+              </p>
+            )}
           </div>
         </div>
       </div>

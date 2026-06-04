@@ -19,6 +19,23 @@ export const TOKEN_BONDING_PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_PROGRAM_ID ?? "41nppqSazESeBmrgnud2j5Nz1MbsnPGeyAryPcKAefqa",
 );
 
+/**
+ * Wallet-funding dispenser (devnet demo only).
+ *
+ * After signing up, a fresh embedded wallet has no USDC, so it can't pay
+ * the 25-USDC launch fee. This dispenser lets a user "top up" their wallet
+ * from the treasury (the fee-payer wallet) so they can play with the full
+ * flow without an onramp.
+ *
+ * Limited to two top-ups per wallet — first 30, then 10 — so the treasury
+ * doesn't drain. The per-wallet count is derived on-chain (see
+ * /api/fund-wallet), so there's no database to keep in sync.
+ *
+ * In production this role is played by an onramp (or, longer-term, a
+ * fiduciary/escrow that dispenses real funds under the same capped rules).
+ */
+export const FUND_WALLET_AMOUNTS: number[] = [30, 10];
+
 export interface BaseTokenInfo {
   mint: string;
   symbol: string;
