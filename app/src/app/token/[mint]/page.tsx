@@ -41,6 +41,19 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
   const [tokenName, setTokenName] = useState<string | null>(null);
   const [tokenSymbol, setTokenSymbol] = useState<string | null>(null);
   const [tokenImage, setTokenImage] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const tokenUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/token/${params.mint}`
+      : `/token/${params.mint}`;
+
+  function copyTokenLink() {
+    navigator.clipboard.writeText(tokenUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   useEffect(() => {
     if (!sdk || !tokenBonding) return;
@@ -123,6 +136,25 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
           <div className="label">{displaySymbol}</div>
           <h1 className="th-name">{displayName}</h1>
           <div className="th-handle">{shortenAddress(params.mint)}</div>
+        </div>
+        <div className="th-share">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={copyTokenLink}
+            style={{ padding: "10px 16px", fontSize: 14 }}
+          >
+            {copied ? t.copied : t.copyLink}
+          </button>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(tokenUrl)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+            style={{ padding: "10px 16px", fontSize: 14 }}
+          >
+            {t.shareWA}
+          </a>
         </div>
       </div>
 
