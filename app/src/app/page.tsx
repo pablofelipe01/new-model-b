@@ -248,6 +248,7 @@ pub mod update_bonding;
               price={row.price}
               supply={row.supplyRaw / Math.pow(10, row.targetDecimals)}
               reserve={row.account.reserveBalanceFromBonding.toNumber() / Math.pow(10, row.baseDecimals)}
+              holders={row.holders}
             />
           ))}
         </div>

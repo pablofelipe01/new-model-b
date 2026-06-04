@@ -33,6 +33,8 @@ export interface BondingRow {
   tokenName: string | undefined;
   tokenSymbol: string | undefined;
   tokenImage: string | undefined;
+  /** Number of wallets holding the target token with a positive balance. */
+  holders: number | undefined;
 }
 
 interface State {
@@ -108,6 +110,16 @@ export function useTokenBondings(): State & { refresh: () => void } {
               account.targetMint,
             );
 
+            // Count believers: token accounts holding the target mint with a
+            // positive balance. getTokenLargestAccounts returns up to 20, which
+            // is plenty for the devnet demo; we count the non-empty ones.
+            const holders = await sdk.provider.connection
+              .getTokenLargestAccounts(account.targetMint)
+              .then(
+                (r) => r.value.filter((a) => (a.uiAmount ?? 0) > 0).length,
+              )
+              .catch(() => undefined);
+
             return {
               publicKey,
               account,
@@ -118,6 +130,7 @@ export function useTokenBondings(): State & { refresh: () => void } {
               tokenName: meta?.name,
               tokenSymbol: meta?.symbol,
               tokenImage: meta?.image,
+              holders,
             } satisfies BondingRow;
           }),
         );

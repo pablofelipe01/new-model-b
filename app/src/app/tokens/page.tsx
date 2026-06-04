@@ -48,6 +48,7 @@ export default function TokensPage() {
               row.account.reserveBalanceFromBonding.toNumber() /
               Math.pow(10, row.baseDecimals)
             }
+            holders={row.holders}
           />
         ))}
       </div>
