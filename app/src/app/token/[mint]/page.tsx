@@ -10,6 +10,7 @@ import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
 
 import { BondingCurveChart } from "@/components/BondingCurveChart";
+import { FundModal } from "@/components/FundModal";
 import { SwapPanel } from "@/components/SwapPanel";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
@@ -32,7 +33,8 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
 
   const { tokenBonding, loading } = useTokenBonding(bondingPk ?? undefined);
   const { price } = useBondedPrice(bondingPk ?? undefined);
-  const { sdk } = useSdk();
+  const { sdk, ready } = useSdk();
+  const [fundOpen, setFundOpen] = useState(false);
 
   const [curveParams, setCurveParams] = useState<CurveParams | null>(null);
   const [supplyRaw, setSupplyRaw] = useState<number>(0);
@@ -233,8 +235,41 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
               baseDecimals={baseDecimals}
             />
           )}
+
+          {/* New arrivals via a shared link may have an empty wallet —
+              let them top up right here without leaving the page. */}
+          {ready && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: "14px 16px",
+                background: "var(--color-surface)",
+                border: "0.5px solid var(--border-subtle)",
+                borderRadius: "var(--radius-md)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <span className="muted-small">{t.noUsdcPrompt}</span>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setFundOpen(true)}
+                style={{ padding: "10px 16px", fontSize: 14 }}
+              >
+                {t.fundWallet}
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      <FundModal
+        open={fundOpen}
+        onClose={() => setFundOpen(false)}
+        walletAddress={sdk?.provider.wallet.publicKey?.toBase58()}
+      />
     </div>
   );
 }
