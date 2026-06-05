@@ -15,8 +15,8 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const links = [
-    { href: "/tokens", label: t.allTokens },
-    { href: "/launch", label: t.creators },
+    { href: "/tokens", label: t.creators },
+    { href: "/launch", label: t.launch },
     { href: "/dashboard", label: t.dashboard },
   ];
 
