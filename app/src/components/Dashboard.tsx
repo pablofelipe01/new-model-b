@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Sparkline } from "@/components/matiz/Sparkline";
 import { FundModal } from "@/components/FundModal";
 import { SendModal } from "@/components/SendModal";
+import { ShareToken } from "@/components/ShareToken";
 import { SwapPanel } from "@/components/SwapPanel";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
@@ -240,6 +241,22 @@ function HoldingRow({
             targetDecimals={row.targetDecimals}
             baseDecimals={row.baseDecimals}
           />
+
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 16,
+              borderTop: "0.5px solid var(--border-subtle)",
+            }}
+          >
+            <div className="label" style={{ marginBottom: 8 }}>
+              {t.shareToken}
+            </div>
+            <ShareToken
+              mint={row.account.targetMint.toBase58()}
+              className="share-row"
+            />
+          </div>
         </div>
       )}
     </div>
