@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useSdk } from "@/components/providers/SdkProvider";
 import { MLogo } from "@/components/matiz/MLogo";
 
 import { WalletButton } from "./WalletButton";
@@ -12,12 +13,14 @@ import { WalletButton } from "./WalletButton";
 export function Header() {
   const pathname = usePathname();
   const { lang, setLang, t } = useLanguage();
+  const { ready } = useSdk();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const links = [
     { href: "/tokens", label: t.creators },
     { href: "/launch", label: t.launch },
-    { href: "/dashboard", label: t.dashboard },
+    // Dashboard is personal — only show it once a wallet is connected.
+    ...(ready ? [{ href: "/dashboard", label: t.dashboard }] : []),
   ];
 
   return (

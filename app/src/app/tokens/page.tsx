@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 
 import { TokenCard } from "@/components/TokenCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -9,6 +10,17 @@ import { useTokenBondings } from "@/hooks/useTokenBondings";
 export default function TokensPage() {
   const { rows, loading, error } = useTokenBondings();
   const { t } = useLanguage();
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(
+      (r) =>
+        (r.tokenName ?? "").toLowerCase().includes(q) ||
+        (r.tokenSymbol ?? "").toLowerCase().includes(q),
+    );
+  }, [rows, query]);
 
   return (
     <div className="dashboard">
@@ -22,6 +34,16 @@ export default function TokensPage() {
         </Link>
       </div>
 
+      <div style={{ marginBottom: 24, maxWidth: 420 }}>
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t.searchCreators}
+          className="input"
+        />
+      </div>
+
       {error && (
         <p className="muted-small" style={{ color: "var(--state-danger)" }}>
           {error.message}
@@ -33,9 +55,12 @@ export default function TokensPage() {
           + {t.launchYourEconomy}
         </Link>
       )}
+      {!loading && rows.length > 0 && filtered.length === 0 && (
+        <p className="muted-small">{t.noResults}</p>
+      )}
 
       <div className="token-grid">
-        {rows.map((row) => (
+        {filtered.map((row) => (
           <TokenCard
             key={row.publicKey.toBase58()}
             mint={row.account.targetMint.toBase58()}
