@@ -17,7 +17,7 @@ export function Header() {
   const links = [
     { href: "/", label: t.explore },
     { href: "/tokens", label: t.allTokens },
-    { href: "/launch", label: t.launch },
+    { href: "/launch", label: t.creators },
     { href: "/dashboard", label: t.dashboard },
   ];
 
