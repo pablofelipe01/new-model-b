@@ -23,18 +23,31 @@ export const TOKEN_BONDING_PROGRAM_ID = new PublicKey(
  * Wallet-funding dispenser (devnet demo only).
  *
  * After signing up, a fresh embedded wallet has no USDC, so it can't pay
- * the 25-USDC launch fee. This dispenser lets a user "top up" their wallet
- * from the treasury (the fee-payer wallet) so they can play with the full
- * flow without an onramp.
+ * the 25-USDC launch fee. The "Fund wallet" button opens a mock credit-card
+ * checkout (see FundModal) that mimics a real onramp for partner demos.
  *
- * Limited to two top-ups per wallet — first 30, then 10 — so the treasury
- * doesn't drain. The per-wallet count is derived on-chain (see
- * /api/fund-wallet), so there's no database to keep in sync.
+ * Each amount has its own per-wallet cap so the treasury doesn't drain:
+ *   - $30 → dispensed once (the realistic first top-up)
+ *   - $10 → cosmetic only (cap 0): the checkout animates and "succeeds" but
+ *           no USDC moves — it's there to make the option grid feel real
+ *   - $5  → dispensed twice
  *
- * In production this role is played by an onramp (or, longer-term, a
- * fiduciary/escrow that dispenses real funds under the same capped rules).
+ * Caps are enforced on-chain per amount (see /api/fund-wallet), so there's
+ * no database to keep in sync. In production this role is played by an
+ * onramp (or, longer-term, a fiduciary/escrow under the same capped rules).
  */
-export const FUND_WALLET_AMOUNTS: number[] = [30, 10];
+export interface FundWalletOption {
+  /** USDC amount shown on the checkout button. */
+  amount: number;
+  /** Max real dispenses of this amount per wallet. 0 = cosmetic (demo only). */
+  cap: number;
+}
+
+export const FUND_WALLET_OPTIONS: FundWalletOption[] = [
+  { amount: 30, cap: 1 },
+  { amount: 10, cap: 0 },
+  { amount: 5, cap: 2 },
+];
 
 export interface BaseTokenInfo {
   mint: string;

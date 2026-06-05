@@ -12,7 +12,7 @@ import {
 } from "@solana/web3.js";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { FUND_WALLET_AMOUNTS } from "@/lib/constants";
+import { FUND_WALLET_OPTIONS } from "@/lib/constants";
 
 const RPC_ENDPOINT =
   process.env.NEXT_PUBLIC_DEVNET_RPC ?? "https://api.devnet.solana.com";
@@ -29,11 +29,12 @@ const SIG_SCAN_LIMIT = 100;
  *
  * Transfers devnet USDC from the treasury (the fee-payer wallet) to a
  * freshly created user wallet so it can pay the on-chain launch fee and
- * trade. Capped at FUND_WALLET_AMOUNTS per wallet (first 30, then 10),
- * derived from on-chain history so there's no database to keep in sync.
+ * trade. The requested `amount` must be one of FUND_WALLET_OPTIONS, and is
+ * capped per wallet per amount (see FUND_WALLET_OPTIONS), derived from
+ * on-chain history so there's no database to keep in sync.
  *
- * POST body: { wallet: string (base58 pubkey) }
- * Response:  { signature, amount, fundingsUsed, fundingsLeft } | { error }
+ * POST body: { wallet: string (base58 pubkey), amount: number }
+ * Response:  { signature, amount, used, left } | { error }
  */
 export async function POST(request: NextRequest) {
   // 1. Load treasury keypair (same wallet that sponsors gas).
@@ -57,8 +58,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 2. Parse + validate the recipient.
-  let body: { wallet?: string };
+  // 2. Parse + validate the recipient and requested amount.
+  let body: { wallet?: string; amount?: number };
   try {
     body = await request.json();
   } catch {
@@ -76,6 +77,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const option = FUND_WALLET_OPTIONS.find((o) => o.amount === body.amount);
+  if (!option) {
+    return NextResponse.json(
+      { error: "Unsupported amount" },
+      { status: 400 },
+    );
+  }
+  // cap 0 = cosmetic-only option; the checkout handles it client-side and
+  // should never reach the API. Reject defensively so it can't drain funds.
+  if (option.cap === 0) {
+    return NextResponse.json(
+      { error: "This amount is demo-only", used: 0, left: 0 },
+      { status: 409 },
+    );
+  }
+
   if (recipient.equals(treasury.publicKey)) {
     return NextResponse.json(
       { error: "Cannot fund the treasury wallet itself" },
@@ -90,13 +107,18 @@ export async function POST(request: NextRequest) {
     treasury.publicKey,
   );
 
-  // 3. Count how many times the treasury already funded this wallet.
+  const amountHuman = option.amount;
+  const amountRaw = BigInt(Math.round(amountHuman * 10 ** USDC_DECIMALS));
+
+  // 3. Count how many times the treasury already funded this wallet with
+  //    this exact amount, so each amount enforces its own per-wallet cap.
   let fundingsUsed: number;
   try {
     fundingsUsed = await countTreasuryFundings(
       connection,
       treasury.publicKey,
       recipientAta,
+      amountRaw,
     );
   } catch (err) {
     return NextResponse.json(
@@ -105,19 +127,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (fundingsUsed >= FUND_WALLET_AMOUNTS.length) {
+  if (fundingsUsed >= option.cap) {
     return NextResponse.json(
       {
         error: "Funding limit reached for this wallet",
-        fundingsUsed,
-        fundingsLeft: 0,
+        used: fundingsUsed,
+        left: 0,
       },
       { status: 409 },
     );
   }
-
-  const amountHuman = FUND_WALLET_AMOUNTS[fundingsUsed];
-  const amountRaw = BigInt(Math.round(amountHuman * 10 ** USDC_DECIMALS));
 
   // 4. Make sure the treasury can cover it.
   const treasuryBalRaw = await connection
@@ -180,8 +199,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       signature,
       amount: amountHuman,
-      fundingsUsed: fundingsUsed + 1,
-      fundingsLeft: FUND_WALLET_AMOUNTS.length - (fundingsUsed + 1),
+      used: fundingsUsed + 1,
+      left: option.cap - (fundingsUsed + 1),
     });
   } catch (err) {
     return NextResponse.json(
@@ -192,16 +211,19 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Counts USDC transfers from the treasury into `recipientAta` by scanning
- * the ATA's recent signatures. Only transfers whose authority is the
- * treasury are counted, so the user's own spends (e.g. paying the launch
- * fee) are ignored.
+ * Counts USDC transfers from the treasury into `recipientAta` for the exact
+ * `amountRaw`, by scanning the ATA's recent signatures. Only transfers whose
+ * authority is the treasury are counted, so the user's own spends (e.g.
+ * paying the launch fee) are ignored. Matching on amount lets each top-up
+ * size (e.g. $30 vs $5) enforce its own per-wallet cap independently.
  */
 async function countTreasuryFundings(
   connection: Connection,
   treasury: PublicKey,
   recipientAta: PublicKey,
+  amountRaw: bigint,
 ): Promise<number> {
+  const amountStr = amountRaw.toString();
   const sigs = await connection.getSignaturesForAddress(recipientAta, {
     limit: SIG_SCAN_LIMIT,
   });
@@ -226,6 +248,8 @@ async function countTreasuryFundings(
           destination?: string;
           authority?: string;
           multisigAuthority?: string;
+          amount?: string;
+          tokenAmount?: { amount?: string };
         };
       };
       if (parsed.type !== "transfer" && parsed.type !== "transferChecked") {
@@ -233,7 +257,14 @@ async function countTreasuryFundings(
       }
       const info = parsed.info ?? {};
       const authority = info.authority ?? info.multisigAuthority;
-      if (info.destination === recipientAtaStr && authority === treasuryStr) {
+      // `transfer` carries info.amount; `transferChecked` nests it under
+      // info.tokenAmount.amount. Match either against the requested amount.
+      const txAmount = info.tokenAmount?.amount ?? info.amount;
+      if (
+        info.destination === recipientAtaStr &&
+        authority === treasuryStr &&
+        txAmount === amountStr
+      ) {
         count++;
       }
     }
