@@ -5,9 +5,7 @@ import Link from "next/link";
 import { FAQ } from "@/components/FAQ";
 import { MLogo } from "@/components/matiz/MLogo";
 import { Sparkline } from "@/components/matiz/Sparkline";
-import { TokenCard } from "@/components/TokenCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
-import { useTokenBondings } from "@/hooks/useTokenBondings";
 
 const EXPLORER_URL =
   "https://explorer.solana.com/address/41nppqSazESeBmrgnud2j5Nz1MbsnPGeyAryPcKAefqa";
@@ -15,7 +13,6 @@ const TED_URL =
   "https://www.ted.com/talks/adam_mosseri_a_creator_led_internet_built_on_blockchain";
 
 export default function HomePage() {
-  const { rows, loading, error } = useTokenBondings();
   const { t } = useLanguage();
 
   return (
@@ -37,9 +34,9 @@ export default function HomePage() {
               <Link href="/launch" className="btn btn-primary">
                 {t.launchYourEconomy} →
               </Link>
-              <a href="#featured" className="btn btn-ghost">
+              <Link href="/tokens" className="btn btn-ghost">
                 {t.seeWhoAlready}
-              </a>
+              </Link>
             </div>
             <div className="hero-meta">
               <span className="dot" />
@@ -223,38 +220,7 @@ pub mod update_bonding;
         ))}
       </section>
 
-      {/* ═══════ 7. FEATURED TOKENS ═══════ */}
-      <section className="featured" id="featured">
-        <div className="section-head">
-          <div className="label">{t.featuredLabel}</div>
-          <h2 className="display-m"><em>{t.featuredTitle}</em></h2>
-        </div>
-
-        {error && <p className="muted-small" style={{ color: "var(--state-danger)" }}>{error.message}</p>}
-        {loading && <p className="muted-small">...</p>}
-        {!loading && rows.length === 0 && !error && (
-          <div className="empty-add">
-            <Link href="/launch" className="link">{t.launchYourEconomy}</Link>
-          </div>
-        )}
-        <div className="token-grid">
-          {rows.map((row) => (
-            <TokenCard
-              key={row.publicKey.toBase58()}
-              mint={row.account.targetMint.toBase58()}
-              name={row.tokenName}
-              symbol={row.tokenSymbol}
-              imageUrl={row.tokenImage}
-              price={row.price}
-              supply={row.supplyRaw / Math.pow(10, row.targetDecimals)}
-              reserve={row.account.reserveBalanceFromBonding.toNumber() / Math.pow(10, row.baseDecimals)}
-              holders={row.holders}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* ═══════ 8. FAQ ═══════ */}
+      {/* ═══════ 7. FAQ ═══════ */}
       <section id="faq" style={{ padding: "64px 48px", maxWidth: 860, margin: "0 auto" }}>
         <div className="section-head">
           <div className="label">{t.faqHeader}</div>
@@ -262,7 +228,7 @@ pub mod update_bonding;
         <FAQ />
       </section>
 
-      {/* ═══════ 9. CTA FINAL ═══════ */}
+      {/* ═══════ 8. CTA FINAL ═══════ */}
       <section style={{ padding: "128px 48px", textAlign: "center" }}>
         <h2 className="display-l fraunces-italic">{t.ctaH1}</h2>
         <h3 className="display-l fraunces-italic" style={{ marginTop: 8, color: "var(--text-secondary)" }}>
@@ -270,7 +236,7 @@ pub mod update_bonding;
         </h3>
         <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 32, flexWrap: "wrap" }}>
           <Link href="/launch" className="btn btn-primary">{t.launchYourEconomy}</Link>
-          <a href="#featured" className="btn btn-secondary">{t.seeWhoAlready}</a>
+          <Link href="/tokens" className="btn btn-secondary">{t.seeWhoAlready}</Link>
         </div>
       </section>
 
@@ -280,7 +246,7 @@ pub mod update_bonding;
           <div>
             <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", marginBottom: 12 }}>{t.footProduct}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <a href="#featured" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footExplore}</a>
+              <Link href="/tokens" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footExplore}</Link>
               <a href="#how-it-works" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footHowItWorks}</a>
               <a href="#faq" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footFaq}</a>
               <a href="#promises" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footPricing}</a>
