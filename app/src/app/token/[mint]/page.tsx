@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BondingCurveChart } from "@/components/BondingCurveChart";
 import { FundModal } from "@/components/FundModal";
 import { SwapPanel } from "@/components/SwapPanel";
+import { WalletButton } from "@/components/WalletButton";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
 import { useBondedPrice } from "@/hooks/useBondedPrice";
@@ -111,6 +112,10 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
   if (!mintPk) return <Empty text="Invalid mint" />;
   if (loading) return <Empty text={lang === "es" ? "Cargando…" : "Loading…"} />;
   if (!tokenBonding || !bondingPk) {
+    // A recipient opening a shared link isn't connected yet, so the token
+    // data can't load. Instead of a dead-end error, greet them with the
+    // quick-start guide and a connect CTA.
+    if (!ready) return <QuickStartGuide title={t.guideTitle} sub={t.guideSub} />;
     return <Empty text={lang === "es" ? "No se encontró este token" : "No bonding found for this mint"} />;
   }
 
@@ -278,6 +283,36 @@ function Empty({ text }: { text: string }) {
   return (
     <div className="token-screen" style={{ textAlign: "center", paddingTop: 120 }}>
       <p className="muted">{text}</p>
+    </div>
+  );
+}
+
+function QuickStartGuide({ title, sub }: { title: string; sub: string }) {
+  return (
+    <div className="token-screen" style={{ textAlign: "center", paddingTop: 48 }}>
+      <h1 className="display-m fraunces-italic" style={{ marginBottom: 8 }}>
+        {title}
+      </h1>
+      <p className="muted" style={{ marginBottom: 24 }}>
+        {sub}
+      </p>
+      <video
+        src="/Matiz_Quick_Start_Guide.mp4"
+        controls
+        autoPlay
+        muted
+        playsInline
+        preload="metadata"
+        style={{
+          width: "100%",
+          maxWidth: 760,
+          borderRadius: "var(--radius-lg)",
+          border: "0.5px solid var(--border-subtle)",
+        }}
+      />
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+        <WalletButton />
+      </div>
     </div>
   );
 }
