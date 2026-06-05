@@ -178,9 +178,10 @@ export function FundModal({ open, onClose, walletAddress, onSuccess }: Props) {
           </div>
           <div
             style={{
-              fontSize: 19,
-              letterSpacing: 2,
+              fontSize: "clamp(15px, 4.6vw, 19px)",
+              letterSpacing: 1.5,
               fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
               marginBottom: 18,
             }}
           >
