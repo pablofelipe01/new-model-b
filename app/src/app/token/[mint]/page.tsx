@@ -297,10 +297,8 @@ function QuickStartGuide({ title, sub }: { title: string; sub: string }) {
         {sub}
       </p>
       <video
-        src="/Matiz_Quick_Start_Guide.mp4"
+        src="/Matiz_Quick_Start_Guide.mp4#t=0.1"
         controls
-        autoPlay
-        muted
         playsInline
         preload="metadata"
         style={{
