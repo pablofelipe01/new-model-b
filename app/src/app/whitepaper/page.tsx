@@ -762,12 +762,6 @@ export default function WhitepaperPage() {
             múltiples identidades para manipular el precio
           </li>
           <li>
-            <strong>Vesting del lanzador:</strong> en su versión completa, el
-            protocolo contempla que los tokens emitidos al lanzador tengan un
-            período de bloqueo on-chain, eliminando la posibilidad de
-            pump-and-dump coordinado
-          </li>
-          <li>
             <strong>Fee simétrico:</strong> el fee de plataforma aplica tanto a
             compras como a ventas, desincentivando operaciones de alta frecuencia
             sin valor económico real
