@@ -256,7 +256,7 @@ pub mod update_bonding;
             <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", marginBottom: 12 }}>{t.footCompany}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <a href="#promises" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footAbout}</a>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footBlog}</a>
+              <Link href="/whitepaper" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footWhitepaper}</Link>
               <a href="mailto:legal@matiz.community" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footContact}</a>
             </div>
           </div>
