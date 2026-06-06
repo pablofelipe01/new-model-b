@@ -398,8 +398,8 @@ export default function WhitepaperPage() {
             Google/email, sin seed phrase visible)
           </li>
           <li>
-            <strong>On/off ramp:</strong> Transak (conversión tarjeta de crédito
-            ↔ USDC, cubre LATAM)
+            <strong>On/off ramp:</strong> un proveedor de on-ramp verificado
+            (conversión tarjeta de crédito ↔ USDC, con cobertura LATAM)
           </li>
           <li>
             <strong>Frontend:</strong> Next.js 14 con App Router, Tailwind CSS,
@@ -567,15 +567,16 @@ export default function WhitepaperPage() {
             Privy crea la wallet embebida.
           </li>
           <li>
-            <strong>Compra:</strong> el comprador ingresa el monto en USD. Transak
-            convierte con tarjeta de crédito a USDC. La plataforma ejecuta buy_v1
+            <strong>Compra:</strong> el comprador ingresa el monto en USD. Un
+            sistema de on-ramp verificado convierte con tarjeta de crédito a
+            USDC. La plataforma ejecuta buy_v1
             automáticamente. El comprador recibe sus tokens y ve su portfolio en
             USD.
           </li>
           <li>
             <strong>Venta:</strong> el comprador puede vender en cualquier
-            momento. La bonding curve garantiza liquidez permanente. Transak
-            convierte el USDC a moneda local.
+            momento. La bonding curve garantiza liquidez permanente. Un sistema
+            de off-ramp verificado convierte el USDC a moneda local.
           </li>
         </ul>
       </section>
@@ -649,7 +650,7 @@ export default function WhitepaperPage() {
                 <td>No</td>
                 <td>No</td>
                 <td>No</td>
-                <td>Sí (Transak)</td>
+                <td>Sí (on-ramp verificado)</td>
               </tr>
               <tr>
                 <td>Reserva intocable</td>
@@ -755,8 +756,9 @@ export default function WhitepaperPage() {
         </p>
         <ul>
           <li>
-            <strong>KYC de plataforma:</strong> Transak requiere verificación de
-            identidad para on-ramps superiores a $150, elevando el costo de crear
+            <strong>KYC de plataforma:</strong> el proveedor de on-ramp
+            verificado requiere verificación de identidad para on-ramps
+            superiores a $150, elevando el costo de crear
             múltiples identidades para manipular el precio
           </li>
           <li>
