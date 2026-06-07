@@ -50,7 +50,7 @@ export default function HomePage() {
           <div className="hero-video-wrap">
             <video
               className="hero-video"
-              src="/Matiz__Own_Your_Community.mp4"
+              src="/Matiz__Building_an_Independent_Economy_for_Creators.mp4"
               controls
               playsInline
               preload="metadata"
