@@ -1,0 +1,42 @@
+---
+title: "Why we chose a bonding curve (and not a liquidity pool)"
+description: "Automatic liquidity isn't magic — it's an integral. Here's why Matiz uses a square-root curve and the problem it solves for creators."
+date: 2026-06-08
+author: "Pablo F. Acebedo"
+tags: ["protocol", "math"]
+draft: false
+---
+
+When a creator launches their token on Matiz, they don't need to round up
+investors to "provide liquidity" or rely on an exchange. Liquidity is already
+guaranteed by the math. But how?
+
+## The social-token problem
+
+Earlier categories of social tokens died for one simple reason: **nobody could
+sell**. If you buy a creator's token and want to exit tomorrow, you need someone
+else to buy it from you. Without a buyer, your token is practically worth zero —
+no matter how popular the creator still is.
+
+## The bonding curve as a market maker
+
+A bonding curve is an automated market maker: the token price is defined by a
+function of the circulating supply. At Matiz we use:
+
+> **P = S^0.5**
+
+where `P` is the price in USDC and `S` is the supply. Every purchase pushes the
+price up; every sale pushes it down. There's no order book and no counterparty:
+the curve **always** buys back from you.
+
+## The reserve always covers it
+
+The elegant part is that the reserve —the deposited USDC— is exactly the area
+under the curve:
+
+> **R = (2/3) · S^1.5**
+
+This guarantees, by mathematical construction, that if every holder sold at the
+same time, the reserve covers it exactly. It's not a promise: it's a property.
+
+Want the full derivation? It's in the [whitepaper](/whitepaper).
