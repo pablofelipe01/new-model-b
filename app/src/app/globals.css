@@ -401,6 +401,8 @@ em { font-style: italic; font-family: var(--font-serif, 'Fraunces', serif); font
 .blog-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0; }
 .blog-head { text-align: left; padding-bottom: 24px; margin-bottom: 8px; border-bottom: 0.5px solid var(--border-subtle); }
 .blog-body { margin-top: 8px; }
+.blog-body img { display: block; width: 100%; margin: 18px 0; border-radius: var(--radius-md); border: 0.5px solid var(--border-subtle); }
+.blog-body h3 { margin-top: 32px; }
 
 @media (max-width: 640px) {
   .blog-grid { grid-template-columns: 1fr; }
