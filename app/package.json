@@ -9,6 +9,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.0",
     "@coral-xyz/anchor": "^0.31.1",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@farcaster/mini-app-solana": "^2.0.0",

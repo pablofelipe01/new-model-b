@@ -2,6 +2,7 @@ import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
+import { ChatWidget } from "@/components/ChatWidget";
 import { Header } from "@/components/Header";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
@@ -70,6 +71,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <Header />
                   <main className="screen">{children}</main>
                   <InstallPrompt />
+                  <ChatWidget />
                 </div>
                 <Analytics />
               </SdkProvider>
