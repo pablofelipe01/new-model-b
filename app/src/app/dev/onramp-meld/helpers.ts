@@ -31,11 +31,45 @@ export const USDC_MINT: Record<Net, PublicKey> = {
   devnet: new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
 };
 
-/** Privy SolanaChain CAIP-2 identifiers. Fiat on-ramps deliver on mainnet. */
-export const SOLANA_CHAIN: Record<Net, `solana:${string}`> = {
-  mainnet: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
-  devnet: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+/**
+ * Meld crypto widget (direct integration — no SDK). The widget is a hosted page
+ * we point an iframe / new tab at, configured entirely via URL params. The
+ * public key is meant to be public (it rides in the URL); the sandbox vs live
+ * environment is determined by which key you use.
+ */
+export const MELD = {
+  publicKey: process.env.NEXT_PUBLIC_MELD_PUBLIC_KEY || "",
+  widgetUrl: process.env.NEXT_PUBLIC_MELD_WIDGET_URL || "https://meldcrypto.com/",
 };
+
+export interface MeldParams {
+  amount: number;
+  fiat: string; // USD | COP
+  dest: string; // destinationCurrencyCode, e.g. USDC_SOLANA
+  wallet: string; // destination wallet (locked)
+  country: string; // ISO-2, e.g. CO
+}
+
+/** Build the Meld widget URL with the wallet + country locked. */
+export function buildMeldUrl(p: MeldParams): string {
+  const u = new URL(MELD.widgetUrl);
+  const q = u.searchParams;
+  q.set("publicKey", MELD.publicKey);
+  q.set("destinationCurrencyCode", p.dest);
+  q.set("destinationCurrencyCodeLocked", "true");
+  q.set("walletAddress", p.wallet);
+  q.set("walletAddressLocked", "true"); // the user never sees/edits the address
+  q.set("sourceAmount", String(p.amount));
+  q.set("sourceCurrencyCode", p.fiat);
+  q.set("countryCode", p.country);
+  q.set("countryCodeLocked", "true");
+  return u.toString();
+}
+
+/** Hide the public key when displaying / logging a widget URL. */
+export function maskMeldUrl(url: string): string {
+  return url.replace(/(publicKey=)[^&]+/i, "$1•••");
+}
 
 /** USDC balance for an owner on a given network. null = query failed (not "0"). */
 export async function fetchUsdcBalance(
