@@ -30,8 +30,12 @@ import {
 } from "./helpers";
 
 const AMOUNTS = [10, 15, 20, 50];
-const COUNTRY = "CO";
+const DEFAULT_COUNTRY = "CO"; // real target; editable for sandbox combos
 const DEFAULT_DEST = "USDC_SOLANA"; // editable in the panel if Meld rejects it
+// Sandbox only supports a small subset (tokens: BTC/ETH/USDC, países: US/Europa,
+// fiat: USD/EUR). El combo real CO+USDC_SOLANA+COP NO existe en sandbox, así que
+// para validar la mecánica del widget se usa este preset soportado.
+const SANDBOX_PRESET = { country: "US", fiat: "USD" as const, dest: "BTC" };
 const POLL_INTERVAL_MS = 15_000;
 const POLL_DEADLINE_MS = 10 * 60_000; // 10 min → "entrega simulada"
 
@@ -85,6 +89,7 @@ function Bench({ owner }: { owner: string }) {
   const [amount, setAmount] = useState(15);
   const [fiat, setFiat] = useState<"USD" | "COP">("USD");
   const [env, setEnv] = useState<MeldEnv>("sandbox");
+  const [country, setCountry] = useState(DEFAULT_COUNTRY);
   const [dest, setDest] = useState(DEFAULT_DEST);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [balances, setBalances] = useState<Record<Net, number | null>>({
@@ -210,7 +215,7 @@ function Bench({ owner }: { owner: string }) {
     if (!MELD.publicKey) return;
     const id = crypto.randomUUID();
     const startBal = (await fetchUsdcBalance("mainnet", owner)) ?? 0;
-    const url = buildMeldUrl({ amount, fiat, dest, wallet: owner, country: COUNTRY, env });
+    const url = buildMeldUrl({ amount, fiat, dest, wallet: owner, country, env });
     const attempt: Attempt = {
       id,
       date: new Date().toISOString(),
@@ -226,7 +231,7 @@ function Bench({ owner }: { owner: string }) {
         {
           t: Date.now(),
           type: "meld.open",
-          payload: { amount, fiat, dest, country: COUNTRY, env, url: maskMeldUrl(url), startBal },
+          payload: { amount, fiat, dest, country, env, url: maskMeldUrl(url), startBal },
         },
       ],
     };
@@ -235,7 +240,7 @@ function Bench({ owner }: { owner: string }) {
     persistAttempts([attempt, ...loadAttempts()]);
     startPoller(id, startBal);
     setIframeUrl(url);
-  }, [amount, fiat, dest, env, owner, persistAttempts, startPoller]);
+  }, [amount, fiat, dest, country, env, owner, persistAttempts, startPoller]);
 
   function exportJson() {
     const blob = new Blob([JSON.stringify(attempts, null, 2)], {
@@ -297,8 +302,10 @@ function Bench({ owner }: { owner: string }) {
           <div className="review-card" style={{ marginBottom: 24 }}>
             <h2 className="h2" style={{ marginBottom: 4 }}>Widget de Meld</h2>
             <p className="muted-small" style={{ marginBottom: 16 }}>
-              Wallet pre-llenada y <strong>bloqueada</strong>, país forzado a{" "}
-              <strong>Colombia (CO)</strong>. El widget muestra qué proveedor enruta Meld.
+              Wallet pre-llenada y <strong>bloqueada</strong>; país, fiat y token configurables.
+              El combo real es <strong>CO + USDC_SOLANA + COP</strong>, pero <strong>sandbox solo
+              soporta US/Europa, BTC/ETH/USDC y USD/EUR</strong> — usa el botón
+              <strong> Preset Sandbox</strong> para validar la mecánica con un combo soportado.
             </p>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-end" }}>
@@ -333,10 +340,26 @@ function Bench({ owner }: { owner: string }) {
                 </div>
               </div>
               <div>
+                <label className="input-label">countryCode</label>
+                <input className="input" value={country}
+                  onChange={(e) => setCountry(e.target.value.toUpperCase())}
+                  style={{ minHeight: 0, padding: "8px 10px", width: 70, fontSize: 13 }} />
+              </div>
+              <div>
                 <label className="input-label">destinationCurrencyCode</label>
                 <input className="input" value={dest} onChange={(e) => setDest(e.target.value)}
                   style={{ minHeight: 0, padding: "8px 10px", width: 160, fontSize: 13 }} />
               </div>
+              <button type="button" className="btn btn-secondary"
+                onClick={() => {
+                  setEnv("sandbox");
+                  setCountry(SANDBOX_PRESET.country);
+                  setFiat(SANDBOX_PRESET.fiat);
+                  setDest(SANDBOX_PRESET.dest);
+                }}
+                style={{ minWidth: 140 }} title="US + USD + BTC en sandbox (combo soportado)">
+                Preset Sandbox
+              </button>
               <button type="button" className="btn btn-primary" onClick={launch} style={{ minWidth: 180 }}>
                 Iniciar funding con Meld
               </button>
