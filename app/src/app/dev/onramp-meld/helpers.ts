@@ -34,12 +34,25 @@ export const USDC_MINT: Record<Net, PublicKey> = {
 /**
  * Meld crypto widget (direct integration — no SDK). The widget is a hosted page
  * we point an iframe / new tab at, configured entirely via URL params. The
- * public key is meant to be public (it rides in the URL); the sandbox vs live
- * environment is determined by which key you use.
+ * public key is meant to be public (it rides in the URL).
+ *
+ * Meld has TWO hosts and the key must match the host:
+ *  - sandbox: https://sb.meldcrypto.com/  → Meld auto-enables test onramps
+ *  - production: https://meldcrypto.com/   → needs onramp credentials/webhooks
+ *    configured in the Meld dashboard, otherwise every quote ends in
+ *    "Onramp currently unavailable".
  */
+export type MeldEnv = "sandbox" | "production";
+
+export const MELD_HOSTS: Record<MeldEnv, string> = {
+  sandbox: "https://sb.meldcrypto.com/",
+  production: "https://meldcrypto.com/",
+};
+
 export const MELD = {
   publicKey: process.env.NEXT_PUBLIC_MELD_PUBLIC_KEY || "",
-  widgetUrl: process.env.NEXT_PUBLIC_MELD_WIDGET_URL || "https://meldcrypto.com/",
+  // Optional override; when unset we pick the host from the env toggle below.
+  widgetUrl: process.env.NEXT_PUBLIC_MELD_WIDGET_URL || "",
 };
 
 export interface MeldParams {
@@ -48,6 +61,7 @@ export interface MeldParams {
   dest: string; // destinationCurrencyCode, e.g. USDC_SOLANA
   wallet: string; // destination wallet (locked)
   country: string; // ISO-2, e.g. CO
+  env: MeldEnv; // sandbox | production — selects the Meld host
 }
 
 /**
@@ -62,7 +76,9 @@ export interface MeldParams {
  * https://docs.meld.io/docs/url-parameters
  */
 export function buildMeldUrl(p: MeldParams): string {
-  const u = new URL(MELD.widgetUrl);
+  // Explicit env var override wins; otherwise pick host from the env toggle.
+  const base = MELD.widgetUrl || MELD_HOSTS[p.env];
+  const u = new URL(base);
   const q = u.searchParams;
   q.set("publicKey", MELD.publicKey);
   q.set("destinationCurrencyCodeLocked", p.dest); // e.g. USDC_SOLANA — preset + frozen

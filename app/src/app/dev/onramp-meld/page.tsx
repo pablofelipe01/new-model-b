@@ -15,6 +15,7 @@ import {
   type Delivery,
   type GeoInfo,
   MELD,
+  type MeldEnv,
   type Net,
   RPC,
   buildMeldUrl,
@@ -83,6 +84,7 @@ function Bench({ owner }: { owner: string }) {
   const [checklist, setChecklist] = useState<Checklist | null>(null);
   const [amount, setAmount] = useState(15);
   const [fiat, setFiat] = useState<"USD" | "COP">("USD");
+  const [env, setEnv] = useState<MeldEnv>("sandbox");
   const [dest, setDest] = useState(DEFAULT_DEST);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [balances, setBalances] = useState<Record<Net, number | null>>({
@@ -208,7 +210,7 @@ function Bench({ owner }: { owner: string }) {
     if (!MELD.publicKey) return;
     const id = crypto.randomUUID();
     const startBal = (await fetchUsdcBalance("mainnet", owner)) ?? 0;
-    const url = buildMeldUrl({ amount, fiat, dest, wallet: owner, country: COUNTRY });
+    const url = buildMeldUrl({ amount, fiat, dest, wallet: owner, country: COUNTRY, env });
     const attempt: Attempt = {
       id,
       date: new Date().toISOString(),
@@ -224,7 +226,7 @@ function Bench({ owner }: { owner: string }) {
         {
           t: Date.now(),
           type: "meld.open",
-          payload: { amount, fiat, dest, country: COUNTRY, url: maskMeldUrl(url), startBal },
+          payload: { amount, fiat, dest, country: COUNTRY, env, url: maskMeldUrl(url), startBal },
         },
       ],
     };
@@ -233,7 +235,7 @@ function Bench({ owner }: { owner: string }) {
     persistAttempts([attempt, ...loadAttempts()]);
     startPoller(id, startBal);
     setIframeUrl(url);
-  }, [amount, fiat, dest, owner, persistAttempts, startPoller]);
+  }, [amount, fiat, dest, env, owner, persistAttempts, startPoller]);
 
   function exportJson() {
     const blob = new Blob([JSON.stringify(attempts, null, 2)], {
@@ -321,6 +323,16 @@ function Bench({ owner }: { owner: string }) {
                 </div>
               </div>
               <div>
+                <label className="input-label">Entorno Meld</label>
+                <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                  {(["sandbox", "production"] as const).map((e) => (
+                    <button key={e} type="button" onClick={() => setEnv(e)}
+                      className={`btn ${env === e ? "btn-primary" : "btn-secondary"}`}
+                      style={{ padding: "8px 14px" }}>{e === "sandbox" ? "Sandbox" : "Producción"}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
                 <label className="input-label">destinationCurrencyCode</label>
                 <input className="input" value={dest} onChange={(e) => setDest(e.target.value)}
                   style={{ minHeight: 0, padding: "8px 10px", width: 160, fontSize: 13 }} />
@@ -331,9 +343,12 @@ function Bench({ owner }: { owner: string }) {
             </div>
 
             <p className="muted-small" style={{ marginTop: 10 }}>
-              Si Meld rechaza <code>{dest}</code>, prueba otro código (p. ej. <code>SOL</code>,{" "}
+              <strong>Entorno:</strong> en <code>Sandbox</code> (sb.meldcrypto.com) Meld auto-habilita
+              onramps de prueba; si en <code>Producción</code> (meldcrypto.com) sale{" "}
+              <em>"Onramp currently unavailable"</em>, faltan credenciales/webhooks de proveedor en tu
+              dashboard de Meld. Si rechaza <code>{dest}</code>, prueba otro código (p. ej. <code>SOL</code>,{" "}
               <code>USDC_SOL</code>) — se documenta aquí, no falla mudo. <code>sourceCurrencyCode={fiat}</code>{" "}
-              es lo que pedimos como moneda fiat; si el widget muestra USD igual, anótalo en el checklist.
+              es la moneda fiat solicitada.
             </p>
 
             {iframeUrl && (
