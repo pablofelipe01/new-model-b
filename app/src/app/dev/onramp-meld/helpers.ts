@@ -50,19 +50,26 @@ export interface MeldParams {
   country: string; // ISO-2, e.g. CO
 }
 
-/** Build the Meld widget URL with the wallet + country locked. */
+/**
+ * Build the Meld widget URL with the destination currency, wallet and country
+ * locked.
+ *
+ * IMPORTANT (Meld quirk): the `*Locked` params take the VALUE itself, not
+ * `true` (e.g. `destinationCurrencyCodeLocked=USDC_SOLANA`,
+ * `walletAddressLocked=<addr>`). A locked param both presets AND freezes the
+ * field, so we don't also send the unlocked version. Sending `...Locked=true`
+ * is silently ignored and Meld falls back to its default (BTC). See
+ * https://docs.meld.io/docs/url-parameters
+ */
 export function buildMeldUrl(p: MeldParams): string {
   const u = new URL(MELD.widgetUrl);
   const q = u.searchParams;
   q.set("publicKey", MELD.publicKey);
-  q.set("destinationCurrencyCode", p.dest);
-  q.set("destinationCurrencyCodeLocked", "true");
-  q.set("walletAddress", p.wallet);
-  q.set("walletAddressLocked", "true"); // the user never sees/edits the address
+  q.set("destinationCurrencyCodeLocked", p.dest); // e.g. USDC_SOLANA — preset + frozen
+  q.set("walletAddressLocked", p.wallet); // the user never sees/edits the address
+  q.set("countryCodeLocked", p.country); // forced to CO
   q.set("sourceAmount", String(p.amount));
   q.set("sourceCurrencyCode", p.fiat);
-  q.set("countryCode", p.country);
-  q.set("countryCodeLocked", "true");
   return u.toString();
 }
 
