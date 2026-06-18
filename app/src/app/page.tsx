@@ -247,6 +247,7 @@ pub mod update_bonding;
             <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", marginBottom: 12 }}>{t.footProduct}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <Link href="/tokens" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footExplore}</Link>
+              <Link href="/simulaciones" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footSimulations}</Link>
               <a href="#how-it-works" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footHowItWorks}</a>
               <a href="#faq" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footFaq}</a>
               <a href="#promises" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footPricing}</a>
