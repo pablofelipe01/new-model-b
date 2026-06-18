@@ -40,16 +40,18 @@ export function LaunchForm() {
   const [uploading, setUploading] = useState(false);
   const [decimals] = useState(9);
 
-  // Step 2
-  const [selectedPreset, setSelectedPreset] = useState(PRESETS[0]);
-  const [startingPrice, setStartingPrice] = useState(0);
-  const [growthRate, setGrowthRate] = useState(1);
+  // Step 2 — curva fija a "raíz cuadrada" con valores por defecto.
+  // El creador solo edita la comisión; los demás parámetros se ocultan
+  // para no confundir.
+  const selectedPreset = PRESETS[0]; // sqrt
+  const startingPrice = 1; // precio inicial 1 a 1
+  const growthRate = 0.5; // tasa de crecimiento
   const [launcherFeePct, setLauncherFeePct] = useState(0);
 
   const curveParams = useMemo<CurveParams>(() => {
     const base = CURVES[selectedPreset.key];
     return {
-      c: selectedPreset.key === "quadratic" ? growthRate : selectedPreset.key === "sqrt" ? growthRate : growthRate,
+      c: growthRate,
       b: startingPrice,
       pow: base.pow,
       frac: base.frac,
@@ -332,63 +334,7 @@ export function LaunchForm() {
 
           {step === 2 && (
             <div className="form">
-              <label className="input-label">{lang === "es" ? "Tipo de curva" : "Curve type"}</label>
-              <div className="slope-row">
-                {PRESETS.map((p) => (
-                  <button
-                    key={p.key}
-                    type="button"
-                    onClick={() => setSelectedPreset(p)}
-                    className={`slope-opt ${selectedPreset.key === p.key ? "on" : ""}`}
-                  >
-                    <div className="slope-label" style={{ textTransform: "capitalize" }}>
-                      {p.key === "sqrt"
-                        ? lang === "es" ? "Raíz cuadrada" : "Square root"
-                        : p.key === "linear"
-                          ? "Linear"
-                          : lang === "es" ? "Cuadrática" : "Quadratic"}
-                    </div>
-                    <div className="slope-sub">
-                      {p.key === "sqrt"
-                        ? lang === "es" ? "Crece despacio, luego rápido" : "Grows slowly, then faster"
-                        : p.key === "linear"
-                          ? lang === "es" ? "Crece a ritmo constante" : "Grows at constant rate"
-                          : lang === "es" ? "Crece muy rápido" : "Grows very fast"}
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <label className="input-label">{t.launchStartPrice} ($)</label>
-              <input
-                type="number"
-                step="0.001"
-                min={0}
-                value={startingPrice}
-                onChange={(e) => setStartingPrice(Number(e.target.value))}
-                className="input"
-                placeholder="0"
-              />
-
-              <label className="input-label" style={{ marginTop: 12 }}>
-                {lang === "es" ? "Tasa de crecimiento" : "Growth rate"}
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                min={0}
-                value={growthRate}
-                onChange={(e) => setGrowthRate(Number(e.target.value))}
-                className="input"
-                placeholder="1"
-              />
-              <p className="help">
-                {lang === "es"
-                  ? "Mayor = el precio sube más rápido con la demanda."
-                  : "Higher = price rises faster with demand."}
-              </p>
-
-              <label className="input-label" style={{ marginTop: 12 }}>
+              <label className="input-label">
                 {lang === "es" ? "Tu comisión %" : "Your fee %"} (0–{LAUNCHER_FEE_BPS_MAX / 100})
               </label>
               <input

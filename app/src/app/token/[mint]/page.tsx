@@ -15,7 +15,6 @@ import { SwapPanel } from "@/components/SwapPanel";
 import { WalletButton } from "@/components/WalletButton";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
-import { useBondedPrice } from "@/hooks/useBondedPrice";
 import { useTokenBonding } from "@/hooks/useTokenBonding";
 import { fetchTokenMetadata } from "@/hooks/useTokenBondings";
 import { TOKEN_BONDING_PROGRAM_ID } from "@/lib/constants";
@@ -33,7 +32,6 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
   }, [mintPk]);
 
   const { tokenBonding, loading } = useTokenBonding(bondingPk ?? undefined);
-  const { price } = useBondedPrice(bondingPk ?? undefined);
   const { sdk, ready } = useSdk();
   const [fundOpen, setFundOpen] = useState(false);
 
@@ -167,12 +165,6 @@ export default function TokenPage({ params }: { params: { mint: string } }) {
 
       {/* Price strip */}
       <div className="price-strip">
-        <div className="ps-item">
-          <div className="label">{t.price}</div>
-          <div className="numeric-l">
-            ${price !== undefined ? formatNumber(price, 4) : "—"}
-          </div>
-        </div>
         <div className="ps-item">
           <div className="label">{t.supply}</div>
           <div className="numeric-m">{formatNumber(supplyHuman, 2)}</div>
