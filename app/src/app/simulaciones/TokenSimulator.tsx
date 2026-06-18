@@ -27,20 +27,21 @@ const PANIC_STEP = 28;
 const PLATFORM_FEE = 0.005;
 
 type Params = {
-  demand: number; // USDC/paso de compra orgánica
+  demand: number; // USDC/paso de compra orgánica de la comunidad
   sellPct: number; // % del supply vendido por paso
   whaleSize: number; // USDC que entra la ballena (0 = sin ballena)
-  creatorSpend: number; // USDC/paso que el creador invierte para premiar fans
+  creatorSpend: number; // USDC/paso que el creador reinvierte comprando (y conservando) su token
+  creatorFeePct: number; // comisión del creador (% del volumen) → su propia wallet
   panicPct: number; // % del supply vendido de golpe en el pánico (0 = sin pánico)
 };
 
 const PRESETS: Record<string, Params> = {
-  normal: { demand: 600, sellPct: 8, whaleSize: 0, creatorSpend: 0, panicPct: 0 },
-  optimista: { demand: 1400, sellPct: 4, whaleSize: 0, creatorSpend: 300, panicPct: 0 },
-  pesimista: { demand: 300, sellPct: 14, whaleSize: 12000, creatorSpend: 0, panicPct: 45 },
+  normal: { demand: 600, sellPct: 8, whaleSize: 0, creatorSpend: 0, creatorFeePct: 2, panicPct: 0 },
+  optimista: { demand: 1400, sellPct: 4, whaleSize: 0, creatorSpend: 300, creatorFeePct: 2, panicPct: 0 },
+  pesimista: { demand: 300, sellPct: 14, whaleSize: 12000, creatorSpend: 0, creatorFeePct: 2, panicPct: 45 },
 };
 
-type ActorKey = "fans" | "mercado" | "ballena" | "creador";
+type ActorKey = "comunidad" | "ballena" | "creador";
 type Actor = { inv: number; real: number; tok: number };
 
 type Sim = {
@@ -55,6 +56,7 @@ type Sim = {
   reserve: number;
   volTotal: number;
   fees: number;
+  creatorFee: number;
   pnl: Record<ActorKey, number>;
   actors: Record<ActorKey, Actor>;
 };
@@ -63,8 +65,7 @@ function simulate(p: Params): Sim {
   let S = 0;
   let volTotal = 0;
   const actors: Record<ActorKey, Actor> = {
-    fans: { inv: 0, real: 0, tok: 0 },
-    mercado: { inv: 0, real: 0, tok: 0 },
+    comunidad: { inv: 0, real: 0, tok: 0 },
     ballena: { inv: 0, real: 0, tok: 0 },
     creador: { inv: 0, real: 0, tok: 0 },
   };
@@ -92,8 +93,8 @@ function simulate(p: Params): Sim {
   };
 
   for (let t = 0; t < N; t++) {
-    buy("mercado", p.demand);
-    sell("mercado", S * (p.sellPct / 100));
+    buy("comunidad", p.demand);
+    sell("comunidad", S * (p.sellPct / 100));
 
     if (p.whaleSize > 0 && t === WHALE_IN) {
       buy("ballena", p.whaleSize);
@@ -105,16 +106,14 @@ function simulate(p: Params): Sim {
     }
 
     if (p.creatorSpend > 0) {
-      // El creador compra y regala los tokens a sus fans (fans: costo 0).
-      const tok = buyBaseAmount(CURVE, S, p.creatorSpend);
-      S += tok;
-      actors.creador.inv += p.creatorSpend;
-      actors.fans.tok += tok;
-      volTotal += p.creatorSpend;
+      // El creador compra su propio token y LO CONSERVA (es su activo). El
+      // efecto de "premiar a fans" es que esta compra sube el precio para
+      // toda la comunidad que ya tiene tokens.
+      buy("creador", p.creatorSpend);
     }
 
     if (p.panicPct > 0 && t === PANIC_STEP) {
-      sell("mercado", Math.min(S * (p.panicPct / 100), actors.mercado.tok));
+      sell("comunidad", Math.min(S * (p.panicPct / 100), actors.comunidad.tok));
       markers.push({ t, type: "panic" });
     }
 
@@ -124,10 +123,17 @@ function simulate(p: Params): Sim {
   const finalP = currentPrice(CURVE, S);
   const startP = currentPrice(CURVE, 0);
   const peakP = Math.max(...prices, startP);
+
+  // La comisión del creador (su %) se cobra sobre TODO el volumen y cae en su
+  // wallet — es ingreso real que suma a su resultado.
+  const creatorFee = volTotal * (p.creatorFeePct / 100);
+
   const pnl = {} as Record<ActorKey, number>;
   (Object.keys(actors) as ActorKey[]).forEach((k) => {
     pnl[k] = actors[k].real + actors[k].tok * finalP - actors[k].inv;
   });
+  // El creador además conserva sus tokens (ya contados arriba) y cobra fees.
+  pnl.creador += creatorFee;
 
   return {
     prices,
@@ -141,6 +147,7 @@ function simulate(p: Params): Sim {
     reserve: reserveForSupply(CURVE, S),
     volTotal,
     fees: volTotal * PLATFORM_FEE,
+    creatorFee,
     pnl,
     actors,
   };
@@ -244,10 +251,9 @@ function curveChart(sim: Sim): string {
 
 function pnlChart(sim: Sim): string {
   const items: [string, number, boolean][] = [
-    ["Fans", sim.pnl.fans, sim.actors.fans.tok > 1e-6],
-    ["Mercado", sim.pnl.mercado, sim.actors.mercado.inv > 0],
+    ["Comunidad (fans)", sim.pnl.comunidad, sim.actors.comunidad.inv > 0],
     ["Ballena", sim.pnl.ballena, sim.actors.ballena.inv > 0],
-    ["Creador", sim.pnl.creador, sim.actors.creador.inv > 0],
+    ["Creador", sim.pnl.creador, sim.actors.creador.inv > 0 || sim.creatorFee > 0],
   ];
   const W = 720,
     H = 240,
@@ -300,9 +306,15 @@ function narrative(sim: Sim, p: Params): string[] {
   }
   if (p.creatorSpend > 0) {
     out.push(
-      `El creador invirtió ${money(sim.actors.creador.inv)} para premiar a sus fans, que terminaron con ${money(sim.actors.fans.tok * sim.finalP)} en tokens.`,
+      `El creador reinvirtió ${money(sim.actors.creador.inv)} comprando su propio token —que conserva (vale ${money(sim.actors.creador.tok * sim.finalP)})— y eso empujó el precio para toda la comunidad.`,
     );
   }
+  if (sim.creatorFee > 0) {
+    out.push(
+      `Además cobró ${money(sim.creatorFee)} de comisión (${p.creatorFeePct}% del volumen): resultado neto del creador ${signMoney(sim.pnl.creador)}.`,
+    );
+  }
+  out.push(`La comunidad terminó con ${signMoney(sim.pnl.comunidad)} sobre lo que invirtió.`);
   if (p.panicPct > 0 && drop > 1) {
     out.push(`El pánico (P${PANIC_STEP + 1}) tumbó el precio ${drop.toFixed(0)}% desde el pico.`);
   }
@@ -333,7 +345,8 @@ export function TokenSimulator() {
     { k: "demand", label: "Compradores entran", min: 0, max: 3000, step: 50, fmt: (v) => `$${v}/paso` },
     { k: "sellPct", label: "Vendedores salen", min: 0, max: 25, step: 1, fmt: (v) => `${v}%/paso` },
     { k: "whaleSize", label: "Ballena (pump & dump)", min: 0, max: 30000, step: 500, fmt: (v) => (v === 0 ? "sin ballena" : `$${(v / 1000).toFixed(1)}K`) },
-    { k: "creatorSpend", label: "Creador premia a fans", min: 0, max: 800, step: 25, fmt: (v) => (v === 0 ? "off" : `$${v}/paso`) },
+    { k: "creatorSpend", label: "Creador reinvierte (compra y conserva)", min: 0, max: 800, step: 25, fmt: (v) => (v === 0 ? "off" : `$${v}/paso`) },
+    { k: "creatorFeePct", label: "Comisión del creador", min: 0, max: 5, step: 0.5, fmt: (v) => `${v}% del volumen` },
     { k: "panicPct", label: "Pánico — venta masiva", min: 0, max: 80, step: 5, fmt: (v) => (v === 0 ? "off" : `${v}% del supply`) },
   ];
 
