@@ -328,6 +328,25 @@ export function MarketResearchContent() {
           </div>
         </section>
 
+        {/* VIDEO */}
+        <section>
+          <div className="eyebrow">{es ? "En video" : "On video"}</div>
+          <h2>{es ? "La autopsia de SocialFi: diseñando el token de creador de 2.ª generación" : "The autopsy of SocialFi: architecting the Gen-2 creator token"}</h2>
+          <p className="sec-sub">{es ? "Por qué fracasó la primera ola de social tokens y cómo Matiz corrige sus causas de raíz." : "Why the first wave of social tokens failed and how Matiz fixes its root causes."}</p>
+          <figure style={{ margin: "8px 0 0" }}>
+            <video
+              src="/The_Autopsy_of_SocialFi.mp4#t=0.1"
+              controls
+              playsInline
+              preload="metadata"
+              style={{ width: "100%", borderRadius: 16, border: "1px solid var(--line)", display: "block", background: "#0A0C1C" }}
+            />
+            <figcaption style={{ fontSize: 12.5, color: "var(--muted2)", textAlign: "center", marginTop: 10 }}>
+              {es ? "Análisis en video · Matiz Protocol" : "Video analysis · Matiz Protocol"}
+            </figcaption>
+          </figure>
+        </section>
+
         {/* DIFFERENTIATION */}
         <section>
           <div className="eyebrow">{es ? "Diferenciación" : "Differentiation"}</div>
