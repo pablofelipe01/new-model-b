@@ -33,7 +33,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     launchYourEconomy: "Lanza tu economía",
     seeWhoAlready: "Explora quiénes ya lo hicieron",
     heroMeta1: "3 pasos para lanzar",
-    heroMeta2: "Sin cripto",
+    heroMeta2: "Con dólares digitales",
     heroMeta3: "Entras con Google",
 
     // Promises
@@ -93,7 +93,7 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // FAQ
     faqHeader: "Preguntas frecuentes",
-    faq1q: "¿Necesito saber de cripto?",
+    faq1q: "¿Necesito saber de tecnología?",
     faq1a: "No. Entras con Google, pagas con tarjeta (próximamente), y todo pasa debajo del capó. Si nunca quieres ver una wallet, no la ves.",
     faq2q: "¿Es un Ponzi o una pirámide?",
     faq2a: "No. En una pirámide el dinero nuevo paga al viejo y cuando nadie entra, colapsa. Aquí cada token está respaldado por una reserva real. Si nadie compra más, el precio queda quieto — no se cae. Y siempre puedes vender al precio de la curva.",
@@ -224,7 +224,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     launchYourEconomy: "Launch your economy",
     seeWhoAlready: "See who already did",
     heroMeta1: "3 steps to launch",
-    heroMeta2: "No crypto required",
+    heroMeta2: "Just digital dollars",
     heroMeta3: "Sign in with Google",
 
     // Promises
@@ -284,7 +284,7 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // FAQ
     faqHeader: "Frequent questions",
-    faq1q: "Do I need to know crypto?",
+    faq1q: "Do I need to be tech-savvy?",
     faq1a: "No. You sign in with Google, pay with a card (coming soon), and everything happens under the hood. If you never want to see a wallet, you don't.",
     faq2q: "Is this a Ponzi scheme?",
     faq2a: "No. In a pyramid, new money pays old money, and when no one joins, it collapses. Here every token is backed by a real reserve. If no one else buys, the price stays flat — it doesn't crash. And you can always sell at the curve's price.",

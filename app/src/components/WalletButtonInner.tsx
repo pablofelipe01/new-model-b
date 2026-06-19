@@ -110,8 +110,8 @@ export default function WalletButtonInner() {
               </div>
               <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
                 {lang === "es"
-                  ? "No necesitas saber de cripto. Te creamos una billetera automáticamente."
-                  : "No crypto knowledge needed. We create a wallet for you automatically."}
+                  ? "No necesitas saber de tecnología. Te creamos una billetera automáticamente."
+                  : "No technical knowledge needed. We create a wallet for you automatically."}
               </div>
             </button>
 
