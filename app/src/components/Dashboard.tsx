@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Sparkline } from "@/components/matiz/Sparkline";
+import { ActivityFeed, type TokenInfo } from "@/components/ActivityFeed";
 import { FundModal } from "@/components/FundModal";
 import { SendModal } from "@/components/SendModal";
 import { ShareToken } from "@/components/ShareToken";
@@ -35,6 +36,16 @@ export function Dashboard() {
   }
 
   const totalValue = held.reduce((a, r) => a + r.valueUsdc, 0) + usdcBalance;
+
+  // mint → token display info, so the activity feed can show symbols + avatars.
+  const tokenInfo: Record<string, TokenInfo> = {};
+  for (const r of [...held, ...launched]) {
+    tokenInfo[r.account.targetMint.toBase58()] = {
+      symbol: r.tokenSymbol,
+      name: r.tokenName,
+      image: r.tokenImage,
+    };
+  }
 
   return (
     <div className="dashboard">
@@ -138,19 +149,12 @@ export function Dashboard() {
           )}
         </section>
 
-        {/* Activity placeholder */}
+        {/* Recent activity */}
         <section>
           <div className="section-sub-head">
             <h2 className="h2">{t.recentActivity}</h2>
           </div>
-          <div
-            className="stat-card"
-            style={{ textAlign: "center", padding: 32 }}
-          >
-            <p className="muted-small">
-              {lang === "es" ? "Próximamente" : "Coming soon"}
-            </p>
-          </div>
+          <ActivityFeed tokenInfo={tokenInfo} />
         </section>
       </div>
 
