@@ -52,7 +52,13 @@ function Row({ row, tokenInfo, es }: { row: ActivityRow; tokenInfo: Record<strin
       title = es ? `Recibiste ${tokenAmt} ${sym}` : `Received ${tokenAmt} ${sym}`;
       break;
     case "sent":
-      title = es ? `Enviaste ${tokenAmt} ${sym}` : `Sent ${tokenAmt} ${sym}`;
+      title = row.baseMint
+        ? es
+          ? `Enviaste $${baseAmt}`
+          : `Sent $${baseAmt}`
+        : es
+          ? `Enviaste ${tokenAmt} ${sym}`
+          : `Sent ${tokenAmt} ${sym}`;
       break;
     case "topup":
     default:
