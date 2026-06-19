@@ -259,7 +259,7 @@ pub mod update_bonding;
               <a href="#promises" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footAbout}</a>
               <Link href="/blog" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footBlog}</Link>
               <Link href="/whitepaper" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footWhitepaper}</Link>
-              <a href="/investigacion-mercado.html" target="_blank" rel="noopener noreferrer" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footMarketResearch}</a>
+              <Link href="/investigacion-mercado" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footMarketResearch}</Link>
               <a href="mailto:legal@matiz.community" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t.footContact}</a>
             </div>
           </div>
