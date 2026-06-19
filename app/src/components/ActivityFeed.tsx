@@ -109,7 +109,7 @@ function Row({ row, tokenInfo, es }: { row: ActivityRow; tokenInfo: Record<strin
 export function ActivityFeed({ tokenInfo }: { tokenInfo: Record<string, TokenInfo> }) {
   const { lang } = useLanguage();
   const es = lang === "es";
-  const { activity, loading } = useActivity();
+  const { activity, loading, error } = useActivity();
 
   if (loading && activity.length === 0) {
     return (
@@ -120,11 +120,23 @@ export function ActivityFeed({ tokenInfo }: { tokenInfo: Record<string, TokenInf
   }
 
   if (activity.length === 0) {
+    const configError = error === "helius-key-missing";
     return (
       <div className="stat-card" style={{ textAlign: "center", padding: 32 }}>
         <p className="muted-small">
-          {es ? "Aún no hay movimientos. Tu primera compra aparecerá aquí." : "No moves yet. Your first buy will show up here."}
+          {configError
+            ? es
+              ? "Servicio de actividad no configurado (falta HELIUS_API_KEY en este entorno)."
+              : "Activity service not configured (HELIUS_API_KEY missing in this environment)."
+            : es
+              ? "Aún no hay movimientos. Tu primera compra aparecerá aquí."
+              : "No moves yet. Your first buy will show up here."}
         </p>
+        {error && !configError && (
+          <p className="muted-small" style={{ marginTop: 8, opacity: 0.6, fontSize: 11 }}>
+            {error}
+          </p>
+        )}
       </div>
     );
   }
