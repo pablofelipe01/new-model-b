@@ -109,7 +109,7 @@ function Row({ row, tokenInfo, es }: { row: ActivityRow; tokenInfo: Record<strin
 export function ActivityFeed({ tokenInfo }: { tokenInfo: Record<string, TokenInfo> }) {
   const { lang } = useLanguage();
   const es = lang === "es";
-  const { activity, loading, error } = useActivity();
+  const { activity, loading, error } = useActivity(50);
 
   if (loading && activity.length === 0) {
     return (
@@ -142,10 +142,15 @@ export function ActivityFeed({ tokenInfo }: { tokenInfo: Record<string, TokenInf
   }
 
   return (
-    <div className="holdings-list">
-      {activity.map((row) => (
-        <Row key={row.signature} row={row} tokenInfo={tokenInfo} es={es} />
-      ))}
+    <div
+      className="stat-card"
+      style={{ padding: 8, maxHeight: 440, overflowY: "auto", overscrollBehavior: "contain" }}
+    >
+      <div className="holdings-list">
+        {activity.map((row) => (
+          <Row key={row.signature} row={row} tokenInfo={tokenInfo} es={es} />
+        ))}
+      </div>
     </div>
   );
 }
