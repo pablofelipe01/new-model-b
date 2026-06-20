@@ -5,14 +5,22 @@ import { useState } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { FinancialDashboard } from "./FinancialDashboard";
-import { TokenSimulator } from "./TokenSimulator";
+import { type InjectedPreset, type Params, TokenSimulator } from "./TokenSimulator";
+import { UseCases } from "./UseCases";
 
-type Tab = "modelo" | "token";
+type Tab = "modelo" | "token" | "casos";
 
 export function SimulacionesContent() {
   const { lang } = useLanguage();
   const en = lang === "en";
   const [tab, setTab] = useState<Tab>("token");
+  const [injected, setInjected] = useState<InjectedPreset | undefined>(undefined);
+
+  // Load a use-case preset into the simulator and jump to its tab.
+  function playCase(params: Params, label: string) {
+    setInjected((prev) => ({ params, label, nonce: (prev?.nonce ?? 0) + 1 }));
+    setTab("token");
+  }
 
   const tabs: { id: Tab; label: string; desc: string }[] = [
     {
@@ -21,6 +29,13 @@ export function SimulacionesContent() {
       desc: en
         ? "Play out what happens to a token's price as buyers enter and exit, a whale pumps & dumps, the creator rewards fans, or panic hits."
         : "Juega qué le pasa al precio de un token cuando entran y salen compradores, una ballena infla y vende, el creador premia a sus fans o llega el pánico.",
+    },
+    {
+      id: "casos",
+      label: en ? "Use cases" : "Casos de uso",
+      desc: en
+        ? "Three sibling stories — artist, musician, athlete — of the same honest engine. The bigger the community, the flatter the curve: proof it can't be pumped."
+        : "Tres historias hermanas — artista, música, deportista — del mismo motor honesto. A mayor comunidad, más plana la curva: la prueba de que no se puede bombear.",
     },
     {
       id: "modelo",
@@ -75,7 +90,9 @@ export function SimulacionesContent() {
         {cur.desc}
       </p>
 
-      {tab === "token" ? <TokenSimulator /> : <FinancialDashboard />}
+      {tab === "token" && <TokenSimulator injected={injected} />}
+      {tab === "casos" && <UseCases onPlay={playCase} />}
+      {tab === "modelo" && <FinancialDashboard />}
     </div>
   );
 }

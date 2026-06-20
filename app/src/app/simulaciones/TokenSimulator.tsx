@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   buyBaseAmount,
   buyTargetAmount,
@@ -26,7 +26,7 @@ const WHALE_OUT = 19;
 const PANIC_STEP = 28;
 const PLATFORM_FEE = 0.005;
 
-type Params = {
+export type Params = {
   demand: number; // USDC/paso de compra orgánica de la comunidad
   sellPct: number; // % del supply vendido por paso
   whaleSize: number; // USDC que entra la ballena (0 = sin ballena)
@@ -34,6 +34,9 @@ type Params = {
   creatorFeePct: number; // comisión del creador (% del volumen) → su propia wallet
   panicPct: number; // % del supply vendido de golpe en el pánico (0 = sin pánico)
 };
+
+/** A preset to load into the simulator from outside (e.g. a use-case card). */
+export type InjectedPreset = { params: Params; label: string; nonce: number };
 
 const PRESETS: Record<string, Params> = {
   normal: { demand: 600, sellPct: 8, whaleSize: 0, creatorSpend: 0, creatorFeePct: 2, panicPct: 0 },
@@ -325,10 +328,19 @@ function narrative(sim: Sim, p: Params): string[] {
 }
 
 /* ---------- component ---------- */
-export function TokenSimulator() {
-  const [p, setP] = useState<Params>(PRESETS.normal);
-  const [active, setActive] = useState<string>("normal");
+export function TokenSimulator({ injected }: { injected?: InjectedPreset }) {
+  const [p, setP] = useState<Params>(injected?.params ?? PRESETS.normal);
+  const [active, setActive] = useState<string>(injected?.label ?? "normal");
   const sim = useMemo(() => simulate(p), [p]);
+
+  // Load a preset pushed from a use-case card (re-fires on each nonce change).
+  useEffect(() => {
+    if (injected) {
+      setP(injected.params);
+      setActive(injected.label);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [injected?.nonce]);
 
   const set = (k: keyof Params, v: number) => {
     setP((prev) => ({ ...prev, [k]: v }));
