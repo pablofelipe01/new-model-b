@@ -44,7 +44,7 @@ export function LaunchForm() {
   // El creador solo edita la comisión; los demás parámetros se ocultan
   // para no confundir.
   const selectedPreset = PRESETS[0]; // sqrt
-  const startingPrice = 1; // precio inicial 1 a 1
+  const startingPrice = 0.1; // precio inicial: $0.10 USDC
   const growthRate = 0.5; // tasa de crecimiento
   const [launcherFeePct, setLauncherFeePct] = useState(0);
 

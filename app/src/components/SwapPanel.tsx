@@ -36,32 +36,45 @@ export function SwapPanel({
   const { t, lang } = useLanguage();
 
   const targetFactor = Math.pow(10, targetDecimals);
-  void baseDecimals;
+  const baseFactor = Math.pow(10, baseDecimals);
 
+  // On BUY the input is the USDC amount to spend; on SELL it's the token
+  // quantity to sell.
   const numericHuman = Number(amount) || 0;
 
   const quote = useMemo(() => {
-    if (numericHuman <= 0) return { baseHuman: 0, perTokenHuman: 0 };
-    let baseHuman: number;
+    if (numericHuman <= 0) return { tokensHuman: 0, baseHuman: 0, perTokenHuman: 0 };
     if (mode === "buy") {
-      baseHuman = buyTargetAmount(curve, currentSupply, numericHuman);
-    } else {
-      baseHuman = buyTargetAmount(
-        curve,
-        Math.max(currentSupply - numericHuman, 0),
-        numericHuman,
-      );
+      // input = USDC to spend → how many tokens it buys.
+      const tokensHuman = buyBaseAmount(curve, currentSupply, numericHuman);
+      return {
+        tokensHuman,
+        baseHuman: numericHuman,
+        perTokenHuman: tokensHuman > 0 ? numericHuman / tokensHuman : 0,
+      };
     }
-    return { baseHuman, perTokenHuman: baseHuman / numericHuman };
+    // input = tokens to sell → how much USDC you get back.
+    const baseHuman = buyTargetAmount(
+      curve,
+      Math.max(currentSupply - numericHuman, 0),
+      numericHuman,
+    );
+    return {
+      tokensHuman: numericHuman,
+      baseHuman,
+      perTokenHuman: numericHuman > 0 ? baseHuman / numericHuman : 0,
+    };
   }, [mode, numericHuman, curve, currentSupply]);
 
   async function onSubmit() {
     if (numericHuman <= 0) return;
-    const amountBn = new BN(Math.floor(numericHuman * targetFactor));
     if (mode === "buy") {
-      await swap.buy(amountBn, "tokens", slippage);
+      // Spend exactly this much USDC (base units).
+      const baseAmountBn = new BN(Math.floor(numericHuman * baseFactor));
+      await swap.buy(baseAmountBn, "base", slippage);
     } else {
-      await swap.sell(amountBn, slippage);
+      const tokenAmountBn = new BN(Math.floor(numericHuman * targetFactor));
+      await swap.sell(tokenAmountBn, slippage);
     }
   }
 
@@ -81,9 +94,11 @@ export function SwapPanel({
         ))}
       </div>
 
-      {/* Amount input */}
+      {/* Amount input — buy: USDC to spend · sell: tokens to sell */}
       <label className="input-label">
-        {t.quantity} ({targetSymbol})
+        {mode === "buy"
+          ? `${t.amountToSpend} (${baseSymbol})`
+          : `${t.quantity} (${targetSymbol})`}
       </label>
       <input
         type="number"
@@ -104,10 +119,12 @@ export function SwapPanel({
       <div className="summary">
         <div className="sm-row">
           <span style={{ color: "var(--text-secondary)" }}>
-            {mode === "buy" ? t.youPay : t.youGet}
+            {mode === "buy" ? t.youReceive : t.youGet}
           </span>
           <span className="num">
-            {formatNumber(quote.baseHuman, 6)} {baseSymbol}
+            {mode === "buy"
+              ? `${formatNumber(quote.tokensHuman, 4)} ${targetSymbol}`
+              : `${formatNumber(quote.baseHuman, 6)} ${baseSymbol}`}
           </span>
         </div>
         <div className="sm-row">
@@ -115,7 +132,7 @@ export function SwapPanel({
             {t.price} / {targetSymbol}
           </span>
           <span className="num">
-            {formatNumber(quote.perTokenHuman, 8)} {baseSymbol}
+            {formatNumber(quote.perTokenHuman, 4)} {baseSymbol}
           </span>
         </div>
       </div>
