@@ -288,16 +288,20 @@ function QuickStartGuide({ title, sub }: { title: string; sub: string }) {
       <p className="muted" style={{ marginBottom: 24 }}>
         {sub}
       </p>
-      <video
-        src="/Gateway_to_the_Creator_Economy.mp4#t=0.1"
-        controls
-        playsInline
-        preload="metadata"
+      <iframe
+        src="https://www.youtube-nocookie.com/embed/3_kbx1niyY8?rel=0"
+        title="Gateway to the Creator Economy"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
         style={{
           width: "100%",
           maxWidth: 760,
-          borderRadius: "var(--radius-lg)",
+          aspectRatio: "16 / 9",
+          margin: "0 auto",
+          display: "block",
           border: "0.5px solid var(--border-subtle)",
+          borderRadius: "var(--radius-lg)",
         }}
       />
       <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
