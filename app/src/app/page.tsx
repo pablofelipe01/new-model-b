@@ -48,12 +48,14 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hero-video-wrap">
-            <video
+            <iframe
               className="hero-video"
-              src="/Matiz__Building_an_Independent_Economy_for_Creators.mp4"
-              controls
-              playsInline
-              preload="metadata"
+              src="https://www.youtube-nocookie.com/embed/AbNvoi_QChU?rel=0"
+              title="Matiz — Building an Independent Economy for Creators"
+              style={{ aspectRatio: "16 / 9", border: 0 }}
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
             />
           </div>
         </div>
