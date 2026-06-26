@@ -8,13 +8,15 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 function PaperVideo({ caption }: { caption: string }) {
   return (
     <figure style={{ margin: "40px 0 8px" }}>
-      <video
-        src="/The_Math_of_Guaranteed_Liquidity__Deriving_Matiz_Protocol.mp4#t=0.1"
-        controls
-        playsInline
-        preload="metadata"
+      <iframe
+        src="https://www.youtube-nocookie.com/embed/_BHgaUfPOEs?rel=0"
+        title="The Math of Guaranteed Liquidity — Deriving Matiz Protocol"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
         style={{
           width: "100%",
+          aspectRatio: "16 / 9",
           borderRadius: "var(--radius-lg)",
           border: "0.5px solid var(--border-subtle)",
           display: "block",
