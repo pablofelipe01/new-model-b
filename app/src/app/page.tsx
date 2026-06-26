@@ -274,9 +274,9 @@ pub mod update_bonding;
           <div>
             <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", marginBottom: 12 }}>{t.footCommunity}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>Twitter</a>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>Instagram</a>
-              <a href="#" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>Discord</a>
+              <a href="https://www.youtube.com/channel/UCrqn0uqDD6GGZZQqPV-F3HQ" target="_blank" rel="noopener noreferrer" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>YouTube</a>
+              <a href="https://www.tiktok.com/@matizprotocol" target="_blank" rel="noopener noreferrer" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>TikTok</a>
+              <a href="https://discord.gg/PTPVaQjEd" target="_blank" rel="noopener noreferrer" className="link" style={{ fontSize: 13, color: "var(--text-secondary)" }}>Discord</a>
             </div>
           </div>
         </div>
