@@ -460,7 +460,9 @@ document.getElementById('reset').onclick=()=>applyPreset('base');
 
 /* ---------- live data + auto-height ---------- */
 function postHeight(){
-  const h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight);
+  // Measure the body's content box (not documentElement.scrollHeight, which is
+  // clamped to the iframe viewport and would prevent the frame from shrinking).
+  const h=Math.ceil(document.body.getBoundingClientRect().height);
   parent.postMessage({type:'matiz-sim-height',h},'*');
 }
 function syncPresets(){

@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
  */
 export function FinancialDashboard() {
   const ref = useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = useState(2200);
+  const [height, setHeight] = useState(1200);
 
   useEffect(() => {
     function onMessage(e: MessageEvent) {
