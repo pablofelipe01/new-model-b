@@ -64,7 +64,7 @@ function TermsEN() {
       <P>Price is determined algorithmically. It increases when tokens are purchased and decreases when sold. There is <Strong>no guarantee</Strong> the price will go up. The value may go to zero.</P>
 
       <H2>4. Platform Fees</H2>
-      <P>Launch fee: $25 USDC (one-time). Platform trade fee: 0.5% per transaction. Launcher fee: 0-5% (creator-configurable). All fees are encoded on-chain, verifiable, and non-refundable.</P>
+      <P>Matiz is a research prototype on Solana Devnet: it does not accept payments and no real money is charged. The following are simulated devnet parameters, not prices, and may change. Launch fee: $25 USDC (one-time). Platform trade fee: 0.5% per transaction. Launcher fee: 0-5% (creator-configurable). All fees are encoded on-chain and verifiable.</P>
 
       <H2>5. No Investment Advice</H2>
       <P>Nothing on Matiz constitutes financial, investment, tax, or legal advice. We do not recommend any token, endorse any creator, or guarantee any returns. You are solely responsible for your own decisions.</P>
@@ -141,7 +141,7 @@ function TermsES() {
       <P>El precio esta determinado algoritmicamente. Sube cuando se compra y baja cuando se vende. <Strong>No hay garantia</Strong> de que el precio suba. El valor puede llegar a cero.</P>
 
       <H2>4. Comisiones</H2>
-      <P>Lanzamiento: $25 USDC (una vez). Plataforma: 0.5% por transaccion. Lanzador: 0-5% (configurable). Todas codificadas on-chain, verificables y no reembolsables.</P>
+      <P>Matiz es un prototipo de investigacion en Solana Devnet: no acepta pagos y no se cobra dinero real. Las siguientes son parametros simulados en devnet, no precios, y pueden cambiar. Lanzamiento: $25 USDC (una vez). Plataforma: 0.5% por transaccion. Lanzador: 0-5% (configurable). Todas codificadas on-chain y verificables.</P>
 
       <H2>5. No es Asesoria de Inversion</H2>
       <P>Nada en Matiz constituye asesoria financiera, de inversiones, fiscal o legal. No recomendamos ningun token, no respaldamos ningun creador, no garantizamos ningun retorno. Eres el unico responsable de tus decisiones.</P>

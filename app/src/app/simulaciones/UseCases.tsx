@@ -187,7 +187,7 @@ export function UseCases({ onPlay }: { onPlay: (params: Params, label: string) =
       <p className="uc-foot">
         Nombres ilustrativos y ficticios. Mismas relaciones que el caso base: precio ∝ reserva^(1/3), market cap = 1,5 ×
         reserva, los primeros reciben varias veces más tokens por dólar, y duplicar el precio exige ~7× la reserva. Fee
-        de plataforma 0,5% · lanzamiento $25 · el fee del creador (0–5%) va al creador.
+        de plataforma 0,5% · lanzamiento $25 · el fee del creador (0–5%) va al creador. Cifras y comisiones son parámetros simulados en Solana Devnet, no precios: no se cobra dinero real.
       </p>
     </div>
   );

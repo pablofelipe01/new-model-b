@@ -8,7 +8,7 @@ import { Sparkline } from "@/components/matiz/Sparkline";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
 const EXPLORER_URL =
-  "https://explorer.solana.com/address/41nppqSazESeBmrgnud2j5Nz1MbsnPGeyAryPcKAefqa";
+  "https://explorer.solana.com/address/41nppqSazESeBmrgnud2j5Nz1MbsnPGeyAryPcKAefqa?cluster=devnet";
 const TED_URL =
   "https://www.ted.com/talks/adam_mosseri_a_creator_led_internet_built_on_blockchain";
 

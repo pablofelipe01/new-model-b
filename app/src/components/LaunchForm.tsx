@@ -407,9 +407,19 @@ export function LaunchForm() {
                   </div>
                   <div>
                     <div className="label">{lang === "es" ? "Costo de lanzamiento" : "Launch cost"}</div>
-                    <div style={{ fontWeight: 500 }}>$25</div>
+                    <div style={{ fontWeight: 500 }}>
+                      $25{" "}
+                      <span style={{ color: "var(--text-tertiary)", fontWeight: 400 }}>
+                        {lang === "es" ? "(simulado)" : "(simulated)"}
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <p className="muted-small" style={{ marginTop: 12 }}>
+                  {lang === "es"
+                    ? "Cifras simuladas en Solana Devnet. No se cobra dinero real y los tokens no tienen valor monetario."
+                    : "Simulated figures on Solana Devnet. No real money is charged and the tokens have no monetary value."}
+                </p>
               </div>
 
               {error && (
