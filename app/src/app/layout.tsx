@@ -22,9 +22,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Matiz — Tu matiz tiene una comunidad",
+  title: "Matiz — Convierte suscriptores en backers",
   description:
-    "Tokeniza tu marca personal. Tu comunidad, on-chain, portable, y tuya para siempre.",
+    "Convierte tu audiencia gratis en una economía de early backers. Como una ronda seed de startup, pero para tu comunidad de creador.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
   },
   formatDetection: { telephone: false },
   openGraph: {
-    title: "Matiz — Tu matiz tiene una comunidad",
+    title: "Matiz — Convierte suscriptores en backers",
     description:
-      "Tokeniza tu marca personal. Tu comunidad, on-chain, portable, y tuya para siempre.",
+      "Convierte tu audiencia gratis en una economía de early backers. Como una ronda seed de startup, pero para tu comunidad de creador.",
     url: "https://matiz.community",
     siteName: "Matiz",
     locale: "es_CO",
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Matiz — Tu matiz tiene una comunidad",
+    title: "Matiz — Convierte suscriptores en backers",
     description:
-      "Tokeniza tu marca personal. Tu comunidad, on-chain, portable, y tuya para siempre.",
+      "Convierte tu audiencia gratis en una economía de early backers. Como una ronda seed de startup, pero para tu comunidad de creador.",
   },
   icons: {
     icon: [

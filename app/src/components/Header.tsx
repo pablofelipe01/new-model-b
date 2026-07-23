@@ -31,7 +31,9 @@ export function Header() {
         <nav className="top-nav">
           <Link href="/" className="nav-logo">
             <MLogo size={28} />
-            <span className="nav-logo-word">matiz</span>
+            <span className="nav-logo-word">
+              mati<span className="matiz-z">z</span>
+            </span>
           </Link>
 
           {/* Desktop nav links */}

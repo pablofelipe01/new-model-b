@@ -19,10 +19,10 @@ export const translations: Record<Lang, Record<string, string>> = {
     searchCreators: "Buscar creador por nombre o símbolo…",
     noResults: "No encontramos creadores que coincidan.",
     fundWallet: "Cargar billetera",
-    noUsdcPrompt: "¿Aún sin USDC? Recarga tu billetera para comprar.",
-    guideTitle: "Te invitaron a creer en alguien",
+    noUsdcPrompt: "¿Aún sin USDC? Recarga tu billetera para respaldar.",
+    guideTitle: "Te invitaron a respaldar a alguien temprano",
     guideSub:
-      "Mira cómo empezar en menos de un minuto y conéctate para comprar.",
+      "Mira cómo empezar en menos de un minuto y conéctate para entrar.",
     copied: "¡Copiado!",
     shareToken: "Compartir token",
     dashboard: "Panel",
@@ -33,59 +33,59 @@ export const translations: Record<Lang, Record<string, string>> = {
     langSwitch: "EN",
 
     // Hero
-    eyebrow: "Tu matiz tiene una comunidad",
-    heroH1: "Tu audiencia en Instagram es prestada.",
-    heroH2: "Tu economía en Matiz es ",
-    heroH2Accent: "tuya.",
+    eyebrow: "La economía del Return on Influence",
+    heroH1: "Tus fans no tienen que solo suscribirse.",
+    heroH2: "Pueden respaldarte ",
+    heroH2Accent: "temprano.",
     heroSub:
-      "Tokeniza tu marca personal. Deja que quienes crean en ti temprano crezcan contigo. Tu comunidad, on-chain, portable, y tuya para siempre.",
-    launchYourEconomy: "Lanza tu economía",
+      "Convierte tu audiencia gratis en una economía de early backers. En vez de una suscripción que se evapora cada mes, tus fans toman una posición tokenizada en tu carrera: acceso, estatus de founder fan y una parte de tu crecimiento. Como una ronda seed de startup, pero para tu comunidad.",
+    launchYourEconomy: "Abre tu economía",
     seeWhoAlready: "Explora quiénes ya lo hicieron",
-    heroMeta1: "3 pasos para lanzar",
+    heroMeta1: "3 pasos para abrir",
     heroMeta2: "Con dólares digitales",
     heroMeta3: "Entras con Google",
 
     // Promises
     promisesHeader: "Lo que te prometemos",
-    promise1Title: "Cuando tú creces, tu comunidad crece contigo.",
+    promise1Title: "Un suscriptor consume. Un backer participa.",
     promise1Body:
-      "Tus fans no te siguen desde afuera: sostienen tu proyecto desde adentro. Quienes llegaron primero entraron con menos. Esto no es una suscripción — es una economía compartida donde el reconocimiento es mutuo. (En este prototipo todo ocurre en devnet: los tokens no tienen valor monetario.)",
-    promise2Title: "Tu comunidad es tuya.",
+      "En vez de pagar una mensualidad que desaparece, tus fans toman una posición en tu economía. Quienes llegan primero entran más abajo y quedan registrados como founder fans. No es una suscripción — es una comunidad de early backers donde el reconocimiento es mutuo. (En este prototipo todo ocurre en devnet: los tokens no tienen valor monetario.)",
+    promise2Title: "Tus backers son tuyos.",
     promise2Body:
-      "Si mañana Instagram cierra tu cuenta, TikTok te desmonetiza, o Twitter cambia las reglas — tus fans tokenizados siguen contigo. Viven on-chain, no en un servidor ajeno. Son tuyos, no de una plataforma.",
+      "Si mañana una plataforma de suscripción cambia las reglas, se queda con un corte mayor o cierra tu cuenta — tus backers siguen contigo. Viven on-chain, no en el servidor de nadie. La relación es tuya, no de la plataforma.",
     promise3Title: "La reserva no la puede tocar nadie.",
     promise3Body:
-      "Cada peso que entra queda bloqueado en un contrato público. Ni nosotros, ni tú, ni un hacker pueden sacarlo. La única forma de que salga es que un fan venda su token. Matemáticamente. Verificable en dos clics.",
+      "Cada aporte que entra queda bloqueado en un contrato público. Ni nosotros, ni tú, ni un hacker pueden sacarlo. La única forma de que salga es que un backer venda su token. Matemáticamente. Verificable en dos clics.",
 
     // How it works
     howHeader: "Cómo funciona, en tres pasos",
-    step1Title: "1. Lanza tu token.",
+    step1Title: "1. Abre tu ronda.",
     step1Body:
-      "Entra con Google. Pon un nombre, un símbolo, una foto. Define tu comisión de creador: entre 0% y 5%. La comisión de lanzamiento ($25) es un parámetro simulado en devnet — no se cobra dinero real. Listo: tienes un link para compartir.",
-    step2Title: "2. Tu comunidad entra.",
+      "Entra con Google. Pon un nombre, un símbolo, una foto. Define tu comisión de creador: entre 0% y 5%. La comisión de lanzamiento ($25) es un parámetro simulado en devnet — no se cobra dinero real. Listo: tienes un link para invitar a tu círculo interno.",
+    step2Title: "2. Tus fans entran como backers.",
     step2Body:
-      "Cada persona que cree en ti toma una parte de tu economía con tokens de devnet. El precio de la curva sube con cada compra. Los primeros entran más abajo. Todo queda en una reserva pública que nadie puede vaciar.",
+      "Cada persona que cree en ti toma una parte de tu economía con tokens de devnet. Los primeros —tu ronda friends & family— entran más abajo. El precio de la curva sube con cada backer nuevo. Todo queda en una reserva pública que nadie puede vaciar.",
     step3Title: "3. Crecen contigo.",
     step3Body:
-      "Mientras más gente se une, más sube el precio de la curva. Si alguien quiere salir, devuelve su parte al precio que dicta la curva y la reserva responde. El creador recibe un porcentaje de cada transacción. Todo con tokens sin valor monetario, en devnet.",
+      "Mientras más backers se suman, más sube el precio de la curva. Si alguien quiere salir, devuelve su parte al precio que dicta la curva y la reserva responde. Tú recibes un porcentaje de cada transacción. Todo con tokens sin valor monetario, en devnet.",
     plusOneTitle: "+1. Tú también puedes entrar.",
     plusOneBody:
-      "Nada te impide tomar una parte de tu propio token: entrar temprano, respaldar a tu comunidad cuando haga falta, o regalarle una parte a quienes te apoyaron desde el día uno. Eres creator y también puedes ser parte.",
-    curveCaptionShort: "Cuanto antes crees, más bajo pagas.",
+      "Nada te impide tomar una parte de tu propio token: entrar en tu propia ronda, respaldar a tu comunidad cuando haga falta, o regalarle una parte a los founder fans que te apoyaron desde el día uno. Eres creator y también puedes ser parte.",
+    curveCaptionShort: "Cuanto antes respaldas, más bajo entras.",
 
     // Guarantee
     guaranteeTitle: "La promesa está en el código.",
     guaranteeBody1:
       "En otras plataformas tienes que confiar en la compañía. En Matiz confías en matemáticas públicas.",
     guaranteeBody2:
-      "La función que permitiría retirar la reserva fue **físicamente borrada del código antes del lanzamiento**. No existe. Ni un hacker, ni un empleado deshonesto, ni nosotros mismos podemos tocarla. La única forma de que los fondos salgan es que un fan venda su token — y recibe lo que la curva dice.",
+      "La función que permitiría retirar la reserva fue **físicamente borrada del código antes del lanzamiento**. No existe. Ni un hacker, ni un empleado deshonesto, ni nosotros mismos podemos tocarla. La única forma de que los fondos salgan es que un backer venda su token — y recibe lo que la curva dice.",
     guaranteeBody3: "Todo es público. Verificable. Auditable.",
     guaranteeCta: "Ver el contrato en Solana Explorer →",
 
     // Mosseri
     mosseriTitle: "El Head of Instagram ya lo dijo.",
     mosseriIntro:
-      "En 2022, Adam Mosseri subió al escenario de TED. Describió un futuro donde los creators son dueños de su comunidad. Donde sus fans invierten en ellos como en startups. Donde si una plataforma desaparece, la relación con la audiencia sobrevive.",
+      "En 2022, Adam Mosseri subió al escenario de TED. Describió un futuro donde los creators son dueños de su comunidad. Donde sus fans no solo se suscriben: los respaldan temprano, como a una startup. Donde si una plataforma desaparece, la relación con la audiencia sobrevive.",
     mosseriQuote:
       '"Ninguna compañía puede quitarle a Lisa su comunidad. Instagram podría desaparecer mañana, y ella mantendría su relación con sus suscriptores, y mantendría sus ingresos."',
     mosseriAttrib: "— Adam Mosseri, Head of Instagram",
@@ -96,44 +96,44 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // For whom
     forWhomHeader: "Matiz es para ti si…",
-    forWhom1Title: "Eres artista y tu carrera es tu obra.",
+    forWhom1Title: "Vives de tu contenido y de tu comunidad.",
     forWhom1Body:
-      "Músicos, ilustradores, escritores, diseñadores, muralistas. Personas cuyo trabajo tiene fans reales, no solo seguidores. Matiz te deja explorar tu carrera como una economía: quien llegó cuando eras emergente queda registrado, on-chain, como parte de tu historia.",
-    forWhom2Title: "Construiste una comunidad y quieres que dure.",
+      "Creadores de suscripción, contenido premium, membresías, close friends. Personas cuyos fans pagan por acceso directo, no solo por seguir. Matiz convierte a esos suscriptores en backers: quien llegó cuando empezabas queda registrado, on-chain, como founder fan y parte de tu historia.",
+    forWhom2Title: "Tu círculo interno merece más que un 'gracias'.",
     forWhom2Body:
-      'Si levantaste un club, un fandom, un movimiento — Matiz le da permanencia. Tus miembros más activos pueden tener una parte real del proyecto, no solo un "gracias" cada tanto. Y si alguien se va, el valor queda en la comunidad.',
-    forWhom3Title: "Crees en alguien y quieres acompañarlo de verdad.",
+      'Tus fans más fieles —los que renuevan cada mes, los que te escriben, los que llegaron primero— pueden tener una parte real de tu economía. Con perks: contenido exclusivo, material sin publicar, llamadas privadas, acceso anticipado, prioridad. Y si alguien se va, el valor queda en la comunidad.',
+    forWhom3Title: "Crees en alguien y quieres respaldarlo de verdad.",
     forWhom3Body:
-      "No como donación anónima. No como suscripción que se evapora. Como una señal de apoyo que queda registrada y que puedes retirar cuando quieras. En este prototipo la señal es simbólica: corre en devnet y los tokens no tienen valor monetario.",
+      "No como suscripción que se evapora cada mes. Como una posición que queda registrada, te da acceso y estatus de founder fan, y que puedes retirar cuando quieras. En este prototipo la señal es simbólica: corre en devnet y los tokens no tienen valor monetario.",
 
     // Stories placeholder
     storiesTitle: "Historias, pronto.",
     storiesBody:
-      "Estamos trabajando con los primeros artistas que van a lanzar su economía en Matiz. Cuando sus historias estén listas, aquí las contaremos.",
-    storiesCta: "¿Eres artista y quieres ser de los primeros? Escríbenos →",
+      "Estamos trabajando con los primeros creadores que van a abrir su economía en Matiz. Cuando sus historias estén listas, aquí las contaremos.",
+    storiesCta: "¿Eres creador y quieres ser de los primeros? Escríbenos →",
 
     // Featured
     featuredLabel: "En movimiento",
-    featuredTitle: "Gente en la que creer",
+    featuredTitle: "Creadores para respaldar",
 
     // FAQ
     faqHeader: "Preguntas frecuentes",
     faq1q: "¿En qué red corre Matiz hoy?",
     faq1a:
       "En Solana Devnet. Matiz es un prototipo de investigación: no está en producción, no acepta pagos y los tokens que se emiten no tienen valor monetario. Todo lo que ves en la plataforma corre con activos de prueba.",
-    faq2q: "¿Necesito saber de tecnología?",
+    faq2q: "¿Esto reemplaza mi suscripción?",
     faq2a:
-      "No. Entras con Google y la billetera se crea sola debajo del capó. Si nunca quieres ver una wallet, no la ves.",
+      "No tiene por qué. Puedes seguir con tu plataforma de suscripción y usar Matiz para convertir a tus fans más fieles en backers: acceso, estatus de founder fan y una posición en tu economía. Es la capa de respaldo temprano, no un reemplazo de tu contenido diario.",
     faq3q: "¿Cómo funciona la curva?",
     faq3a:
-      'El precio sigue una fórmula pública: sube cuando entran más tokens en circulación y baja cuando salen. La reserva del contrato siempre puede responder a una venta al precio que dicta la curva, sin "esperar a que haya liquidez". En devnet puedes probarlo tú mismo.',
+      'El precio sigue una fórmula pública: sube cuando entran más backers en circulación y baja cuando salen. La reserva del contrato siempre puede responder a una venta al precio que dicta la curva, sin "esperar a que haya liquidez". En devnet puedes probarlo tú mismo.',
     faq4q: "¿Qué parámetros usa el prototipo?",
     faq4a:
       "Comisión de plataforma 0.5% por transacción, comisión de creador entre 0% y 5%, y $25 al lanzar. Son parámetros simulados en devnet, no precios: no se cobra ni se paga dinero real, y pueden cambiar.",
 
     // CTA final
-    ctaH1: "Tu marca ya es una economía.",
-    ctaH2: "Solo falta abrirla.",
+    ctaH1: "Tu audiencia gratis ya es una economía.",
+    ctaH2: "Solo falta convertirla en backers.",
 
     // Footer
     footProduct: "Producto",
@@ -161,7 +161,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     sell: "Vender",
     price: "Precio",
     supply: "Circulación",
-    holders: "Creyentes",
+    holders: "Backers",
     change24: "Últimas 24 h",
     yourBalance: "Tu saldo",
     holdings: "Tus posiciones",
@@ -180,7 +180,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     confirmBuy: "Confirmar compra",
     confirmSell: "Confirmar venta",
     quantity: "Cantidad",
-    believersWord: "creyentes",
+    believersWord: "backers",
     reservePool: "Fondo de reserva",
     contract: "Contrato",
     youOwn: "Tienes",
@@ -190,29 +190,29 @@ export const translations: Record<Lang, Record<string, string>> = {
     sold: "vendió",
     launchedWord: "lanzó",
     viewToken: "Ver token",
-    searchPh: "Busca artistas, creadores, clubes…",
+    searchPh: "Busca creadores, clubes, comunidades…",
 
     // Launch wizard
     step1: "Tu historia",
     step2: "La curva",
-    step3: "Lanzar",
-    launchMine: "Lanzar mi token",
-    shareMoment: "¡Lo lanzaste!",
-    shareCopy: "Comparte tu enlace para que tu gente entre temprano.",
+    step3: "Abrir",
+    launchMine: "Abrir mi economía",
+    shareMoment: "¡La abriste!",
+    shareCopy: "Comparte tu enlace para que tu círculo interno entre temprano.",
     shareWA: "Compartir por WhatsApp",
     copyLink: "Copiar enlace",
     receipt: "Comprobante",
     done: "Listo",
-    launchYourToken: "Lanza tu token",
+    launchYourToken: "Abre tu economía",
     launchName: "Nombre del token",
     launchSymbol: "Símbolo",
     launchBio: "Bio corta",
     launchStartPrice: "Precio inicial",
     next: "Siguiente",
     back: "Atrás",
-    step1Sub: "Cuéntanos quién eres. Lo verán tus primeros creyentes.",
-    step2Sub: "Elige cómo se mueve el precio cuando tu gente entra.",
-    step3Sub: "Revisa y lanza. Se firma contigo en segundos.",
+    step1Sub: "Cuéntanos quién eres. Lo verán tus primeros backers.",
+    step2Sub: "Elige cómo se mueve el precio cuando tus backers entran.",
+    step3Sub: "Revisa y abre tu ronda. Se firma contigo en segundos.",
 
     // Dashboard
     send: "Enviar",
@@ -241,9 +241,9 @@ export const translations: Record<Lang, Record<string, string>> = {
     searchCreators: "Search a creator by name or symbol…",
     noResults: "No creators match your search.",
     fundWallet: "Fund wallet",
-    noUsdcPrompt: "No USDC yet? Top up your wallet to buy.",
-    guideTitle: "You've been invited to believe in someone",
-    guideSub: "See how to start in under a minute, then connect to buy.",
+    noUsdcPrompt: "No USDC yet? Top up your wallet to back a creator.",
+    guideTitle: "You've been invited to back someone early",
+    guideSub: "See how to start in under a minute, then connect to get in.",
     copied: "Copied!",
     shareToken: "Share token",
     dashboard: "Dashboard",
@@ -254,59 +254,59 @@ export const translations: Record<Lang, Record<string, string>> = {
     langSwitch: "ES",
 
     // Hero
-    eyebrow: "Your hue has a community",
-    heroH1: "Your audience on Instagram is borrowed.",
-    heroH2: "Your economy on Matiz is ",
-    heroH2Accent: "yours.",
+    eyebrow: "The Return on Influence economy",
+    heroH1: "Your fans don't have to just subscribe.",
+    heroH2: "They can back you ",
+    heroH2Accent: "early.",
     heroSub:
-      "Tokenize your personal brand. Let the people who believed in you early grow with you. Your community, on-chain, portable, and yours forever.",
-    launchYourEconomy: "Launch your economy",
+      "Turn your free audience into an economy of early backers. Instead of a subscription that evaporates every month, your fans take a tokenized position in your career: access, founder-fan status, and a stake in your growth. Like a startup seed round, but for your community.",
+    launchYourEconomy: "Open your economy",
     seeWhoAlready: "See who already did",
-    heroMeta1: "3 steps to launch",
+    heroMeta1: "3 steps to open",
     heroMeta2: "Just digital dollars",
     heroMeta3: "Sign in with Google",
 
     // Promises
     promisesHeader: "What we promise you",
-    promise1Title: "When you grow, your community grows with you.",
+    promise1Title: "A subscriber consumes. A backer participates.",
     promise1Body:
-      "Your fans don't follow you from the outside — they hold up your project from within. The ones who arrived first came in lower. This isn't a subscription — it's a shared economy where recognition is mutual. (In this prototype everything runs on devnet: the tokens have no monetary value.)",
-    promise2Title: "Your community belongs to you.",
+      "Instead of paying a monthly fee that disappears, your fans take a position in your economy. The ones who arrive first come in lower and are recorded as founder fans. This isn't a subscription — it's a community of early backers where recognition is mutual. (In this prototype everything runs on devnet: the tokens have no monetary value.)",
+    promise2Title: "Your backers belong to you.",
     promise2Body:
-      "If Instagram shuts down your account tomorrow, TikTok demonetizes you, or Twitter changes the rules — your tokenized fans stay with you. They live on-chain, not on someone else's server. They're yours, not the platform's.",
+      "If a subscription platform changes the rules tomorrow, takes a bigger cut, or shuts down your account — your backers stay with you. They live on-chain, not on someone else's server. The relationship is yours, not the platform's.",
     promise3Title: "No one can touch the reserve.",
     promise3Body:
-      "Every dollar that comes in is locked inside a public contract. Not us, not you, not a hacker can withdraw it. The only way it leaves is when a fan sells their token. Mathematically. Verifiable in two clicks.",
+      "Every contribution that comes in is locked inside a public contract. Not us, not you, not a hacker can withdraw it. The only way it leaves is when a backer sells their token. Mathematically. Verifiable in two clicks.",
 
     // How it works
     howHeader: "How it works, in three steps",
-    step1Title: "1. Launch your token.",
+    step1Title: "1. Open your round.",
     step1Body:
-      "Sign in with Google. Add a name, a symbol, a photo. Set your creator fee: between 0% and 5%. The $25 launch fee is a simulated devnet parameter — no real money is charged. Done: you have a link to share.",
-    step2Title: "2. Your community joins.",
+      "Sign in with Google. Add a name, a symbol, a photo. Set your creator fee: between 0% and 5%. The $25 launch fee is a simulated devnet parameter — no real money is charged. Done: you have a link to invite your inner circle.",
+    step2Title: "2. Your fans come in as backers.",
     step2Body:
-      "Every person who believes in you takes a share of your economy with devnet tokens. The curve price rises with each purchase. The first ones come in lower. Everything goes into a public reserve that no one can empty.",
+      "Every person who believes in you takes a share of your economy with devnet tokens. The first ones — your friends & family round — come in lower. The curve price rises with each new backer. Everything goes into a public reserve that no one can empty.",
     step3Title: "3. They grow with you.",
     step3Body:
-      "The more people join, the higher the curve price goes. If anyone wants out, they return their share at the price the curve dictates and the reserve answers for it. The creator receives a percentage of every transaction. All of it with devnet tokens that have no monetary value.",
+      "The more backers join, the higher the curve price goes. If anyone wants out, they return their share at the price the curve dictates and the reserve answers for it. You receive a percentage of every transaction. All of it with devnet tokens that have no monetary value.",
     plusOneTitle: "+1. You can take part too.",
     plusOneBody:
-      "Nothing stops you from taking a share of your own token: come in early, back your community when it needs it, or gift a share to the people who supported you from day one. You're the creator, and you can also take part.",
-    curveCaptionShort: "The earlier you believe, the lower you pay.",
+      "Nothing stops you from taking a share of your own token: come into your own round early, back your community when it needs it, or gift a share to the founder fans who supported you from day one. You're the creator, and you can also take part.",
+    curveCaptionShort: "The earlier you back, the lower you come in.",
 
     // Guarantee
     guaranteeTitle: "The promise lives in the code.",
     guaranteeBody1:
       "On other platforms, you have to trust the company. On Matiz, you trust public math.",
     guaranteeBody2:
-      "The function that would allow withdrawing the reserve was **physically deleted from the code before launch**. It doesn't exist. Not a hacker, not a rogue employee, not us — no one can touch it. The only way funds leave is when a fan sells their token, and they receive exactly what the curve says.",
+      "The function that would allow withdrawing the reserve was **physically deleted from the code before launch**. It doesn't exist. Not a hacker, not a rogue employee, not us — no one can touch it. The only way funds leave is when a backer sells their token, and they receive exactly what the curve says.",
     guaranteeBody3: "All of it is public. Verifiable. Auditable.",
     guaranteeCta: "See the contract on Solana Explorer →",
 
     // Mosseri
     mosseriTitle: "The Head of Instagram already said it.",
     mosseriIntro:
-      "In 2022, Adam Mosseri took the TED stage. He described a future where creators own their community. Where fans invest in them like startups. Where if a platform disappears, the relationship with the audience survives.",
+      "In 2022, Adam Mosseri took the TED stage. He described a future where creators own their community. Where fans don't just subscribe — they back them early, like a startup. Where if a platform disappears, the relationship with the audience survives.",
     mosseriQuote:
       '"No company can ever take Lisa\'s community away from her. Instagram could disappear tomorrow, and she would maintain her relationship with her subscribers, and she would maintain her income."',
     mosseriAttrib: "— Adam Mosseri, Head of Instagram",
@@ -317,45 +317,45 @@ export const translations: Record<Lang, Record<string, string>> = {
 
     // For whom
     forWhomHeader: "Matiz is for you if…",
-    forWhom1Title: "You're an artist and your career is your work.",
+    forWhom1Title: "You live off your content and your community.",
     forWhom1Body:
-      "Musicians, illustrators, writers, designers, muralists. People whose work has real fans, not just followers. Matiz lets you explore your career as an economy: whoever showed up when you were emerging is recorded on-chain as part of your story.",
-    forWhom2Title: "You built a community and you want it to last.",
+      "Subscription creators, premium content, memberships, close friends. People whose fans pay for direct access, not just to follow. Matiz turns those subscribers into backers: whoever showed up when you were starting is recorded on-chain, as a founder fan and part of your story.",
+    forWhom2Title: "Your inner circle deserves more than a 'thank you.'",
     forWhom2Body:
-      'If you\'ve built a club, a fandom, a movement — Matiz gives it permanence. Your most active members can own a real piece of the project, not just get the occasional "thank you." And if someone leaves, the value stays in the community.',
-    forWhom3Title: "You believe in someone and want to truly stand with them.",
+      'Your most loyal fans — the ones who renew every month, the ones who message you, the ones who came first — can own a real piece of your economy. With perks: exclusive content, unreleased material, private calls, early access, priority. And if someone leaves, the value stays in the community.',
+    forWhom3Title: "You believe in someone and want to truly back them.",
     forWhom3Body:
-      "Not as an anonymous donation. Not as a subscription that evaporates. As a signal of support that gets recorded and that you can withdraw whenever you want. In this prototype the signal is symbolic: it runs on devnet and the tokens have no monetary value.",
+      "Not as a subscription that evaporates every month. As a position that gets recorded, gives you access and founder-fan status, and that you can withdraw whenever you want. In this prototype the signal is symbolic: it runs on devnet and the tokens have no monetary value.",
 
     // Stories placeholder
     storiesTitle: "Stories, coming soon.",
     storiesBody:
-      "We're working with the first artists who will launch their economy on Matiz. When their stories are ready, we'll tell them here.",
+      "We're working with the first creators who will open their economy on Matiz. When their stories are ready, we'll tell them here.",
     storiesCta:
-      "Are you an artist and want to be one of the first? Write to us →",
+      "Are you a creator and want to be one of the first? Write to us →",
 
     // Featured
     featuredLabel: "Moving now",
-    featuredTitle: "People to believe in",
+    featuredTitle: "Creators to back",
 
     // FAQ
     faqHeader: "Frequent questions",
     faq1q: "What network does Matiz run on today?",
     faq1a:
       "Solana Devnet. Matiz is a research prototype: it is not in production, it does not accept payments, and the tokens it mints have no monetary value. Everything you see on the platform runs on test assets.",
-    faq2q: "Do I need to be tech-savvy?",
+    faq2q: "Does this replace my subscription?",
     faq2a:
-      "No. You sign in with Google and the wallet is created for you under the hood. If you never want to see a wallet, you don't.",
+      "It doesn't have to. You can keep your subscription platform and use Matiz to turn your most loyal fans into backers: access, founder-fan status, and a position in your economy. It's the early-backing layer, not a replacement for your day-to-day content.",
     faq3q: "How does the curve work?",
     faq3a:
-      'The price follows a public formula: it rises as more tokens enter circulation and falls as they leave. The contract\'s reserve can always answer a sale at the price the curve dictates — no "waiting for liquidity." On devnet you can try it yourself.',
+      'The price follows a public formula: it rises as more backers enter circulation and falls as they leave. The contract\'s reserve can always answer a sale at the price the curve dictates — no "waiting for liquidity." On devnet you can try it yourself.',
     faq4q: "What parameters does the prototype use?",
     faq4a:
       "Platform fee 0.5% per transaction, creator fee between 0% and 5%, and $25 at launch. These are simulated devnet parameters, not prices: no real money is charged or paid out, and they may change.",
 
     // CTA final
-    ctaH1: "Your brand is already an economy.",
-    ctaH2: "It just needs to open.",
+    ctaH1: "Your free audience is already an economy.",
+    ctaH2: "It just needs to turn into backers.",
 
     // Footer
     footProduct: "Product",
@@ -383,7 +383,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     sell: "Sell",
     price: "Price",
     supply: "In circulation",
-    holders: "Believers",
+    holders: "Backers",
     change24: "Last 24 h",
     yourBalance: "Your balance",
     holdings: "Your holdings",
@@ -402,7 +402,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     confirmBuy: "Confirm buy",
     confirmSell: "Confirm sell",
     quantity: "Quantity",
-    believersWord: "believers",
+    believersWord: "backers",
     reservePool: "Reserve pool",
     contract: "Contract",
     youOwn: "You own",
@@ -412,29 +412,29 @@ export const translations: Record<Lang, Record<string, string>> = {
     sold: "sold",
     launchedWord: "launched",
     viewToken: "View token",
-    searchPh: "Search artists, creators, clubs…",
+    searchPh: "Search creators, clubs, communities…",
 
     // Launch wizard
     step1: "Your story",
     step2: "The curve",
-    step3: "Launch",
-    launchMine: "Launch my token",
-    shareMoment: "You launched!",
-    shareCopy: "Share your link so your people get in early.",
+    step3: "Open",
+    launchMine: "Open my economy",
+    shareMoment: "You opened it!",
+    shareCopy: "Share your link so your inner circle gets in early.",
     shareWA: "Share on WhatsApp",
     copyLink: "Copy link",
     receipt: "Receipt",
     done: "Done",
-    launchYourToken: "Launch your token",
+    launchYourToken: "Open your economy",
     launchName: "Token name",
     launchSymbol: "Symbol",
     launchBio: "Short bio",
     launchStartPrice: "Starting price",
     next: "Next",
     back: "Back",
-    step1Sub: "Tell us who you are. Your first believers will see this.",
-    step2Sub: "Pick how the price moves when your people arrive.",
-    step3Sub: "Review and launch. Signed with you in seconds.",
+    step1Sub: "Tell us who you are. Your first backers will see this.",
+    step2Sub: "Pick how the price moves when your backers arrive.",
+    step3Sub: "Review and open your round. Signed with you in seconds.",
 
     // Dashboard
     send: "Send",

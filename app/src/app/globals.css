@@ -70,6 +70,12 @@ em { font-style: italic; font-family: var(--font-serif, 'Fraunces', serif); font
 .top-nav { display: flex; align-items: center; gap: 32px; padding: 16px 48px; background: rgba(10, 11, 24, 0.82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 0.5px solid var(--border-subtle); }
 .nav-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; background: none; border: none; padding: 0; color: inherit; text-decoration: none; }
 .nav-logo-word { font-family: var(--font-serif, 'Fraunces', serif); font-style: italic; font-size: 20px; letter-spacing: -0.01em; }
+/* "z" cruzada por dos barras verticales — guiño a símbolo de moneda ($ / cifrão) */
+.matiz-z { position: relative; display: inline-block; }
+.matiz-z::before,
+.matiz-z::after { content: ""; position: absolute; top: -0.16em; height: 1.12em; width: 0.055em; min-width: 1px; background: currentColor; border-radius: 0.03em; transform: skewX(-12deg); pointer-events: none; }
+.matiz-z::before { left: 32%; }
+.matiz-z::after  { left: 60%; }
 .nav-links { display: flex; gap: 6px; flex: 1; }
 .nav-link { background: none; border: none; color: var(--text-secondary); font: inherit; font-size: 15px; font-weight: 500; padding: 8px 14px; border-radius: var(--radius-md); cursor: pointer; text-decoration: none; }
 .nav-link:hover { color: var(--text-primary); background: var(--color-surface); }
