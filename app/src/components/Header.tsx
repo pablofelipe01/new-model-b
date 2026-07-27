@@ -7,7 +7,6 @@ import { useState } from "react";
 import { DevnetBanner } from "@/components/DevnetBanner";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
-import { MLogo } from "@/components/matiz/MLogo";
 
 import { WalletButton } from "./WalletButton";
 
@@ -30,7 +29,6 @@ export function Header() {
         <DevnetBanner />
         <nav className="top-nav">
           <Link href="/" className="nav-logo">
-            <MLogo size={28} />
             <span className="nav-logo-word">
               mati<span className="matiz-z">z</span>
             </span>
