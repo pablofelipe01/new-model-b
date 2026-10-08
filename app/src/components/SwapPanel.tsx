@@ -120,6 +120,18 @@ export function SwapPanel({
     return frac ? `${whole}.${frac}` : whole;
   }
 
+  async function onSellAll() {
+    if (!balances || balances.target.isZero()) return;
+    try {
+      // Exact raw balance — never a float round-trip that could overshoot.
+      await swap.sell(balances.target, slippage);
+      setAmount("0");
+      setUseMax(false);
+    } finally {
+      void refreshBalances();
+    }
+  }
+
   async function onSubmit() {
     if (numericHuman <= 0 || insufficient) return;
     try {
@@ -261,6 +273,19 @@ export function SwapPanel({
             ? t.confirmBuy
             : t.confirmSell}
       </button>
+
+      {mode === "sell" && balances && !balances.target.isZero() && (
+        <button
+          type="button"
+          onClick={onSellAll}
+          disabled={swap.buying || swap.selling}
+          className="btn btn-secondary btn-full"
+          style={{ marginTop: 8 }}
+        >
+          {t.sellAll} ({formatNumber(Number(rawToHuman(balances.target, targetDecimals)), 4)}{" "}
+          {targetSymbol})
+        </button>
+      )}
 
       {swap.error && (
         <p className="muted-small" style={{ color: "var(--state-danger)", marginTop: 8 }}>
