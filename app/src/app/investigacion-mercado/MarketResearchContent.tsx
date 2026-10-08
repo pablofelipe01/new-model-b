@@ -103,7 +103,7 @@ export function MarketResearchContent() {
       { es: "Foco LATAM: región #2 en adopción y líder en stablecoins.", en: "LATAM focus: #2 region in adoption and stablecoin leader." },
       { es: "Credibilidad on-chain: reserva intocable verificable.", en: "On-chain credibility: verifiable untouchable reserve." },
       { es: "Solana: comisiones casi nulas para microtransacciones.", en: "Solana: near-zero fees for microtransactions." },
-      { es: "Fee de creador (0–5% perpetuo): modelo validado por pump.fun.", en: "Creator fee (0–5% perpetual): model validated by pump.fun." },
+      { es: "Fee de la marca (0–5% perpetuo): modelo validado por pump.fun.", en: "Brand fee (0–5% perpetual): model validated by pump.fun." },
     ] },
     { color: "#F2B85A", title: { es: "Debilidades", en: "Weaknesses" }, items: [
       { es: "La ventaja está en UX, marca y distribución, no en la tecnología.", en: "The edge is in UX, brand and distribution, not technology." },
@@ -132,7 +132,7 @@ export function MarketResearchContent() {
     ] },
     { step: { es: "2 · Hitos a demostrar (KPIs)", en: "2 · Milestones to prove (KPIs)" }, items: [
       { es: "Retención de holders a 30/90 días post-mainnet", en: "Holder retention at 30/90 days post-mainnet" },
-      { es: "Creadores con comunidades reales", en: "Creators with real communities" },
+      { es: "Marcas con comunidades reales", en: "Brands with real communities" },
       { es: "Volumen vía on-ramp fiat", en: "Volume via fiat on-ramp" },
       { es: "Avance de cumplimiento VASP en Brasil", en: "VASP compliance progress in Brazil" },
     ] },
@@ -274,7 +274,7 @@ export function MarketResearchContent() {
             </div>
             <div className="card">
               <h3>{es ? "Penetración de Instagram — mercados clave" : "Instagram penetration — key markets"}</h3>
-              <div className="note">{es ? "Alcance / usuarios donde nacen los creadores" : "Reach / users where creators are born"}</div>
+              <div className="note">{es ? "Alcance / usuarios donde crecen las marcas" : "Reach / users where brands grow"}</div>
               <div className="chart-box">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={igData} margin={{ top: 8, right: 4, left: -8, bottom: 0 }}>
@@ -331,7 +331,7 @@ export function MarketResearchContent() {
         {/* VIDEO */}
         <section>
           <div className="eyebrow">{es ? "En video" : "On video"}</div>
-          <h2>{es ? "La autopsia de SocialFi: diseñando el token de creador de 2.ª generación" : "The autopsy of SocialFi: architecting the Gen-2 creator token"}</h2>
+          <h2>{es ? "La autopsia de SocialFi: diseñando el token de marca de 2.ª generación" : "The autopsy of SocialFi: architecting the Gen-2 brand token"}</h2>
           <p className="sec-sub">{es ? "Por qué fracasó la primera ola de social tokens y cómo Matiz corrige sus causas de raíz." : "Why the first wave of social tokens failed and how Matiz fixes its root causes."}</p>
           <figure style={{ margin: "8px 0 0" }}>
             <iframe

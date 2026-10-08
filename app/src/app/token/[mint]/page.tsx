@@ -290,7 +290,7 @@ function QuickStartGuide({ title, sub }: { title: string; sub: string }) {
       </p>
       <iframe
         src="https://www.youtube-nocookie.com/embed/3_kbx1niyY8?rel=0"
-        title="Gateway to the Creator Economy"
+        title="Gateway to the Brand Economy"
         loading="lazy"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen

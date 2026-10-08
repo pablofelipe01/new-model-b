@@ -51,7 +51,7 @@ export default function HomePage() {
             <iframe
               className="hero-video"
               src="https://www.youtube-nocookie.com/embed/AbNvoi_QChU?rel=0"
-              title="Matiz — Building an Independent Economy for Creators"
+              title="Matiz — Building an Independent Economy for Brands"
               style={{ aspectRatio: "16 / 9", border: 0 }}
               loading="lazy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

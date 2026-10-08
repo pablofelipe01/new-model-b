@@ -41,7 +41,7 @@ const CASES: CaseDef[] = [
       { k: "Creyentes (mintean)", v: "~1.400 · ~$9 c/u" },
       { k: "Reserva inicial", v: "~$12.600" },
       { k: "Evento de ingreso", v: "Galería le encarga una colección · $12.000" },
-      { k: "Creador reinvierte", v: "20% = $2.400 (los conserva)" },
+      { k: "Marca reinvierte", v: "20% = $2.400 (los conserva)" },
       { k: "Impacto en el precio", v: "~+6,0%" },
       { k: "Duplicar el precio", v: "~7× reserva ≈ $88.200" },
     ],
@@ -69,7 +69,7 @@ const CASES: CaseDef[] = [
       { k: "Creyentes (mintean)", v: "~6.000 · ~$5 c/u" },
       { k: "Reserva inicial", v: "~$30.000" },
       { k: "Evento de ingreso", v: "Marca de audio la patrocina en gira · $25.000" },
-      { k: "Creador reinvierte", v: "10% = $2.500 (los conserva)" },
+      { k: "Marca reinvierte", v: "10% = $2.500 (los conserva)" },
       { k: "Impacto en el precio", v: "~+2,7%" },
       { k: "Duplicar el precio", v: "~7× reserva ≈ $210.000" },
     ],
@@ -97,7 +97,7 @@ const CASES: CaseDef[] = [
       { k: "Creyentes (mintean)", v: "~12.000 · ~$4 c/u" },
       { k: "Reserva inicial", v: "~$48.000" },
       { k: "Evento de ingreso", v: "Marca deportiva lo patrocina · $40.000" },
-      { k: "Creador reinvierte", v: "8% = $3.200 (los conserva)" },
+      { k: "Marca reinvierte", v: "8% = $3.200 (los conserva)" },
       { k: "Impacto en el precio", v: "~+2,2%" },
       { k: "Duplicar el precio", v: "~7× reserva ≈ $336.000" },
     ],
@@ -106,7 +106,7 @@ const CASES: CaseDef[] = [
       "Mateo es ciclista. 300.000 lo siguen; 12.000 minan su token con ~$4: ~$48.000 en la reserva. Una marca deportiva lo patrocina por $40.000 — porque su afición es verificable y no se puede fingir con bots. Mateo mete $3.200 en su token y los conserva. Luego gana una carrera importante.",
     happened: [
       "La reserva arrancó en ~$48.000, respaldando cada token on-chain.",
-      "Mateo reinvirtió $3.200: el precio subió solo ~2,2%. Con una comunidad así de grande, ni el creador puede moverla mucho.",
+      "Mateo reinvirtió $3.200: el precio subió solo ~2,2%. Con una comunidad así de grande, ni la marca puede moverla mucho.",
       "El salto de verdad llegó al ganar: entraron fans nuevos con plata nueva. Demanda real, no inflada.",
       "Los que creyeron cuando era promesa tienen la mejor posición.",
     ],
@@ -125,8 +125,8 @@ export function UseCases({ onPlay }: { onPlay: (params: Params, label: string) =
       <div className="uc-insight">
         <div className="uc-insight-head">A mayor comunidad, más plana la curva</div>
         <p>
-          El mismo gesto del creador (reinvertir una parte de un ingreso) mueve el precio cada vez menos. Si lees los
-          tres en orden, enseñan solos que esto no se puede bombear: el motor son los fans, no la billetera del creador.
+          El mismo gesto de la marca (reinvertir una parte de un ingreso) mueve el precio cada vez menos. Si lees los
+          tres en orden, enseñan solos que esto no se puede bombear: el motor son los fans, no la billetera de la marca.
         </p>
         <div className="uc-impacts">
           {CASES.map((c) => (
@@ -187,7 +187,7 @@ export function UseCases({ onPlay }: { onPlay: (params: Params, label: string) =
       <p className="uc-foot">
         Nombres ilustrativos y ficticios. Mismas relaciones que el caso base: precio ∝ reserva^(1/3), market cap = 1,5 ×
         reserva, los primeros reciben varias veces más tokens por dólar, y duplicar el precio exige ~7× la reserva. Fee
-        de plataforma 0,5% · lanzamiento $25 · el fee del creador (0–5%) va al creador. Cifras y comisiones son parámetros simulados en Solana Devnet, no precios: no se cobra dinero real.
+        de plataforma 0,5% · lanzamiento $25 · el fee de la marca (0–5%) va a la marca. Cifras y comisiones son parámetros simulados en Solana Devnet, no precios: no se cobra dinero real.
       </p>
     </div>
   );

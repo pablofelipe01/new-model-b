@@ -333,7 +333,7 @@ function chartUoF(){
     items=BASE.uof.map((it,i)=>[it.label,it.amount,palette[i%palette.length]]);
   }else{
     const nom=6*BASE.nominaPre,inf=6*BASE.infraPre;
-    items=[['Adq. creadores + mkt',70000,'#8B7BF7'],['Nómina (6m)',nom,'#2DD4BF'],
+    items=[['Adq. marcas + mkt',70000,'#8B7BF7'],['Nómina (6m)',nom,'#2DD4BF'],
       ['Auditoría',25000,'#F5B65A'],['Constitución + legal',17500,'#5B7CF0'],
       ['Branding/web',2500,'#F47186'],['Infra (6m)',inf,'#46B39A']];
     const reserve=BASE.raise-items.reduce((a,b)=>a+b[1],0);items.push(['Reserva',reserve,'#574F7E']);

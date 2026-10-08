@@ -40,7 +40,7 @@ const FALLBACK = {
   onetime: [7500, 25000, 10000, 2500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   mktg: [5000, 8000, 12000, 14000, 15000, 16000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000, 12000],
   uof: [
-    { label: "Adquisición de creadores + marketing (6m)", amount: 70000 },
+    { label: "Adquisición de marcas + marketing (6m)", amount: 70000 },
     { label: "Nómina equipo (6 meses)", amount: 43800 },
     { label: "Auditoría de smart contract", amount: 25000 },
     { label: "Constitución Inc. + legal/regulatorio", amount: 17500 },

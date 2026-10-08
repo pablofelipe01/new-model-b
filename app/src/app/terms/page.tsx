@@ -50,7 +50,7 @@ function TermsEN() {
       <P>By accessing or using Matiz, connecting a wallet, launching a token, or executing any transaction, you agree to these Terms of Service. If you do not agree, do not use the Platform.</P>
 
       <H2>2. What Matiz Is</H2>
-      <P>Matiz is a <Strong>technology platform</Strong> that provides a web interface for deploying bonding curve token contracts on the Solana blockchain, tools for creators to tokenize community engagement, and a front-end for users to interact with on-chain smart contracts.</P>
+      <P>Matiz is a <Strong>technology platform</Strong> that provides a web interface for deploying bonding curve token contracts on the Solana blockchain, tools for brands to tokenize community engagement, and a front-end for users to interact with on-chain smart contracts.</P>
       <P><Strong>Matiz is NOT</Strong> a broker, dealer, exchange, custodian, financial intermediary, registered securities platform, investment advisory service, or money transmission service. We do not take custody of your funds at any point.</P>
 
       <H2>3. Nature of Tokens</H2>
@@ -64,13 +64,13 @@ function TermsEN() {
       <P>Price is determined algorithmically. It increases when tokens are purchased and decreases when sold. There is <Strong>no guarantee</Strong> the price will go up. The value may go to zero.</P>
 
       <H2>4. Platform Fees</H2>
-      <P>Matiz is a research prototype on Solana Devnet: it does not accept payments and no real money is charged. The following are simulated devnet parameters, not prices, and may change. Launch fee: $25 USDC (one-time). Platform trade fee: 0.5% per transaction. Launcher fee: 0-5% (creator-configurable). All fees are encoded on-chain and verifiable.</P>
+      <P>Matiz is a research prototype on Solana Devnet: it does not accept payments and no real money is charged. The following are simulated devnet parameters, not prices, and may change. Launch fee: $25 USDC (one-time). Platform trade fee: 0.5% per transaction. Launcher fee: 0-5% (brand-configurable). All fees are encoded on-chain and verifiable.</P>
 
       <H2>5. No Investment Advice</H2>
-      <P>Nothing on Matiz constitutes financial, investment, tax, or legal advice. We do not recommend any token, endorse any creator, or guarantee any returns. You are solely responsible for your own decisions.</P>
+      <P>Nothing on Matiz constitutes financial, investment, tax, or legal advice. We do not recommend any token, endorse any brand, or guarantee any returns. You are solely responsible for your own decisions.</P>
 
       <H2>6. Assumption of Risk</H2>
-      <P><Strong>You acknowledge and accept all risks</Strong>, including: loss of funds, smart contract bugs, blockchain outages, regulatory changes, price volatility, liquidity risk, creator abandonment, technology failures, and wallet key loss.</P>
+      <P><Strong>You acknowledge and accept all risks</Strong>, including: loss of funds, smart contract bugs, blockchain outages, regulatory changes, price volatility, liquidity risk, brand abandonment, technology failures, and wallet key loss.</P>
 
       <H2>7. No Warranties</H2>
       <P>THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE." WE MAKE NO WARRANTIES, EXPRESS OR IMPLIED.</P>
@@ -102,7 +102,7 @@ function TermsEN() {
       <div style={{ borderTop: "0.5px solid var(--border-subtle)", marginTop: 64, paddingTop: 32 }}>
         <H1>Risk Disclaimer</H1>
         <P><Strong>READ THIS CAREFULLY BEFORE USING MATIZ</Strong></P>
-        <P>Matiz is a technology tool. It lets creators deploy bonding curve tokens and lets users interact with those tokens. We are not recommending, endorsing, or selling any token. We are providing software.</P>
+        <P>Matiz is a technology tool. It lets brands deploy bonding curve tokens and lets users interact with those tokens. We are not recommending, endorsing, or selling any token. We are providing software.</P>
         <H2>You Can Lose Money</H2>
         <UL>
           <li>You can lose 100% of what you put in. Tokens can go to zero.</li>
@@ -144,10 +144,10 @@ function TermsES() {
       <P>Matiz es un prototipo de investigacion en Solana Devnet: no acepta pagos y no se cobra dinero real. Las siguientes son parametros simulados en devnet, no precios, y pueden cambiar. Lanzamiento: $25 USDC (una vez). Plataforma: 0.5% por transaccion. Lanzador: 0-5% (configurable). Todas codificadas on-chain y verificables.</P>
 
       <H2>5. No es Asesoria de Inversion</H2>
-      <P>Nada en Matiz constituye asesoria financiera, de inversiones, fiscal o legal. No recomendamos ningun token, no respaldamos ningun creador, no garantizamos ningun retorno. Eres el unico responsable de tus decisiones.</P>
+      <P>Nada en Matiz constituye asesoria financiera, de inversiones, fiscal o legal. No recomendamos ningun token, no respaldamos ninguna marca, no garantizamos ningun retorno. Eres el unico responsable de tus decisiones.</P>
 
       <H2>6. Asuncion de Riesgo</H2>
-      <P><Strong>Reconoces y aceptas todos los riesgos</Strong>: perdida de fondos, bugs en contratos, interrupciones de red, cambios regulatorios, volatilidad, riesgo de liquidez, abandono del creador, fallos tecnologicos y perdida de claves.</P>
+      <P><Strong>Reconoces y aceptas todos los riesgos</Strong>: perdida de fondos, bugs en contratos, interrupciones de red, cambios regulatorios, volatilidad, riesgo de liquidez, abandono de la marca, fallos tecnologicos y perdida de claves.</P>
 
       <H2>7. Sin Garantias</H2>
       <P>LA PLATAFORMA SE PROVEE "TAL CUAL" Y "SEGUN DISPONIBILIDAD." NO HACEMOS GARANTIAS EXPRESAS O IMPLICITAS.</P>

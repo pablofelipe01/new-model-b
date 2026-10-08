@@ -47,8 +47,8 @@ export function ChatWidget() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const greeting = es
-    ? "¡Hola! 👋 Soy el asistente de Matiz. Puedo ayudarte a comprar el token de tu creador, recargar tu billetera o entender cómo funciona. ¿En qué te ayudo?"
-    : "Hi! 👋 I'm the Matiz assistant. I can help you buy your creator's token, fund your wallet, or understand how it works. How can I help?";
+    ? "¡Hola! 👋 Soy el asistente de Matiz. Puedo ayudarte a comprar el token de tu marca favorita, recargar tu billetera o entender cómo funciona. ¿En qué te ayudo?"
+    : "Hi! 👋 I'm the Matiz assistant. I can help you buy your favorite brand's token, fund your wallet, or understand how it works. How can I help?";
 
   const starters = es
     ? ["¿Cómo compro un token?", "¿Cómo recargo mi billetera?", "¿Mi dinero está seguro?"]

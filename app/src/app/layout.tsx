@@ -24,7 +24,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Matiz — Convierte suscriptores en backers",
   description:
-    "Convierte tu audiencia gratis en una economía de early backers. Como una ronda seed de startup, pero para tu comunidad de creador.",
+    "Convierte tu audiencia gratis en una economía de early backers. Como una ronda seed de startup, pero para la comunidad de tu marca.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Matiz — Convierte suscriptores en backers",
     description:
-      "Convierte tu audiencia gratis en una economía de early backers. Como una ronda seed de startup, pero para tu comunidad de creador.",
+      "Convierte tu audiencia gratis en una economía de early backers. Como una ronda seed de startup, pero para la comunidad de tu marca.",
     url: "https://matiz.community",
     siteName: "Matiz",
     locale: "es_CO",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Matiz — Convierte suscriptores en backers",
     description:
-      "Convierte tu audiencia gratis en una economía de early backers. Como una ronda seed de startup, pero para tu comunidad de creador.",
+      "Convierte tu audiencia gratis en una economía de early backers. Como una ronda seed de startup, pero para la comunidad de tu marca.",
   },
   icons: {
     icon: [

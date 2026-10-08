@@ -256,7 +256,7 @@ function pnlChart(sim: Sim): string {
   const items: [string, number, boolean][] = [
     ["Comunidad (fans)", sim.pnl.comunidad, sim.actors.comunidad.inv > 0],
     ["Ballena", sim.pnl.ballena, sim.actors.ballena.inv > 0],
-    ["Creador", sim.pnl.creador, sim.actors.creador.inv > 0 || sim.creatorFee > 0],
+    ["Marca", sim.pnl.creador, sim.actors.creador.inv > 0 || sim.creatorFee > 0],
   ];
   const W = 720,
     H = 240,
@@ -309,12 +309,12 @@ function narrative(sim: Sim, p: Params): string[] {
   }
   if (p.creatorSpend > 0) {
     out.push(
-      `El creador reinvirtió ${money(sim.actors.creador.inv)} comprando su propio token —que conserva (vale ${money(sim.actors.creador.tok * sim.finalP)})— y eso empujó el precio para toda la comunidad.`,
+      `La marca reinvirtió ${money(sim.actors.creador.inv)} comprando su propio token —que conserva (vale ${money(sim.actors.creador.tok * sim.finalP)})— y eso empujó el precio para toda la comunidad.`,
     );
   }
   if (sim.creatorFee > 0) {
     out.push(
-      `Además cobró ${money(sim.creatorFee)} de comisión (${p.creatorFeePct}% del volumen): resultado neto del creador ${signMoney(sim.pnl.creador)}.`,
+      `Además cobró ${money(sim.creatorFee)} de comisión (${p.creatorFeePct}% del volumen): resultado neto de la marca ${signMoney(sim.pnl.creador)}.`,
     );
   }
   out.push(`La comunidad terminó con ${signMoney(sim.pnl.comunidad)} sobre lo que invirtió.`);
@@ -357,8 +357,8 @@ export function TokenSimulator({ injected }: { injected?: InjectedPreset }) {
     { k: "demand", label: "Compradores entran", min: 0, max: 3000, step: 50, fmt: (v) => `$${v}/paso` },
     { k: "sellPct", label: "Vendedores salen", min: 0, max: 25, step: 1, fmt: (v) => `${v}%/paso` },
     { k: "whaleSize", label: "Ballena (pump & dump)", min: 0, max: 30000, step: 500, fmt: (v) => (v === 0 ? "sin ballena" : `$${(v / 1000).toFixed(1)}K`) },
-    { k: "creatorSpend", label: "Creador reinvierte (compra y conserva)", min: 0, max: 800, step: 25, fmt: (v) => (v === 0 ? "off" : `$${v}/paso`) },
-    { k: "creatorFeePct", label: "Comisión del creador", min: 0, max: 5, step: 0.5, fmt: (v) => `${v}% del volumen` },
+    { k: "creatorSpend", label: "Marca reinvierte (compra y conserva)", min: 0, max: 800, step: 25, fmt: (v) => (v === 0 ? "off" : `$${v}/paso`) },
+    { k: "creatorFeePct", label: "Comisión de la marca", min: 0, max: 5, step: 0.5, fmt: (v) => `${v}% del volumen` },
     { k: "panicPct", label: "Pánico — venta masiva", min: 0, max: 80, step: 5, fmt: (v) => (v === 0 ? "off" : `${v}% del supply`) },
   ];
 

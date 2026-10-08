@@ -5,7 +5,7 @@ import { WhitepaperContent } from "./WhitepaperContent";
 export const metadata: Metadata = {
   title: "Whitepaper — Matiz Protocol",
   description:
-    "Social Tokenization: a mathematical framework for the on-chain creator economy on Solana.",
+    "Social Tokenization: a mathematical framework for the on-chain brand economy on Solana.",
 };
 
 export default function WhitepaperPage() {

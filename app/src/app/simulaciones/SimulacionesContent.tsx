@@ -27,8 +27,8 @@ export function SimulacionesContent() {
       id: "token",
       label: en ? "Token simulator" : "Simulador de token",
       desc: en
-        ? "Play out what happens to a token's price as buyers enter and exit, a whale pumps & dumps, the creator rewards fans, or panic hits."
-        : "Juega qué le pasa al precio de un token cuando entran y salen compradores, una ballena infla y vende, el creador premia a sus fans o llega el pánico.",
+        ? "Play out what happens to a token's price as buyers enter and exit, a whale pumps & dumps, the brand rewards fans, or panic hits."
+        : "Juega qué le pasa al precio de un token cuando entran y salen compradores, una ballena infla y vende, la marca premia a sus fans o llega el pánico.",
     },
     {
       id: "casos",
@@ -58,8 +58,8 @@ export function SimulacionesContent() {
       </h1>
       <p className="muted" style={{ maxWidth: "64ch", marginBottom: 24 }}>
         {en
-          ? "Two interactive models: the token economics a creator plays with, and the financial model behind Matiz."
-          : "Dos modelos interactivos: la economía del token con la que juega un creador, y el modelo financiero detrás de Matiz."}
+          ? "Two interactive models: the token economics a brand plays with, and the financial model behind Matiz."
+          : "Dos modelos interactivos: la economía del token con la que juega una marca, y el modelo financiero detrás de Matiz."}
       </p>
 
       {/* tabs */}

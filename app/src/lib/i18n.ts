@@ -16,8 +16,8 @@ export const translations: Record<Lang, Record<string, string>> = {
     allTokens: "Tokens",
     allTokensTitle: "Todos los tokens",
     allTokensSub: "Cada economía lanzada en Matiz.",
-    searchCreators: "Buscar creador por nombre o símbolo…",
-    noResults: "No encontramos creadores que coincidan.",
+    searchCreators: "Buscar marca por nombre o símbolo…",
+    noResults: "No encontramos marcas que coincidan.",
     fundWallet: "Cargar billetera",
     noUsdcPrompt: "¿Aún sin USDC? Recarga tu billetera para respaldar.",
     guideTitle: "Te invitaron a respaldar a alguien temprano",
@@ -27,7 +27,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     shareToken: "Compartir token",
     dashboard: "Panel",
     launch: "Lanzar",
-    creators: "Creadores",
+    creators: "Marcas",
     portfolio: "Cartera",
     home: "Inicio",
     langSwitch: "EN",
@@ -61,7 +61,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     howHeader: "Cómo funciona, en tres pasos",
     step1Title: "1. Abre tu ronda.",
     step1Body:
-      "Entra con Google. Pon un nombre, un símbolo, una foto. Define tu comisión de creador: entre 0% y 5%. La comisión de lanzamiento ($25) es un parámetro simulado en devnet — no se cobra dinero real. Listo: tienes un link para invitar a tu círculo interno.",
+      "Entra con Google. Pon un nombre, un símbolo, una foto. Define tu comisión de marca: entre 0% y 5%. La comisión de lanzamiento ($25) es un parámetro simulado en devnet — no se cobra dinero real. Listo: tienes un link para invitar a tu círculo interno.",
     step2Title: "2. Tus fans entran como backers.",
     step2Body:
       "Cada persona que cree en ti toma una parte de tu economía con tokens de devnet. Los primeros —tu ronda friends & family— entran más abajo. El precio de la curva sube con cada backer nuevo. Todo queda en una reserva pública que nadie puede vaciar.",
@@ -70,7 +70,7 @@ export const translations: Record<Lang, Record<string, string>> = {
       "Mientras más backers se suman, más sube el precio de la curva. Si alguien quiere salir, devuelve su parte al precio que dicta la curva y la reserva responde. Tú recibes un porcentaje de cada transacción. Todo con tokens sin valor monetario, en devnet.",
     plusOneTitle: "+1. Tú también puedes entrar.",
     plusOneBody:
-      "Nada te impide tomar una parte de tu propio token: entrar en tu propia ronda, respaldar a tu comunidad cuando haga falta, o regalarle una parte a los founder fans que te apoyaron desde el día uno. Eres creator y también puedes ser parte.",
+      "Nada te impide tomar una parte de tu propio token: entrar en tu propia ronda, respaldar a tu comunidad cuando haga falta, o regalarle una parte a los founder fans que te apoyaron desde el día uno. Eres la marca y también puedes ser parte.",
     curveCaptionShort: "Cuanto antes respaldas, más bajo entras.",
 
     // Guarantee
@@ -85,7 +85,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Mosseri
     mosseriTitle: "El Head of Instagram ya lo dijo.",
     mosseriIntro:
-      "En 2022, Adam Mosseri subió al escenario de TED. Describió un futuro donde los creators son dueños de su comunidad. Donde sus fans no solo se suscriben: los respaldan temprano, como a una startup. Donde si una plataforma desaparece, la relación con la audiencia sobrevive.",
+      "En 2022, Adam Mosseri subió al escenario de TED. Describió un futuro donde las marcas son dueñas de su comunidad. Donde sus fans no solo se suscriben: los respaldan temprano, como a una startup. Donde si una plataforma desaparece, la relación con la audiencia sobrevive.",
     mosseriQuote:
       '"Ninguna compañía puede quitarle a Lisa su comunidad. Instagram podría desaparecer mañana, y ella mantendría su relación con sus suscriptores, y mantendría sus ingresos."',
     mosseriAttrib: "— Adam Mosseri, Head of Instagram",
@@ -98,7 +98,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     forWhomHeader: "Matiz es para ti si…",
     forWhom1Title: "Vives de tu contenido y de tu comunidad.",
     forWhom1Body:
-      "Creadores de suscripción, contenido premium, membresías, close friends. Personas cuyos fans pagan por acceso directo, no solo por seguir. Matiz convierte a esos suscriptores en backers: quien llegó cuando empezabas queda registrado, on-chain, como founder fan y parte de tu historia.",
+      "Marcas con suscripción, contenido premium, membresías, close friends. Personas cuyos fans pagan por acceso directo, no solo por seguir. Matiz convierte a esos suscriptores en backers: quien llegó cuando empezabas queda registrado, on-chain, como founder fan y parte de tu historia.",
     forWhom2Title: "Tu círculo interno merece más que un 'gracias'.",
     forWhom2Body:
       'Tus fans más fieles —los que renuevan cada mes, los que te escriben, los que llegaron primero— pueden tener una parte real de tu economía. Con perks: contenido exclusivo, material sin publicar, llamadas privadas, acceso anticipado, prioridad. Y si alguien se va, el valor queda en la comunidad.',
@@ -109,12 +109,12 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Stories placeholder
     storiesTitle: "Historias, pronto.",
     storiesBody:
-      "Estamos trabajando con los primeros creadores que van a abrir su economía en Matiz. Cuando sus historias estén listas, aquí las contaremos.",
-    storiesCta: "¿Eres creador y quieres ser de los primeros? Escríbenos →",
+      "Estamos trabajando con las primeras marcas que van a abrir su economía en Matiz. Cuando sus historias estén listas, aquí las contaremos.",
+    storiesCta: "¿Eres una marca y quieres ser de las primeras? Escríbenos →",
 
     // Featured
     featuredLabel: "En movimiento",
-    featuredTitle: "Creadores para respaldar",
+    featuredTitle: "Marcas para respaldar",
 
     // FAQ
     faqHeader: "Preguntas frecuentes",
@@ -129,7 +129,7 @@ export const translations: Record<Lang, Record<string, string>> = {
       'El precio sigue una fórmula pública: sube cuando entran más backers en circulación y baja cuando salen. La reserva del contrato siempre puede responder a una venta al precio que dicta la curva, sin "esperar a que haya liquidez". En devnet puedes probarlo tú mismo.',
     faq4q: "¿Qué parámetros usa el prototipo?",
     faq4a:
-      "Comisión de plataforma 0.5% por transacción, comisión de creador entre 0% y 5%, y $25 al lanzar. Son parámetros simulados en devnet, no precios: no se cobra ni se paga dinero real, y pueden cambiar.",
+      "Comisión de plataforma 0.5% por transacción, comisión de marca entre 0% y 5%, y $25 al lanzar. Son parámetros simulados en devnet, no precios: no se cobra ni se paga dinero real, y pueden cambiar.",
 
     // CTA final
     ctaH1: "Tu audiencia gratis ya es una economía.",
@@ -176,7 +176,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     youReceive: "Recibes",
     priceRange: "Margen de precio ±1%",
     platformFee: "Comisión plataforma",
-    creatorFee: "Comisión creador",
+    creatorFee: "Comisión de marca",
     confirmBuy: "Confirmar compra",
     confirmSell: "Confirmar venta",
     quantity: "Cantidad",
@@ -190,7 +190,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     sold: "vendió",
     launchedWord: "lanzó",
     viewToken: "Ver token",
-    searchPh: "Busca creadores, clubes, comunidades…",
+    searchPh: "Busca marcas, clubes, comunidades…",
 
     // Launch wizard
     step1: "Tu historia",
@@ -238,17 +238,17 @@ export const translations: Record<Lang, Record<string, string>> = {
     allTokens: "Tokens",
     allTokensTitle: "All tokens",
     allTokensSub: "Every economy launched on Matiz.",
-    searchCreators: "Search a creator by name or symbol…",
-    noResults: "No creators match your search.",
+    searchCreators: "Search a brand by name or symbol…",
+    noResults: "No brands match your search.",
     fundWallet: "Fund wallet",
-    noUsdcPrompt: "No USDC yet? Top up your wallet to back a creator.",
+    noUsdcPrompt: "No USDC yet? Top up your wallet to back a brand.",
     guideTitle: "You've been invited to back someone early",
     guideSub: "See how to start in under a minute, then connect to get in.",
     copied: "Copied!",
     shareToken: "Share token",
     dashboard: "Dashboard",
     launch: "Launch",
-    creators: "Creators",
+    creators: "Brands",
     portfolio: "Portfolio",
     home: "Home",
     langSwitch: "ES",
@@ -282,7 +282,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     howHeader: "How it works, in three steps",
     step1Title: "1. Open your round.",
     step1Body:
-      "Sign in with Google. Add a name, a symbol, a photo. Set your creator fee: between 0% and 5%. The $25 launch fee is a simulated devnet parameter — no real money is charged. Done: you have a link to invite your inner circle.",
+      "Sign in with Google. Add a name, a symbol, a photo. Set your brand fee: between 0% and 5%. The $25 launch fee is a simulated devnet parameter — no real money is charged. Done: you have a link to invite your inner circle.",
     step2Title: "2. Your fans come in as backers.",
     step2Body:
       "Every person who believes in you takes a share of your economy with devnet tokens. The first ones — your friends & family round — come in lower. The curve price rises with each new backer. Everything goes into a public reserve that no one can empty.",
@@ -291,7 +291,7 @@ export const translations: Record<Lang, Record<string, string>> = {
       "The more backers join, the higher the curve price goes. If anyone wants out, they return their share at the price the curve dictates and the reserve answers for it. You receive a percentage of every transaction. All of it with devnet tokens that have no monetary value.",
     plusOneTitle: "+1. You can take part too.",
     plusOneBody:
-      "Nothing stops you from taking a share of your own token: come into your own round early, back your community when it needs it, or gift a share to the founder fans who supported you from day one. You're the creator, and you can also take part.",
+      "Nothing stops you from taking a share of your own token: come into your own round early, back your community when it needs it, or gift a share to the founder fans who supported you from day one. You're the brand, and you can also take part.",
     curveCaptionShort: "The earlier you back, the lower you come in.",
 
     // Guarantee
@@ -306,7 +306,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Mosseri
     mosseriTitle: "The Head of Instagram already said it.",
     mosseriIntro:
-      "In 2022, Adam Mosseri took the TED stage. He described a future where creators own their community. Where fans don't just subscribe — they back them early, like a startup. Where if a platform disappears, the relationship with the audience survives.",
+      "In 2022, Adam Mosseri took the TED stage. He described a future where brands own their community. Where fans don't just subscribe — they back them early, like a startup. Where if a platform disappears, the relationship with the audience survives.",
     mosseriQuote:
       '"No company can ever take Lisa\'s community away from her. Instagram could disappear tomorrow, and she would maintain her relationship with her subscribers, and she would maintain her income."',
     mosseriAttrib: "— Adam Mosseri, Head of Instagram",
@@ -319,7 +319,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     forWhomHeader: "Matiz is for you if…",
     forWhom1Title: "You live off your content and your community.",
     forWhom1Body:
-      "Subscription creators, premium content, memberships, close friends. People whose fans pay for direct access, not just to follow. Matiz turns those subscribers into backers: whoever showed up when you were starting is recorded on-chain, as a founder fan and part of your story.",
+      "Subscription brands, premium content, memberships, close friends. People whose fans pay for direct access, not just to follow. Matiz turns those subscribers into backers: whoever showed up when you were starting is recorded on-chain, as a founder fan and part of your story.",
     forWhom2Title: "Your inner circle deserves more than a 'thank you.'",
     forWhom2Body:
       'Your most loyal fans — the ones who renew every month, the ones who message you, the ones who came first — can own a real piece of your economy. With perks: exclusive content, unreleased material, private calls, early access, priority. And if someone leaves, the value stays in the community.',
@@ -330,13 +330,13 @@ export const translations: Record<Lang, Record<string, string>> = {
     // Stories placeholder
     storiesTitle: "Stories, coming soon.",
     storiesBody:
-      "We're working with the first creators who will open their economy on Matiz. When their stories are ready, we'll tell them here.",
+      "We're working with the first brands who will open their economy on Matiz. When their stories are ready, we'll tell them here.",
     storiesCta:
-      "Are you a creator and want to be one of the first? Write to us →",
+      "Are you a brand and want to be one of the first? Write to us →",
 
     // Featured
     featuredLabel: "Moving now",
-    featuredTitle: "Creators to back",
+    featuredTitle: "Brands to back",
 
     // FAQ
     faqHeader: "Frequent questions",
@@ -351,7 +351,7 @@ export const translations: Record<Lang, Record<string, string>> = {
       'The price follows a public formula: it rises as more backers enter circulation and falls as they leave. The contract\'s reserve can always answer a sale at the price the curve dictates — no "waiting for liquidity." On devnet you can try it yourself.',
     faq4q: "What parameters does the prototype use?",
     faq4a:
-      "Platform fee 0.5% per transaction, creator fee between 0% and 5%, and $25 at launch. These are simulated devnet parameters, not prices: no real money is charged or paid out, and they may change.",
+      "Platform fee 0.5% per transaction, brand fee between 0% and 5%, and $25 at launch. These are simulated devnet parameters, not prices: no real money is charged or paid out, and they may change.",
 
     // CTA final
     ctaH1: "Your free audience is already an economy.",
@@ -398,7 +398,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     youReceive: "You receive",
     priceRange: "Price range ±1%",
     platformFee: "Platform fee",
-    creatorFee: "Creator fee",
+    creatorFee: "Brand fee",
     confirmBuy: "Confirm buy",
     confirmSell: "Confirm sell",
     quantity: "Quantity",
@@ -412,7 +412,7 @@ export const translations: Record<Lang, Record<string, string>> = {
     sold: "sold",
     launchedWord: "launched",
     viewToken: "View token",
-    searchPh: "Search creators, clubs, communities…",
+    searchPh: "Search brands, clubs, communities…",
 
     // Launch wizard
     step1: "Your story",

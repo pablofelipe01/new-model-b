@@ -7,7 +7,7 @@ import { BlogIndex } from "./BlogIndex";
 export const metadata: Metadata = {
   title: "Blog — Matiz",
   description:
-    "Ideas sobre tokenización social, bonding curves y la economía del creador.",
+    "Ideas sobre tokenización social, bonding curves y la economía de las marcas.",
 };
 
 export default function BlogPage() {

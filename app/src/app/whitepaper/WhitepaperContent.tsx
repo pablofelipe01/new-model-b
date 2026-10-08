@@ -53,8 +53,8 @@ export function WhitepaperContent() {
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: 17, margin: 0 }}>
           {en
-            ? "Bidirectional Cryptographic Tokens: A Mathematical Framework for the On-Chain Creator Economy"
-            : "Tokens Criptográficos Bidireccionales: un Framework Matemático para la Economía del Creador On-Chain"}
+            ? "Bidirectional Cryptographic Tokens: A Mathematical Framework for the On-Chain Brand Economy"
+            : "Tokens Criptográficos Bidireccionales: un Framework Matemático para la Economía de Marcas On-Chain"}
         </p>
         <p className="paper-meta">
           Pablo F. Acebedo · Matiz Protocol
@@ -171,8 +171,8 @@ function BodyEs() {
             de Matiz Protocol, una plataforma de tokenización social construida
             sobre la red Solana. Partiendo de los fundamentos matemáticos de las
             curvas de vinculación (bonding curves) y el modelado de precios
-            invariantes, desarrollamos un sistema que permite a cualquier creador
-            de contenido, comunidad o proyecto lanzar un token propio con
+            invariantes, desarrollamos un sistema que permite a cualquier marca,
+            comunidad o proyecto lanzar un token propio con
             liquidez automática, custodia autónoma de la reserva y
             bidireccionalidad garantizada. La función de precio adoptada —P =
             S^0.5— genera un mercado automatizado sin necesidad de creadores de
@@ -186,7 +186,7 @@ function BodyEs() {
           </p>
           <p style={{ marginBottom: 0 }}>
             <strong>Palabras clave:</strong> tokenización social, bonding curve,
-            AMM, economía del creador, Solana, DeFi, curva de vinculación,
+            AMM, economía de marcas, Solana, DeFi, curva de vinculación,
             liquidez automática, modelado invariante, Matiz Protocol
           </p>
         </div>
@@ -198,19 +198,19 @@ function BodyEs() {
         <h2>1. Introducción</h2>
         <p>
           Las plataformas de contenido digital han creado uno de los desajustes
-          más profundos de la economía moderna: los creadores generan valor
+          más profundos de la economía moderna: las marcas generan valor
           masivo para audiencias de millones, pero el control sobre esa
           audiencia, los datos y los ingresos reside casi exclusivamente en las
-          plataformas intermediarias. Un creador con diez millones de seguidores
+          plataformas intermediarias. Una marca con diez millones de seguidores
           en Instagram no posee esa relación —la arrienda, sujeta a los
           algoritmos, términos de servicio y decisiones comerciales de Meta.
         </p>
         <p>
           La tokenización social emerge como respuesta estructural a este
-          problema. Al vincular la relación entre un creador y su comunidad a un
+          problema. Al vincular la relación entre una marca y su comunidad a un
           activo criptográfico on-chain, es posible hacer esa relación portable,
           verificable y económicamente significativa: un token que representa el
-          apoyo real, cuantificable en dinero, a un creador o proyecto.
+          apoyo real, cuantificable en dinero, a una marca o proyecto.
         </p>
         <p>
           Strata Protocol, lanzado en la red Solana en 2021 y adquirido por la
@@ -224,7 +224,7 @@ function BodyEs() {
         <p>
           Este paper documenta el fundamento matemático del sistema, la
           arquitectura del protocolo on-chain, el modelo económico adoptado, y
-          las implicaciones para creadores, fans e inversores.
+          las implicaciones para marcas, fans e inversores.
         </p>
       </section>
 
@@ -234,7 +234,7 @@ function BodyEs() {
         <h3>2.1 Definición y naturaleza de los tokens sociales</h3>
         <p>
           Los tokens sociales son activos intercambiables vinculados a una
-          comunidad afiliada a un creador de contenido, proyecto o marca. Son
+          comunidad afiliada a una marca o proyecto. Son
           criptomonedas personalizadas que permiten a los miembros de la
           comunidad desbloquear experiencias específicas o simplemente invertir
           en los proyectos y personas en los que creen.
@@ -256,24 +256,24 @@ function BodyEs() {
 
         <h3>2.2 El problema de los intermediarios</h3>
         <p>
-          El éxito de cualquier creador de valor proviene de fomentar el
+          El éxito de cualquier marca proviene de fomentar el
           crecimiento de su comunidad. Sin embargo, en el modelo actual:
         </p>
         <ul>
-          <li>Los seguidores pertenecen a la plataforma, no al creador</li>
+          <li>Los seguidores pertenecen a la plataforma, no a la marca</li>
           <li>Los algoritmos deciden qué audiencia ve el contenido</li>
           <li>
             La monetización está mediada por comisiones, requisitos y
             restricciones de terceros
           </li>
           <li>
-            Si una plataforma cierra o desmonetiza al creador, la relación con la
+            Si una plataforma cierra o desmonetiza a la marca, la relación con la
             audiencia desaparece
           </li>
         </ul>
         <p>
           Los tokens sociales eluden este control al llevar la relación económica
-          creador-fan a la blockchain, donde ningún intermediario puede
+          marca-fan a la blockchain, donde ningún intermediario puede
           intervenirla. Adam Mosseri, Head of Instagram, describió en 2022 en TED
           este futuro como inevitable: «Ninguna compañía puede quitarle a Lisa su
           comunidad. Instagram podría desaparecer mañana, y ella mantendría su
@@ -297,7 +297,7 @@ function BodyEs() {
               <tr>
                 <td>Propiedad del fan</td>
                 <td>Pertenece a la plataforma</td>
-                <td>On-chain, portátil, del creador</td>
+                <td>On-chain, portátil, de la marca</td>
               </tr>
               <tr>
                 <td>Verificabilidad</td>
@@ -317,7 +317,7 @@ function BodyEs() {
               <tr>
                 <td>Monetización</td>
                 <td>Intermediada, con comisiones altas</td>
-                <td>Directa, fee mínimo al creador</td>
+                <td>Directa, fee mínimo a la marca</td>
               </tr>
               <tr>
                 <td>Custodio de fondos</td>
@@ -675,19 +675,19 @@ function BodyEs() {
       <section>
         <h2>6. Casos de uso y segmentos</h2>
 
-        <h3>6.1 Creadores de contenido</h3>
+        <h3>6.1 Marcas</h3>
         <p>
-          El caso de uso más directo: un artista, músico, escritor, podcaster o
-          youtuber lanza su token. Sus primeros fans compran a precio bajo. A
-          medida que más personas se unen a la comunidad, el precio sube. El
-          creador cobra un fee de cada transacción. Los fans tempranos tienen
+          El caso de uso más directo: una marca, un chef, un deportista,
+          un equipo o un artista lanza su token. Sus primeros fans compran a precio bajo. A
+          medida que más personas se unen a la comunidad, el precio sube. La
+          marca cobra un fee de cada transacción. Los fans tempranos tienen
           tokens más valiosos.
         </p>
         <p>
           El diferenciador frente a Patreon, membresías de YouTube o
           suscripciones de Instagram es que el apoyo no desaparece: si el fan
           decide salir, vende sus tokens y recupera (parte de) su inversión. Si
-          la carrera del creador despega, el fan comparte el crecimiento.
+          la marca despega, el fan comparte el crecimiento.
         </p>
 
         <h3>6.2 Comunidades y proyectos</h3>
@@ -700,7 +700,7 @@ function BodyEs() {
 
         <h3>6.3 Plataforma genérica de token launch</h3>
         <p>
-          Matiz Protocol no está restringido a creadores de contenido. Cualquier
+          Matiz Protocol no está restringido a marcas. Cualquier
           proyecto, empresa o individuo puede lanzar un token con bonding curve
           en cinco minutos y con $25. Esto lo posiciona como alternativa
           accesible a los procesos de IDO (Initial DEX Offering) tradicionales,
@@ -796,7 +796,7 @@ function BodyEs() {
           </li>
           <li>
             <strong>No hay governance:</strong> el token no otorga control sobre
-            el protocolo ni sobre el creador
+            el protocolo ni sobre la marca
           </li>
           <li>
             <strong>Liquidez automática:</strong> el token puede venderse en
@@ -829,7 +829,7 @@ function BodyEs() {
           </li>
           <li>
             <strong>Riesgo reputacional del lanzador:</strong> el valor del token
-            está asociado a la percepción de valor del proyecto o creador
+            está asociado a la percepción de valor del proyecto o de la marca
           </li>
           <li>
             <strong>Ausencia de riesgo de custodia:</strong> los fondos están en
@@ -898,7 +898,7 @@ function BodyEs() {
         <h2>9. Conclusiones</h2>
         <p>
           La tokenización social representa una oportunidad genuina de
-          reequilibrar la relación entre creadores y plataformas. Los tokens
+          reequilibrar la relación entre marcas y plataformas. Los tokens
           sociales con bonding curve resuelven el problema de liquidez que había
           paralizado categorías anteriores de social tokens: no necesitan
           creadores de liquidez externos, no requieren pools de liquidez, y
@@ -915,7 +915,7 @@ function BodyEs() {
         <p>
           El mercado de la economía del creador mueve más de $250 mil millones
           anuales globalmente. América Latina, con su penetración de Instagram
-          superior al 70% en poblaciones urbanas y una cultura de apoyo al creador
+          superior al 70% en poblaciones urbanas y una cultura de apoyo a las marcas
           profundamente arraigada, representa un mercado inicial natural. La
           combinación de on-ramp en monedas locales (COP, MXN, BRL), login social
           sin fricción, y la promesa de transparencia absoluta en la custodia de
@@ -943,7 +943,7 @@ function BodyEn() {
             implementation of Matiz Protocol, a social tokenization platform
             built on the Solana network. Starting from the mathematical
             foundations of bonding curves and invariant price modeling, we
-            develop a system that lets any content creator, community, or project
+            develop a system that lets any brand, community, or project
             launch its own token with automatic liquidity, autonomous reserve
             custody, and guaranteed bidirectionality. The adopted price function
             —P = S^0.5— generates an automated market with no external liquidity
@@ -956,7 +956,7 @@ function BodyEn() {
           </p>
           <p style={{ marginBottom: 0 }}>
             <strong>Keywords:</strong> social tokenization, bonding curve, AMM,
-            creator economy, Solana, DeFi, automatic liquidity, invariant
+            brand economy, Solana, DeFi, automatic liquidity, invariant
             modeling, Matiz Protocol
           </p>
         </div>
@@ -968,19 +968,19 @@ function BodyEn() {
         <h2>1. Introduction</h2>
         <p>
           Digital content platforms have created one of the deepest imbalances in
-          the modern economy: creators generate massive value for audiences of
+          the modern economy: brands generate massive value for audiences of
           millions, yet control over that audience, the data, and the revenue
-          resides almost exclusively with intermediary platforms. A creator with
+          resides almost exclusively with intermediary platforms. A brand with
           ten million followers on Instagram does not own that relationship —they
           rent it, subject to Meta&apos;s algorithms, terms of service, and
           business decisions.
         </p>
         <p>
           Social tokenization emerges as a structural response to this problem. By
-          tying the relationship between a creator and their community to an
+          tying the relationship between a brand and its community to an
           on-chain cryptographic asset, that relationship can be made portable,
           verifiable, and economically meaningful: a token that represents real
-          support —quantifiable in money— for a creator or project.
+          support —quantifiable in money— for a brand or project.
         </p>
         <p>
           Strata Protocol, launched on Solana in 2021 and acquired by the Helium
@@ -993,7 +993,7 @@ function BodyEn() {
         <p>
           This paper documents the system&apos;s mathematical foundation, the
           on-chain protocol architecture, the adopted economic model, and the
-          implications for creators, fans, and investors.
+          implications for brands, fans, and investors.
         </p>
       </section>
 
@@ -1003,7 +1003,7 @@ function BodyEn() {
         <h3>2.1 Definition and nature of social tokens</h3>
         <p>
           Social tokens are tradable assets tied to a community affiliated with a
-          content creator, project, or brand. They are customized cryptocurrencies
+          brand or project. They are customized cryptocurrencies
           that let community members unlock specific experiences or simply invest
           in the projects and people they believe in.
         </p>
@@ -1024,23 +1024,23 @@ function BodyEn() {
 
         <h3>2.2 The intermediary problem</h3>
         <p>
-          The success of any value creator comes from fostering the growth of
-          their community. However, in the current model:
+          The success of any brand comes from fostering the growth of
+          its community. However, in the current model:
         </p>
         <ul>
-          <li>Followers belong to the platform, not the creator</li>
+          <li>Followers belong to the platform, not the brand</li>
           <li>Algorithms decide which audience sees the content</li>
           <li>
             Monetization is mediated by fees, requirements, and third-party
             restrictions
           </li>
           <li>
-            If a platform shuts down or demonetizes the creator, the relationship
+            If a platform shuts down or demonetizes the brand, the relationship
             with the audience disappears
           </li>
         </ul>
         <p>
-          Social tokens bypass this control by moving the creator-fan economic
+          Social tokens bypass this control by moving the brand-fan economic
           relationship onto the blockchain, where no intermediary can interfere
           with it. Adam Mosseri, Head of Instagram, described this future at TED in
           2022 as inevitable: «No company can take Lisa&apos;s community away from
@@ -1065,7 +1065,7 @@ function BodyEn() {
               <tr>
                 <td>Fan ownership</td>
                 <td>Belongs to the platform</td>
-                <td>On-chain, portable, the creator&apos;s</td>
+                <td>On-chain, portable, the brand&apos;s</td>
               </tr>
               <tr>
                 <td>Verifiability</td>
@@ -1085,7 +1085,7 @@ function BodyEn() {
               <tr>
                 <td>Monetization</td>
                 <td>Intermediated, with high fees</td>
-                <td>Direct, minimal fee to the creator</td>
+                <td>Direct, minimal fee to the brand</td>
               </tr>
               <tr>
                 <td>Fund custodian</td>
@@ -1424,18 +1424,18 @@ function BodyEn() {
       <section>
         <h2>6. Use cases and segments</h2>
 
-        <h3>6.1 Content creators</h3>
+        <h3>6.1 Brands</h3>
         <p>
-          The most direct use case: an artist, musician, writer, podcaster, or
-          YouTuber launches their token. Their first fans buy at a low price. As
-          more people join the community, the price rises. The creator earns a fee
+          The most direct use case: a brand, chef, athlete, sports team, or
+          artist launches their token. Their first fans buy at a low price. As
+          more people join the community, the price rises. The brand earns a fee
           on every transaction. Early fans hold more valuable tokens.
         </p>
         <p>
           The differentiator versus Patreon, YouTube memberships, or Instagram
           subscriptions is that the support doesn&apos;t disappear: if the fan
           decides to leave, they sell their tokens and recover (part of) their
-          investment. If the creator&apos;s career takes off, the fan shares in the
+          investment. If the brand takes off, the fan shares in the
           growth.
         </p>
 
@@ -1448,7 +1448,7 @@ function BodyEn() {
 
         <h3>6.3 Generic token-launch platform</h3>
         <p>
-          Matiz Protocol is not restricted to content creators. Any project,
+          Matiz Protocol is not restricted to brands. Any project,
           company, or individual can launch a bonding-curve token in five minutes
           and for $25. This positions it as an accessible alternative to
           traditional IDO (Initial DEX Offering) processes, which require weeks of
@@ -1543,7 +1543,7 @@ function BodyEn() {
           </li>
           <li>
             <strong>No governance:</strong> the token grants no control over the
-            protocol or the creator
+            protocol or the brand
           </li>
           <li>
             <strong>Automatic liquidity:</strong> the token can be sold at any time
@@ -1574,7 +1574,7 @@ function BodyEn() {
           </li>
           <li>
             <strong>Launcher reputation risk:</strong> the token&apos;s value is
-            tied to the perceived value of the project or creator
+            tied to the perceived value of the project or brand
           </li>
           <li>
             <strong>Absence of custody risk:</strong> funds are in the smart
@@ -1632,7 +1632,7 @@ function BodyEn() {
         <h2>9. Conclusions</h2>
         <p>
           Social tokenization represents a genuine opportunity to rebalance the
-          relationship between creators and platforms. Bonding-curve social tokens
+          relationship between brands and platforms. Bonding-curve social tokens
           solve the liquidity problem that had paralyzed earlier categories of
           social tokens: they need no external liquidity providers, require no
           liquidity pools, and mathematically guarantee that any holder can exit at
@@ -1648,7 +1648,7 @@ function BodyEn() {
         <p>
           The creator economy moves more than $250 billion annually worldwide.
           Latin America, with Instagram penetration above 70% in urban populations
-          and a deeply rooted culture of supporting creators, represents a natural
+          and a deeply rooted culture of supporting brands, represents a natural
           initial market. The combination of on-ramps in local currencies (COP,
           MXN, BRL), frictionless social login, and the promise of absolute
           transparency in fund custody positions Matiz Protocol uniquely in this
