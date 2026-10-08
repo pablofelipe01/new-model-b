@@ -7,7 +7,7 @@ export function Sparkline({
   maxSupply,
   width = 120,
   height = 40,
-  accent = "#2F6A3C",
+  accent = "#6062E8",
 }: {
   supply: number;
   maxSupply: number;

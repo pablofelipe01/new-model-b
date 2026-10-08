@@ -1,7 +1,7 @@
 export function MLogo({
   size = 32,
-  stroke = "#17201A",
-  dot = "#2F6A3C",
+  stroke = "#F5F1E8",
+  dot = "#FF5E3A",
   dotOff = false,
 }: {
   size?: number;

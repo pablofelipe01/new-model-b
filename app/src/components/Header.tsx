@@ -7,6 +7,7 @@ import { useState } from "react";
 import { DevnetBanner } from "@/components/DevnetBanner";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSdk } from "@/components/providers/SdkProvider";
+import { MLogo } from "@/components/matiz/MLogo";
 
 import { WalletButton } from "./WalletButton";
 
@@ -28,9 +29,11 @@ export function Header() {
       <div className="top-bar">
         <DevnetBanner />
         <nav className="top-nav">
-          <Link href="/" className="nav-logo" aria-label="Matiz">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/matiz-wordmark.png" alt="Matiz" className="nav-logo-img" />
+          <Link href="/" className="nav-logo">
+            <MLogo size={28} />
+            <span className="nav-logo-word">
+              mati<span className="matiz-z">z</span>
+            </span>
           </Link>
 
           {/* Desktop nav links */}

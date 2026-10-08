@@ -152,7 +152,7 @@ export function FundModal({ open, onClose, walletAddress, onSuccess }: Props) {
             color: "#F5F1E8",
             background:
               "linear-gradient(135deg, var(--color-indigo) 0%, var(--spec-violet) 55%, var(--color-ember) 130%)",
-            boxShadow: "0 12px 30px rgba(47, 106, 60, 0.35)",
+            boxShadow: "0 12px 30px rgba(96, 98, 232, 0.35)",
             overflow: "hidden",
           }}
         >

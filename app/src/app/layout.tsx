@@ -48,11 +48,14 @@ export const metadata: Metadata = {
       "Convierte tu audiencia gratis en una economía de early backers. Como una ronda seed de startup, pero para tu comunidad de creador.",
   },
   icons: {
-    icon: [{ url: "/favicon0002.png", type: "image/png" }],
-    apple: [{ url: "/favicon0002.png" }],
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/icon-192.png", sizes: "192x192" }],
   },
   other: {
-    "theme-color": "#F5F6F1",
+    "theme-color": "#0A0B18",
   },
 };
 

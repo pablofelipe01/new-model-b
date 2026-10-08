@@ -52,8 +52,8 @@ export function BondingCurveChart({
         <ComposedChart data={data} margin={{ top: 20, right: 16, bottom: 8, left: 8 }}>
           <defs>
             <linearGradient id="reserveFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2F6A3C" stopOpacity={0.45} />
-              <stop offset="100%" stopColor="#2F6A3C" stopOpacity={0.05} />
+              <stop offset="0%" stopColor="#6062E8" stopOpacity={0.45} />
+              <stop offset="100%" stopColor="#6062E8" stopOpacity={0.05} />
             </linearGradient>
           </defs>
           <XAxis
@@ -73,8 +73,8 @@ export function BondingCurveChart({
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#FFFFFF",
-              border: "1px solid rgba(23,40,26,0.14)",
+              backgroundColor: "rgb(24 24 27)",
+              border: "1px solid rgb(63 63 70)",
               borderRadius: 8,
               fontSize: 12,
             }}
@@ -94,7 +94,7 @@ export function BondingCurveChart({
           <Line
             type="monotone"
             dataKey="price"
-            stroke="#2F6A3C"
+            stroke="#6062E8"
             strokeWidth={2}
             dot={false}
             isAnimationActive={false}
