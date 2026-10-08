@@ -2,9 +2,12 @@
 
 import { buyBaseAmount, buyTargetAmount, type CurveParams } from "@new-model-b/sdk";
 import BN from "bn.js";
-import { useMemo, useState } from "react";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useSdk } from "@/components/providers/SdkProvider";
 import { useSwap } from "@/hooks/useSwap";
 import { formatNumber } from "@/lib/utils";
 
@@ -34,6 +37,42 @@ export function SwapPanel({
   const [slippage, setSlippage] = useState<number>(0.01);
   const swap = useSwap(tokenBonding);
   const { t, lang } = useLanguage();
+  const { sdk } = useSdk();
+  // Wallet balances in raw units (null = unknown / not connected). Used to
+  // block trades that would fail on-chain with "insufficient funds".
+  const [balances, setBalances] = useState<{ base: BN; target: BN } | null>(null);
+  // Set when "Max" fills the input, so we send the exact raw balance instead
+  // of a float round-trip that could overshoot it.
+  const [useMax, setUseMax] = useState(false);
+
+  const refreshBalances = useCallback(async () => {
+    if (!sdk) return setBalances(null);
+    try {
+      const bonding = await sdk.getTokenBonding(new PublicKey(tokenBonding));
+      if (!bonding) return setBalances(null);
+      const owner = sdk.provider.wallet.publicKey;
+      const conn = sdk.provider.connection;
+      const read = async (mint: PublicKey) => {
+        try {
+          const ata = getAssociatedTokenAddressSync(mint, owner);
+          return new BN((await conn.getTokenAccountBalance(ata)).value.amount);
+        } catch {
+          return new BN(0); // ATA doesn't exist yet
+        }
+      };
+      const [base, target] = await Promise.all([
+        read(bonding.baseMint),
+        read(bonding.targetMint),
+      ]);
+      setBalances({ base, target });
+    } catch {
+      setBalances(null);
+    }
+  }, [sdk, tokenBonding]);
+
+  useEffect(() => {
+    void refreshBalances();
+  }, [refreshBalances]);
 
   const targetFactor = Math.pow(10, targetDecimals);
   const baseFactor = Math.pow(10, baseDecimals);
@@ -66,15 +105,34 @@ export function SwapPanel({
     };
   }, [mode, numericHuman, curve, currentSupply]);
 
+  const available = balances ? (mode === "buy" ? balances.base : balances.target) : null;
+  const decimals = mode === "buy" ? baseDecimals : targetDecimals;
+  const requestedRaw =
+    useMax && available
+      ? available
+      : new BN(Math.floor(numericHuman * (mode === "buy" ? baseFactor : targetFactor)));
+  const insufficient = available !== null && requestedRaw.gt(available);
+
+  function rawToHuman(raw: BN, dec: number): string {
+    const str = raw.toString().padStart(dec + 1, "0");
+    const whole = str.slice(0, str.length - dec);
+    const frac = str.slice(str.length - dec).replace(/0+$/, "");
+    return frac ? `${whole}.${frac}` : whole;
+  }
+
   async function onSubmit() {
-    if (numericHuman <= 0) return;
-    if (mode === "buy") {
-      // Spend exactly this much USDC (base units).
-      const baseAmountBn = new BN(Math.floor(numericHuman * baseFactor));
-      await swap.buy(baseAmountBn, "base", slippage);
-    } else {
-      const tokenAmountBn = new BN(Math.floor(numericHuman * targetFactor));
-      await swap.sell(tokenAmountBn, slippage);
+    if (numericHuman <= 0 || insufficient) return;
+    try {
+      if (mode === "buy") {
+        // Spend exactly this much USDC (base units).
+        await swap.buy(requestedRaw, "base", slippage);
+      } else {
+        await swap.sell(requestedRaw, slippage);
+      }
+      setAmount("0");
+      setUseMax(false);
+    } finally {
+      void refreshBalances();
     }
   }
 
@@ -86,7 +144,10 @@ export function SwapPanel({
           <button
             key={m}
             type="button"
-            onClick={() => setMode(m)}
+            onClick={() => {
+              setMode(m);
+              setUseMax(false);
+            }}
             className={`tt ${mode === m ? "active" : ""}`}
           >
             {m === "buy" ? t.buy : t.sell}
@@ -104,16 +165,43 @@ export function SwapPanel({
         type="number"
         min="0"
         value={amount}
-        onChange={(e) => setAmount(e.target.value)}
+        onChange={(e) => {
+          setAmount(e.target.value);
+          setUseMax(false);
+        }}
         placeholder="0"
         className="input"
         style={{
           fontSize: 22,
           fontWeight: 500,
           fontVariantNumeric: "tabular-nums",
-          marginBottom: 16,
+          marginBottom: available ? 6 : 16,
         }}
       />
+      {available && (
+        <div
+          className="muted-small"
+          style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}
+        >
+          <span style={{ color: insufficient ? "var(--state-danger)" : undefined }}>
+            {insufficient ? t.insufficientBalance : t.balanceLabel}:{" "}
+            {formatNumber(Number(rawToHuman(available, decimals)), mode === "buy" ? 2 : 4)}{" "}
+            {mode === "buy" ? baseSymbol : targetSymbol}
+          </span>
+          <button
+            type="button"
+            className="chip"
+            style={{ flex: "none", padding: "2px 10px" }}
+            disabled={available.isZero()}
+            onClick={() => {
+              setAmount(rawToHuman(available, decimals));
+              setUseMax(true);
+            }}
+          >
+            {t.maxAmount}
+          </button>
+        </div>
+      )}
 
       {/* Summary */}
       <div className="summary">
@@ -164,7 +252,7 @@ export function SwapPanel({
       <button
         type="button"
         onClick={onSubmit}
-        disabled={swap.buying || swap.selling || numericHuman <= 0}
+        disabled={swap.buying || swap.selling || numericHuman <= 0 || insufficient}
         className="btn btn-primary btn-full"
       >
         {swap.buying || swap.selling
